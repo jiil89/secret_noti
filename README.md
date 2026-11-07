@@ -1,0 +1,28 @@
+# 노티 엣지 (secret_noti)
+
+카카오톡·문자·Teams 알림을 폰 안에 저장하고, 화면 가장자리 엣지패널로 보여주는 개인용 안드로이드 앱.
+대화방을 열지 않으므로 상대에게 읽음 표시가 남지 않는다. 자세한 내용은 [SPEC.md](SPEC.md).
+
+## 빌드
+
+필요: JDK 21, Android SDK (platform 37, build-tools 37). `local.properties`에 `sdk.dir`을 적는다.
+
+```
+./gradlew assembleDebug testDebugUnitTest
+```
+
+APK: `app/build/outputs/apk/debug/app-debug.apk`
+
+## 설치 (갤럭시)
+
+1. 설정 → 휴대전화 정보 → 소프트웨어 정보 → 빌드번호 7번 탭 → 개발자 옵션 → USB 디버깅 켜기
+2. 설정 → 보안 및 개인정보 보호 → **자동 차단(Auto Blocker) 끄기**
+3. `adb install -r app/build/outputs/apk/debug/app-debug.apk`
+
+## 진행 상황
+
+- [x] M1 수집·진단: 알림 리스너, 권한 화면, extras 덤프·JSON 내보내기, 손잡이 제스처 시험
+- [ ] M2 저장: 파서 확정, Room, 방 단위 묶기, 중복 제거, 삭제 감지
+- [ ] M3 앱 UI
+- [ ] M4 엣지패널
+- [ ] M5 설정·안정화

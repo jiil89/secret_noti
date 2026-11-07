@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>대화방 기록 보기</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#173DA6}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F4F5F7; font-family: 'Noto Sans KR', system-ui, sans-serif; color: #16181D; display: flex; flex-direction: column">
+
+<div style="background: #FFFFFF; padding: 6px 12px 6px 4px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #E6E8EC">
+<a href="Main.dc.html" aria-label="뒤로" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16181D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+</a>
+<div style="display: flex; flex-direction: column; gap: 1px">
+<span style="font-size: 17px; font-weight: 700">회사 동기 단톡방</span>
+<span style="font-size: 12px; color: #5B6270">카카오톡 · 8명</span>
+</div>
+</div>
+
+<div style="margin: 12px 16px 0; padding: 10px 14px; border-radius: 12px; background: #E8EEFF; color: #1F4FD1; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F4FD1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+알림으로 받은 내용이라 상대방에게 읽음 표시가 안 남아요
+</div>
+
+<div style="flex-grow: 1; overflow: hidden; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+<span style="align-self: center; font-size: 12px; color: #5B6270; padding: 4px 12px; border-radius: 999px; background: #E6E8EC">오늘</span>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; color: #4B5563; font-weight: 500">민수</span>
+<div style="display: flex; align-items: flex-end; gap: 6px"><span style="max-width: 250px; padding: 10px 14px; background: #FFFFFF; border-radius: 4px 18px 18px 18px; font-size: 15px; line-height: 1.45">다들 다음 주 금요일 시간 돼요?</span><span style="font-size: 11px; color: #5B6270">오후 8:31</span></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; color: #4B5563; font-weight: 500">지영</span>
+<div style="display: flex; align-items: flex-end; gap: 6px"><span style="max-width: 250px; padding: 10px 14px; background: #FFFFFF; border-radius: 4px 18px 18px 18px; font-size: 15px; line-height: 1.45">저 가능해요!</span><span style="font-size: 11px; color: #5B6270">오후 8:33</span></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; color: #4B5563; font-weight: 500">현우</span>
+<div style="max-width: 270px; padding: 10px 14px; border-radius: 4px 18px 18px 18px; border: 1px dashed #B8BDC6; background: #FAFAFB; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 12px; color: #5B6270; font-weight: 500">삭제된 메시지 · 원문 보관됨</span>
+<span style="font-size: 15px; line-height: 1.45; color: #3B3F47">저 그날 반차라 조금 늦을 수도 있어요</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; color: #4B5563; font-weight: 500">민수</span>
+<div style="display: flex; align-items: flex-end; gap: 6px"><span style="max-width: 250px; padding: 10px 14px; background: #FFFFFF; border-radius: 4px 18px 18px 18px; font-size: 15px; line-height: 1.45">장소는 강남역이랑 판교 중에 고르면 될 듯</span><span style="font-size: 11px; color: #5B6270">오후 8:40</span></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; color: #4B5563; font-weight: 500">민수</span>
+<div style="display: flex; align-items: flex-end; gap: 6px"><span style="max-width: 250px; padding: 10px 14px; background: #FFFFFF; border-radius: 4px 18px 18px 18px; font-size: 15px; line-height: 1.45">다음 주 금요일 회식 장소 투표 올렸어요</span><span style="font-size: 11px; color: #5B6270">오후 8:47</span></div>
+</div>
+</div>
+
+<div style="background: #FFFFFF; border-top: 1px solid #E6E8EC; padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; color: #5B6270; text-align: center">답장하려면 카카오톡을 열어야 해요. 열면 읽음 처리돼요.</span>
+<button type="button" style="height: 48px; border-radius: 12px; border: 1px solid #D5D8DE; background: #FFFFFF; color: #16181D; font-family: inherit; font-size: 15px; font-weight: 500">카카오톡에서 열기</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
