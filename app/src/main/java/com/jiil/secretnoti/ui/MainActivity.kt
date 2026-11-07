@@ -45,7 +45,7 @@ private fun MainScreen() {
         topBar = {
             Column(Modifier.statusBarsPadding()) {
                 Text(
-                    "노티 엣지 · M1 진단",
+                    "시크릿노티 · M1 진단",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),

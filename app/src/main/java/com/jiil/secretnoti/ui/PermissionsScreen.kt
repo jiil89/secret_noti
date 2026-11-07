@@ -106,7 +106,7 @@ fun PermissionsScreen() {
                 title = "3. 배터리 최적화 제외",
                 body = "절전 기능이 알림 수집을 멈추지 않게 합니다.",
                 granted = state.battery,
-                note = "갤럭시는 추가로: 설정 → 배터리 → 백그라운드 사용 한도 → '절전 예외 앱'에 노티 엣지를 넣어 주세요.",
+                note = "갤럭시는 추가로: 설정 → 배터리 → 백그라운드 사용 한도 → '절전 예외 앱'에 시크릿노티를 넣어 주세요.",
                 actions = listOf(
                     "제외 요청" to {
                         context.launch(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, pkgUri))

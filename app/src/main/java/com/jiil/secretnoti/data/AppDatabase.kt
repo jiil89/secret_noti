@@ -33,13 +33,13 @@ interface DumpDao {
     @Query("SELECT * FROM notification_dump ORDER BY id DESC LIMIT :limit")
     fun observeRecent(limit: Int): Flow<List<NotificationDump>>
 
-    @Query("SELECT * FROM notification_dump WHERE event = 'posted' ORDER BY id DESC LIMIT :limit")
+    @Query("SELECT * FROM notification_dump WHERE event = 'posted' AND title IS NOT NULL ORDER BY id DESC LIMIT :limit")
     fun observeRecentPosted(limit: Int): Flow<List<NotificationDump>>
 
     @Query("SELECT COUNT(*) FROM notification_dump")
     fun observeCount(): Flow<Int>
 
-    @Query("SELECT COUNT(*) FROM notification_dump WHERE event = 'posted' AND receivedAt > :since")
+    @Query("SELECT COUNT(*) FROM notification_dump WHERE event = 'posted' AND title IS NOT NULL AND receivedAt > :since")
     fun observePostedSince(since: Long): Flow<Int>
 
     @Query("SELECT * FROM notification_dump ORDER BY id ASC")

@@ -118,7 +118,15 @@ private fun DumpRow(dump: NotificationDump, expanded: Boolean, onToggle: () -> U
                     color = if (dump.event == "posted") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Text(dump.title ?: "(제목 없음)", fontWeight = FontWeight.Bold)
+            val isSummary = remember(dump.id) { dump.json.contains("\"isGroupSummary\": true") }
+            Text(
+                when {
+                    isSummary -> "그룹 요약 알림 (내용 없음 · 저장 대상 아님)"
+                    else -> dump.title ?: "(제목 없음)"
+                },
+                fontWeight = FontWeight.Bold,
+                color = if (isSummary) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+            )
             Text(dump.text ?: "", maxLines = if (expanded) Int.MAX_VALUE else 2)
             if (expanded) {
                 SelectionContainer {
