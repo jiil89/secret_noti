@@ -1,5 +1,7 @@
 package com.jiil.secretnoti.ui
 
+import com.jiil.secretnoti.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jiil.secretnoti.ui.design.NotiIcons
 
-private val tabs = listOf("권한", "알림 덤프", "손잡이 시험")
+private val tabs = listOf(R.string.route_permissions, R.string.route_notification_dump, R.string.route_handle_test)
 
 /** 진단 도구: 권한 상태·알림 덤프·손잡이 제스처 기록. */
 @Composable
@@ -33,12 +35,12 @@ fun DiagnosticsScreen(onBack: () -> Unit) {
         topBar = {
             Column(Modifier.statusBarsPadding()) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp, top = 4.dp)) {
-                    IconButton(onClick = onBack) { Icon(NotiIcons.chevronLeft, contentDescription = "뒤로") }
-                    Text("진단 도구", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    IconButton(onClick = onBack) { Icon(NotiIcons.chevronLeft, contentDescription = stringResource(R.string.route_back)) }
+                    Text(stringResource(R.string.route_diagnostics), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
                 PrimaryTabRow(selectedTabIndex = tab) {
                     tabs.forEachIndexed { i, title ->
-                        Tab(selected = tab == i, onClick = { tab = i }, text = { Text(title) })
+                        Tab(selected = tab == i, onClick = { tab = i }, text = { Text(stringResource(title)) })
                     }
                 }
             }
@@ -63,7 +65,7 @@ fun BackScaffold(title: String, onBack: () -> Unit, content: @Composable () -> U
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.statusBarsPadding().padding(start = 4.dp, top = 4.dp),
             ) {
-                IconButton(onClick = onBack) { Icon(NotiIcons.chevronLeft, contentDescription = "뒤로") }
+                IconButton(onClick = onBack) { Icon(NotiIcons.chevronLeft, contentDescription = stringResource(R.string.route_back)) }
                 Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
         },

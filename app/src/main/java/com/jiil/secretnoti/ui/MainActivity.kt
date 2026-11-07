@@ -1,5 +1,7 @@
 package com.jiil.secretnoti.ui
 
+import com.jiil.secretnoti.R
+import androidx.compose.ui.res.stringResource
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -127,7 +129,7 @@ private fun AppRoot(requestedRoute: MutableStateFlow<String?>) {
             onOpenPermissions = { route = MainActivity.ROUTE_PERMISSIONS },
             onOpenDiagnostics = { route = MainActivity.ROUTE_DIAGNOSTICS },
         )
-        route == MainActivity.ROUTE_PERMISSIONS -> BackScaffold("권한", onBack = goBack) { PermissionsScreen() }
+        route == MainActivity.ROUTE_PERMISSIONS -> BackScaffold(stringResource(R.string.route_permissions), onBack = goBack) { PermissionsScreen() }
         route == MainActivity.ROUTE_DIAGNOSTICS -> DiagnosticsScreen(onBack = goBack)
         else -> ConversationListRoute(
             onOpenConversation = { route = MainActivity.routeRoom(it) },

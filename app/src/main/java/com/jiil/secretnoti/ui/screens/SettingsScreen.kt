@@ -1,5 +1,9 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import com.jiil.secretnoti.R
+
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -32,6 +36,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
     var keyword by remember { mutableStateOf("") }
     var passwordDialog by remember { mutableStateOf<Boolean?>(null) }
     var pendingRetention by remember(state.retentionDays) { mutableStateOf<Int?>(null) }
+    val positionDescription = stringResource(R.string.settings_screen_position_description)
     val position = state.handlePosition.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: 0.5f
 
     Surface(color = NotiColors.Background) {
@@ -41,16 +46,16 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = actions::back, modifier = Modifier.size(NotiSpacing.button)) {
-                    Icon(NotiIcons.chevronLeft, contentDescription = "뒤로", tint = NotiColors.Body)
+                    Icon(NotiIcons.chevronLeft, contentDescription = stringResource(R.string.settings_screen_back), tint = NotiColors.Body)
                 }
-                Text("설정", style = MaterialTheme.typography.titleLarge, color = NotiColors.Text)
+                Text(stringResource(R.string.settings_screen_title), style = MaterialTheme.typography.titleLarge, color = NotiColors.Text)
             }
             Column(
                 Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(NotiSpacing.content),
                 verticalArrangement = Arrangement.spacedBy(NotiSpacing.panel),
             ) {
                 SettingsPermissions(state.permissions, actions::openPermissions)
-                SettingsSection("대상 앱") {
+                SettingsSection(stringResource(R.string.settings_screen_apps)) {
                     val suggested = state.apps.filter { it.suggested }
                     val others = state.apps.filterNot { it.suggested }
                     (suggested + if (expandedApps) others else emptyList()).forEach { app ->
@@ -59,15 +64,15 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             leading = { AppIcon(app.packageName, 24.dp) })
                     }
                     if (others.isNotEmpty()) TextButton(onClick = { expandedApps = !expandedApps }) {
-                        Text(if (expandedApps) "다른 앱 접기" else "다른 앱 더 보기 (${others.size})")
+                        Text(if (expandedApps) stringResource(R.string.settings_screen_collapse_apps) else pluralStringResource(R.plurals.settings_screen_more_apps, others.size, others.size))
                     }
-                    SettingsHelper("메시지 알림을 보내는 앱이면 대부분 쓸 수 있어요. 켠 앱의 알림만 저장해요.")
+                    SettingsHelper(stringResource(R.string.settings_screen_apps_hint))
                 }
                 HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection("엣지 손잡이") {
-                    SettingsSwitchRow("손잡이 표시", checked = state.handleEnabled,
+                SettingsSection(stringResource(R.string.settings_screen_handle)) {
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_show_handle), checked = state.handleEnabled,
                         onCheckedChange = actions::setHandleEnabled)
-                    Text("표시 방향", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.settings_screen_side), style = MaterialTheme.typography.titleSmall)
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         listOf(true, false).forEachIndexed { index, onLeft ->
                             SegmentedButton(
@@ -77,7 +82,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                                 shape = SegmentedButtonDefaults.itemShape(index, 2),
                                 modifier = Modifier.heightIn(min = NotiSpacing.button),
                                 icon = {},
-                            ) { Text(if (onLeft) "왼쪽" else "오른쪽") }
+                            ) { Text(if (onLeft) stringResource(R.string.settings_screen_left) else stringResource(R.string.settings_screen_right)) }
                         }
                     }
                     Surface(shape = NotiShapes.banner, color = NotiColors.DetailBackground) {
@@ -88,25 +93,25 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         ) {
                             HandlePreview(state.handleOnLeft, position, state.handleSize, state.handleEnabled)
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text("손잡이 미리보기", style = MaterialTheme.typography.labelLarge)
-                                SettingsHelper("갤럭시 엣지 패널 손잡이와 겹치지 않는 위치로 맞춰 주세요.")
+                                Text(stringResource(R.string.settings_screen_handle_preview), style = MaterialTheme.typography.labelLarge)
+                                SettingsHelper(stringResource(R.string.settings_screen_handle_hint))
                             }
                         }
                     }
-                    Text("세로 위치", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.settings_screen_position), style = MaterialTheme.typography.titleSmall)
                     Slider(
                         value = position,
                         onValueChange = actions::setHandlePosition,
                         valueRange = 0f..1f,
                         enabled = state.handleEnabled,
                         modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)
-                            .semantics { contentDescription = "손잡이 세로 위치, 위에서 아래로" },
+                            .semantics { contentDescription = positionDescription },
                     )
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        SettingsHelper("위")
-                        SettingsHelper("아래")
+                        SettingsHelper(stringResource(R.string.settings_screen_top))
+                        SettingsHelper(stringResource(R.string.settings_screen_bottom))
                     }
-                    Text("손잡이 크기", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.settings_screen_size), style = MaterialTheme.typography.titleSmall)
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         HandleSize.entries.forEachIndexed { index, handleSize ->
                             SegmentedButton(
@@ -116,25 +121,25 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                                 shape = SegmentedButtonDefaults.itemShape(index, HandleSize.entries.size),
                                 modifier = Modifier.heightIn(min = NotiSpacing.button),
                                 icon = {},
-                            ) { Text(handleSize.label) }
+                            ) { Text(stringResource(handleSize.labelRes)) }
                         }
                     }
                     SettingsSwitchRow(
-                        label = "뒤로 가기 제스처와 겹치지 않게",
-                        detail = "손잡이를 밀 때 뒤로 가기가 실행되면 켜 두세요",
+                        label = stringResource(R.string.settings_screen_gesture),
+                        detail = stringResource(R.string.settings_screen_gesture_hint),
                         checked = state.gestureExclusion,
                         onCheckedChange = actions::setGestureExclusion,
                         enabled = state.handleEnabled,
                     )
                 }
                 HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection("개인정보 보호") {
-                    SettingsSwitchRow("앱 잠금", state.lockEnabled, actions::setLock,
+                SettingsSection(stringResource(R.string.settings_screen_privacy)) {
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_lock), state.lockEnabled, actions::setLock,
                         enabled = state.lockAvailable,
-                        detail = if (state.lockAvailable) "지문·얼굴·화면 잠금으로 열어요" else "폰에 화면 잠금을 먼저 설정하세요")
-                    SettingsSwitchRow("엣지패널·위젯에서 내용 가리기", state.hidePreviews, actions::setHidePreviews)
+                        detail = if (state.lockAvailable) stringResource(R.string.settings_screen_lock_hint) else stringResource(R.string.settings_screen_lock_unavailable))
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_hide_previews), state.hidePreviews, actions::setHidePreviews)
                     if (state.hiddenConversations.isNotEmpty()) {
-                        Text("숨긴 대화방", style = MaterialTheme.typography.titleSmall)
+                        Text(stringResource(R.string.settings_screen_hidden), style = MaterialTheme.typography.titleSmall)
                         state.hiddenConversations.forEach { conversation ->
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -142,57 +147,58 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                                     Text(conversation.title, style = MaterialTheme.typography.bodyLarge)
                                     SettingsHelper(conversation.appLabel)
                                 }
-                                TextButton(onClick = { actions.unhideConversation(conversation.id) }) { Text("다시 보이기") }
+                                TextButton(onClick = { actions.unhideConversation(conversation.id) }) { Text(stringResource(R.string.settings_screen_unhide)) }
                             }
                         }
                     }
                 }
                 HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection("삭제된 메시지") {
-                    SettingsSwitchRow("삭제되면 알림 받기", state.deletionAlerts, actions::setDeletionAlerts)
+                SettingsSection(stringResource(R.string.settings_screen_deleted_messages)) {
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_deletion_alerts), state.deletionAlerts, actions::setDeletionAlerts)
                     if (state.deletionAlerts && !state.notificationPermission) {
                         Surface(color = NotiColors.NoticeBackground, shape = NotiShapes.banner) {
                             Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                                Text("삭제 알림을 받으려면 알림 권한이 필요해요", color = NotiColors.NoticeForeground)
-                                TextButton(onClick = actions::requestNotificationPermission) { Text("알림 권한 허용") }
+                                Text(stringResource(R.string.settings_screen_notification_required), color = NotiColors.NoticeForeground)
+                                TextButton(onClick = actions::requestNotificationPermission) { Text(stringResource(R.string.settings_screen_allow_notifications)) }
                             }
                         }
                     }
                 }
-                SettingsSection("사진") {
-                    SettingsSwitchRow("사진 미리보기 저장", state.savePhotos, actions::setSavePhotos,
-                        detail = "알림에 사진이 함께 오면 미리보기를 폰 안에 저장해요")
+                SettingsSection(stringResource(R.string.settings_screen_photos)) {
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_save_photos), state.savePhotos, actions::setSavePhotos,
+                        detail = stringResource(R.string.settings_screen_photos_hint))
                 }
-                SettingsSection("키워드") {
-                    SettingsHelper("이 단어가 들어간 메시지를 강조해요")
+                SettingsSection(stringResource(R.string.settings_screen_keywords)) {
+                    SettingsHelper(stringResource(R.string.settings_screen_keywords_hint))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         state.keywords.forEach { word ->
+                            val removeDescription = stringResource(R.string.settings_screen_remove_keyword, word)
                             InputChip(selected = true, onClick = { actions.removeKeyword(word) },
                                 label = { Text(word) }, modifier = Modifier.heightIn(min = 48.dp)
-                                    .semantics { contentDescription = "${word} 삭제" },
+                                    .semantics { contentDescription = removeDescription },
                                 trailingIcon = { Icon(NotiIcons.close, null, Modifier.size(16.dp)) })
                         }
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(keyword, { keyword = it }, Modifier.weight(1f),
-                            label = { Text("키워드") }, singleLine = true)
+                            label = { Text(stringResource(R.string.settings_screen_keywords)) }, singleLine = true)
                         Button(onClick = { actions.addKeyword(keyword.trim()); keyword = "" },
                             enabled = keyword.isNotBlank() && state.keywords.none { it.equals(keyword.trim(), ignoreCase = true) }) {
-                            Text("추가")
+                            Text(stringResource(R.string.settings_screen_add))
                         }
                     }
                 }
-                SettingsSection("화면") {
+                SettingsSection(stringResource(R.string.settings_screen_appearance)) {
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         ThemeMode.entries.forEachIndexed { index, mode ->
                             SegmentedButton(selected = state.themeMode == mode, onClick = { actions.setThemeMode(mode) },
                                 shape = SegmentedButtonDefaults.itemShape(index, ThemeMode.entries.size), icon = {},
-                                modifier = Modifier.heightIn(min = 48.dp)) { Text(mode.label) }
+                                modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(mode.labelRes)) }
                         }
                     }
                 }
                 HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection("보관 기간") {
+                SettingsSection(stringResource(R.string.settings_screen_retention)) {
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(NotiSpacing.small),
                         verticalArrangement = Arrangement.spacedBy(NotiSpacing.tiny),
@@ -209,25 +215,25 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                                         }
                                     }
                                 },
-                                label = { Text(when (days) { 0 -> "계속 보관"; 365 -> "1년"; else -> "${days}일" }) },
+                                label = { Text(when (days) { 0 -> stringResource(R.string.settings_screen_forever); 365 -> stringResource(R.string.settings_screen_year); else -> pluralStringResource(R.plurals.settings_screen_days, days, days) }) },
                                 modifier = Modifier.heightIn(min = NotiSpacing.button),
                             )
                         }
                     }
-                    SettingsHelper("기간이 지난 메시지는 자동으로 지워져요.")
+                    SettingsHelper(stringResource(R.string.settings_screen_retention_hint))
                 }
-                SettingsSection("백업") {
-                    SettingsHelper("백업 파일은 비밀번호로 암호화돼요. 비밀번호를 잊으면 복원할 수 없어요.")
+                SettingsSection(stringResource(R.string.settings_screen_backup)) {
+                    SettingsHelper(stringResource(R.string.settings_screen_backup_hint))
                     OutlinedButton(onClick = { passwordDialog = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                        Text("백업 파일 만들기")
+                        Text(stringResource(R.string.settings_screen_create_backup))
                     }
                     OutlinedButton(onClick = { passwordDialog = false }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                        Text("백업에서 복원")
+                        Text(stringResource(R.string.settings_screen_restore_backup))
                     }
                 }
                 TextButton(onClick = actions::openDiagnostics,
                     modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)) {
-                    Text("진단 도구 (알림 덤프·제스처 기록)", color = NotiColors.Secondary)
+                    Text(stringResource(R.string.settings_screen_diagnostics), color = NotiColors.Secondary)
                 }
             }
         }
@@ -243,17 +249,17 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
     pendingRetention?.let { days ->
         AlertDialog(
             onDismissRequest = { pendingRetention = null },
-            title = { Text("보관 기간을 줄일까요?") },
-            text = { Text("${days}일보다 오래된 메시지가 지금 지워져요. 계속할까요?") },
+            title = { Text(stringResource(R.string.settings_screen_shorten_retention)) },
+            text = { Text(pluralStringResource(R.plurals.settings_screen_retention_warning, days, days)) },
             confirmButton = {
                 TextButton(onClick = {
                     pendingRetention = null
                     actions.setRetention(days)
-                }, modifier = Modifier.heightIn(min = NotiSpacing.button)) { Text("지우기") }
+                }, modifier = Modifier.heightIn(min = NotiSpacing.button)) { Text(stringResource(R.string.settings_screen_delete)) }
             },
             dismissButton = {
                 TextButton(onClick = { pendingRetention = null },
-                    modifier = Modifier.heightIn(min = NotiSpacing.button)) { Text("취소") }
+                    modifier = Modifier.heightIn(min = NotiSpacing.button)) { Text(stringResource(R.string.settings_screen_cancel)) }
             },
         )
     }
@@ -304,9 +310,9 @@ private fun SettingsSwitchRow(
 @Composable
 private fun SettingsPermissions(permissions: PermissionSummaryUi, onOpenPermissions: () -> Unit) {
     val missing = buildList {
-        if (!permissions.notificationAccess) add("알림 접근")
-        if (!permissions.overlay) add("다른 앱 위에 표시")
-        if (!permissions.batteryExempt) add("배터리 최적화 제외")
+        if (!permissions.notificationAccess) add(stringResource(R.string.settings_screen_notification_access))
+        if (!permissions.overlay) add(stringResource(R.string.settings_screen_overlay))
+        if (!permissions.batteryExempt) add(stringResource(R.string.settings_screen_battery))
     }
     Surface(
         shape = NotiShapes.banner,
@@ -318,15 +324,15 @@ private fun SettingsPermissions(permissions: PermissionSummaryUi, onOpenPermissi
                 verticalAlignment = Alignment.CenterVertically) {
                 Icon(NotiIcons.info, null, Modifier.size(20.dp),
                     tint = if (permissions.allGranted) NotiColors.Secondary else NotiColors.NoticeForeground)
-                Text(if (permissions.allGranted) "권한 모두 허용됨" else "권한 설정이 필요해요",
+                Text(if (permissions.allGranted) stringResource(R.string.settings_screen_permissions_granted) else stringResource(R.string.settings_screen_permissions_needed),
                     style = MaterialTheme.typography.titleSmall,
                     color = if (permissions.allGranted) NotiColors.Body else NotiColors.NoticeForeground)
             }
             if (!permissions.allGranted) {
-                Text("허용 필요: ${missing.joinToString(" / ")}",
+                Text(stringResource(R.string.settings_screen_missing_permissions, missing.joinToString(" / ")),
                     style = MaterialTheme.typography.bodyMedium, color = NotiColors.NoticeForeground)
                 TextButton(onClick = onOpenPermissions, modifier = Modifier.heightIn(min = NotiSpacing.button)) {
-                    Text("권한 설정", color = NotiColors.NoticeForeground)
+                    Text(stringResource(R.string.settings_screen_permissions_settings), color = NotiColors.NoticeForeground)
                 }
             }
         }
@@ -336,8 +342,10 @@ private fun SettingsPermissions(permissions: PermissionSummaryUi, onOpenPermissi
 @Composable
 private fun HandlePreview(onLeft: Boolean, position: Float, handleSize: HandleSize, enabled: Boolean) {
     val description = if (enabled) {
-        "${if (onLeft) "왼쪽" else "오른쪽"} 손잡이, 위에서 ${(position * 100).toInt()}%, ${handleSize.label}"
-    } else "손잡이 숨김"
+        stringResource(R.string.settings_screen_handle_description,
+            stringResource(if (onLeft) R.string.settings_screen_left else R.string.settings_screen_right),
+            (position * 100).toInt(), stringResource(handleSize.labelRes))
+    } else stringResource(R.string.settings_screen_handle_hidden)
     val background = NotiColors.Background
     val secondary = NotiColors.Secondary
     val accent = NotiColors.Accent
@@ -364,30 +372,30 @@ private fun BackupPasswordDialog(backup: Boolean, onDismiss: () -> Unit, onConfi
     var confirmation by remember { mutableStateOf("") }
     var submitted by remember { mutableStateOf(false) }
     val error = when {
-        backup && password.length < 6 -> "비밀번호는 6자 이상 입력하세요"
-        backup && password != confirmation -> "비밀번호가 일치하지 않아요"
-        !backup && password.isEmpty() -> "비밀번호를 입력하세요"
+        backup && password.length < 6 -> stringResource(R.string.settings_screen_password_length)
+        backup && password != confirmation -> stringResource(R.string.settings_screen_password_mismatch)
+        !backup && password.isEmpty() -> stringResource(R.string.settings_screen_password_required)
         else -> null
     }
     AlertDialog(onDismissRequest = onDismiss,
-        title = { Text(if (backup) "백업 파일 만들기" else "백업에서 복원") },
+        title = { Text(if (backup) stringResource(R.string.settings_screen_create_backup) else stringResource(R.string.settings_screen_restore_backup)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(password, { password = it }, label = { Text("비밀번호") }, singleLine = true,
+                OutlinedTextField(password, { password = it }, label = { Text(stringResource(R.string.settings_screen_password)) }, singleLine = true,
                     visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     isError = submitted && error != null)
-                if (backup) OutlinedTextField(confirmation, { confirmation = it }, label = { Text("비밀번호 확인") }, singleLine = true,
+                if (backup) OutlinedTextField(confirmation, { confirmation = it }, label = { Text(stringResource(R.string.settings_screen_password_confirmation)) }, singleLine = true,
                     visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     isError = submitted && password != confirmation)
                 if (submitted && error != null) Text(error, color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium)
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("취소") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.settings_screen_cancel)) } },
         confirmButton = {
             TextButton(onClick = {
                 submitted = true
                 if (error == null) onConfirm(password)
-            }) { Text(if (backup) "백업" else "복원") }
+            }) { Text(if (backup) stringResource(R.string.settings_screen_backup) else stringResource(R.string.settings_screen_restore)) }
         })
 }

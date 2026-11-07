@@ -1,5 +1,8 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import com.jiil.secretnoti.R
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -16,11 +19,11 @@ fun LockScreen(onUnlock: () -> Unit, error: String?) {
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Icon(NotiIcons.lock, null, Modifier.size(48.dp), tint = NotiColors.Accent)
             Spacer(Modifier.height(24.dp))
-            Text("시크릿노티", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.lock_screen_app_name), style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(8.dp))
-            Text("잠겨 있어요", color = NotiColors.Secondary)
+            Text(stringResource(R.string.lock_screen_locked), color = NotiColors.Secondary)
             Spacer(Modifier.height(24.dp))
-            Button(onClick = onUnlock, modifier = Modifier.heightIn(min = 48.dp)) { Text("잠금 해제") }
+            Button(onClick = onUnlock, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.lock_screen_unlock)) }
             if (error != null) Text(error, Modifier.padding(top = 16.dp),
                 color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
         }

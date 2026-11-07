@@ -1,5 +1,7 @@
 package com.jiil.secretnoti.ui.components
 
+import com.jiil.secretnoti.R
+import androidx.compose.ui.res.stringResource
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -80,11 +82,11 @@ fun MessagePhoto(path: String) {
     var expanded by remember(path) { mutableStateOf(false) }
     val bitmap = photo.bitmap
     if (bitmap != null) {
-        Image(bitmap, "사진 크게 보기", Modifier.width(220.dp).heightIn(max = 220.dp)
+        Image(bitmap, stringResource(R.string.messages_photo_expand), Modifier.width(220.dp).heightIn(max = 220.dp)
             .aspectRatio((bitmap.width.toFloat() / bitmap.height).coerceIn(0.5f, 2f))
             .clip(NotiShapes.banner).clickable { expanded = true }, contentScale = ContentScale.Fit)
     } else {
-        Text(if (photo.loading) "사진 불러오는 중" else "사진을 불러올 수 없어요",
+        Text(if (photo.loading) stringResource(R.string.messages_photo_loading) else stringResource(R.string.messages_photo_unavailable),
             Modifier.padding(vertical = 16.dp), color = NotiColors.Secondary,
             style = MaterialTheme.typography.bodyMedium)
     }
@@ -94,10 +96,10 @@ fun MessagePhoto(path: String) {
             val full = filePhoto(path, 2048)
             Box(Modifier.fillMaxSize().background(Color.Black).safeDrawingPadding()) {
                 val display = full.bitmap ?: bitmap
-                if (display != null) Image(display, "저장된 사진", Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                if (display != null) Image(display, stringResource(R.string.messages_photo_saved), Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
                 IconButton(onClick = { expanded = false }, modifier = Modifier.align(Alignment.TopEnd)
                     .padding(8.dp).background(Color.Black, NotiShapes.pill)) {
-                    Icon(NotiIcons.close, "닫기", tint = Color.White)
+                    Icon(NotiIcons.close, stringResource(R.string.messages_photo_close), tint = Color.White)
                 }
             }
         }

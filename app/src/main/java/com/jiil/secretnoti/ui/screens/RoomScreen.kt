@@ -1,5 +1,8 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import com.jiil.secretnoti.R
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -35,7 +38,7 @@ fun RoomScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 IconButton(onBack, Modifier.size(NotiSpacing.button)) {
-                    Icon(NotiIcons.chevronLeft, "뒤로", Modifier.size(24.dp))
+                    Icon(NotiIcons.chevronLeft, stringResource(R.string.room_screen_back), Modifier.size(24.dp))
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                     Text(title, style = MaterialTheme.typography.titleMedium,
@@ -66,13 +69,13 @@ fun RoomScreen(
                 HorizontalDivider(color = NotiColors.Divider)
                 Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("답장하려면 ${appLabel} 앱을 열어야 해요. 열면 읽음 처리돼요.",
+                    Text(stringResource(R.string.room_screen_reply_hint, appLabel),
                         Modifier.fillMaxWidth(), color = NotiColors.Secondary,
                         style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
                     OutlinedButton(onOpenInApp, Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         shape = NotiShapes.banner, border = BorderStroke(1.dp, NotiColors.Outline),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = NotiColors.Text)) {
-                        Text("${appLabel}에서 열기", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(R.string.room_screen_open, appLabel), style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }

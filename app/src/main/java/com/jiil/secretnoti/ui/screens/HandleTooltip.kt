@@ -1,5 +1,8 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import com.jiil.secretnoti.R
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -17,7 +20,7 @@ fun HandleTooltip() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Icon(NotiIcons.chevronLeft, null, Modifier.size(14.dp))
-            Text("살짝 밀어서 새 메시지 보기", style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.handle_tooltip_swipe), style = MaterialTheme.typography.labelMedium)
         }
     }
 }

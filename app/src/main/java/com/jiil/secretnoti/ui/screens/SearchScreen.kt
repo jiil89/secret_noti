@@ -1,5 +1,9 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.jiil.secretnoti.R
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,20 +34,20 @@ fun SearchScreen(
     Surface(color = NotiColors.Background) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
             Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) { Icon(NotiIcons.chevronLeft, "뒤로") }
+                IconButton(onClick = onBack) { Icon(NotiIcons.chevronLeft, stringResource(R.string.search_screen_back)) }
                 TextField(query, onQueryChange, Modifier.weight(1f).focusRequester(focus),
-                    placeholder = { Text("메시지 검색") }, singleLine = true,
+                    placeholder = { Text(stringResource(R.string.search_screen_placeholder)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     trailingIcon = {
                         if (query.isNotEmpty()) IconButton(onClick = { onQueryChange("") }) {
-                            Icon(NotiIcons.close, "검색어 지우기")
+                            Icon(NotiIcons.close, stringResource(R.string.search_screen_clear))
                         }
                     })
             }
             if (q.isEmpty() || results.isEmpty()) {
                 Box(Modifier.weight(1f).fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    Text(if (q.isEmpty()) "보낸 사람·내용으로 찾을 수 있어요"
-                        else "‘${q}’와(과) 일치하는 메시지가 없어요", color = NotiColors.Secondary,
+                    Text(if (q.isEmpty()) stringResource(R.string.search_screen_hint)
+                        else stringResource(R.string.search_screen_no_results, q), color = NotiColors.Secondary,
                         textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyLarge)
                 }
             } else {
@@ -56,16 +60,16 @@ fun SearchScreen(
                                 AppIcon(result.packageName, 24.dp)
                                 Text(result.roomTitle, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
                                     maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text(formatRelativeTime(result.at), color = NotiColors.Secondary,
+                                Text(formatRelativeTime(LocalContext.current, result.at), color = NotiColors.Secondary,
                                     style = MaterialTheme.typography.labelSmall)
                             }
                             SourceLabel(result.appLabel)
-                            Text(highlightedText(if (result.isMine) "나" else result.sender ?: "알 수 없는 보낸 사람", keywords + q),
+                            Text(highlightedText(if (result.isMine) stringResource(R.string.search_screen_me) else result.sender ?: stringResource(R.string.search_screen_unknown_sender), keywords + q),
                                 style = MaterialTheme.typography.labelMedium, color = NotiColors.Secondary)
                             val snippet = remember(result.text, q) { searchSnippet(result.text, q) }
                             Text(highlightedText(snippet, keywords + q), color = NotiColors.Body,
                                 style = MaterialTheme.typography.bodyLarge, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                            if (result.deletedBySender) MessageTag("삭제된 메시지 · 원문 보관됨")
+                            if (result.deletedBySender) MessageTag(stringResource(R.string.search_screen_deleted))
                             HorizontalDivider(Modifier.padding(top = 8.dp), color = NotiColors.Divider)
                         }
                     }

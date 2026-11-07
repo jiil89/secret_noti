@@ -1,5 +1,8 @@
 package com.jiil.secretnoti.ui
 
+import com.jiil.secretnoti.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import android.content.Context
 import android.net.Uri
 import android.widget.Toast
@@ -65,7 +68,7 @@ fun DumpScreen() {
             val n = runCatching { exportDumps(context, uri) }
             Toast.makeText(
                 context,
-                n.fold({ "$it 건을 저장했어요" }, { "저장 실패: ${it.message}" }),
+                n.fold({ context.resources.getQuantityString(R.plurals.route_dump_saved, it, it) }, { context.getString(R.string.route_dump_failed, it.message ?: context.getString(R.string.route_unknown_error)) }),
                 Toast.LENGTH_SHORT,
             ).show()
         }
@@ -75,21 +78,20 @@ fun DumpScreen() {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "카톡 1:1·단톡·사진·이모티콘·삭제, Teams 1:1·그룹·채널, 문자를 받아본 뒤 " +
-                        "'JSON 내보내기'로 저장해서 PC로 옮겨 주세요. 이 샘플로 파서를 확정합니다.",
+                    stringResource(R.string.route_dump_help),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("대상 앱 외 모든 알림도 덤프", Modifier.weight(1f))
+                    Text(stringResource(R.string.route_dump_all), Modifier.weight(1f))
                     Switch(checked = dumpAll, onCheckedChange = { Prefs.dumpAllApps.value = it })
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilledTonalButton(onClick = {
                         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
                         exportLauncher.launch("noti-dumps-$stamp.json")
-                    }) { Text("JSON 내보내기 ($count)") }
-                    OutlinedButton(onClick = { scope.launch(Dispatchers.IO) { dao.clear() } }) { Text("모두 지우기") }
+                    }) { Text(pluralStringResource(R.plurals.route_export_json, count, count)) }
+                    OutlinedButton(onClick = { scope.launch(Dispatchers.IO) { dao.clear() } }) { Text(stringResource(R.string.route_clear_all)) }
                 }
             }
         }
@@ -113,7 +115,7 @@ private fun DumpRow(dump: NotificationDump, expanded: Boolean, onToggle: () -> U
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    if (dump.event == "posted") "게시" else "제거",
+                    if (dump.event == "posted") stringResource(R.string.route_posted) else stringResource(R.string.route_removed),
                     style = MaterialTheme.typography.labelSmall,
                     color = if (dump.event == "posted") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -121,8 +123,8 @@ private fun DumpRow(dump: NotificationDump, expanded: Boolean, onToggle: () -> U
             val isSummary = remember(dump.id) { dump.json.contains("\"isGroupSummary\": true") }
             Text(
                 when {
-                    isSummary -> "그룹 요약 알림 (내용 없음 · 저장 대상 아님)"
-                    else -> dump.title ?: "(제목 없음)"
+                    isSummary -> stringResource(R.string.route_group_summary)
+                    else -> dump.title ?: stringResource(R.string.route_no_title)
                 },
                 fontWeight = FontWeight.Bold,
                 color = if (isSummary) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,

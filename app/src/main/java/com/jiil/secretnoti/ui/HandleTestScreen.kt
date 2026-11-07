@@ -1,5 +1,7 @@
 package com.jiil.secretnoti.ui
 
+import com.jiil.secretnoti.R
+import androidx.compose.ui.res.stringResource
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -51,33 +53,29 @@ fun HandleTestScreen() {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            "가장자리 스와이프가 시스템 '뒤로 가기' 제스처와 겹치는지 확인하는 시험입니다.",
+            stringResource(R.string.route_handle_test_help),
             style = MaterialTheme.typography.bodyMedium,
         )
-        if (!connected) Warning("손잡이는 알림 리스너 안에서 실행돼요. '권한' 탭에서 알림 접근 권한을 먼저 허용하세요.")
-        if (!canDraw) Warning("'다른 앱 위에 표시' 권한이 필요해요.")
+        if (!connected) Warning(stringResource(R.string.route_handle_listener_warning))
+        if (!canDraw) Warning(stringResource(R.string.route_handle_overlay_warning))
 
-        PrefSwitch("손잡이 표시", Prefs.overlayEnabled)
-        PrefSwitch("시스템 제스처 예외 영역 사용 (Android 10+)", Prefs.gestureExclusion)
-        PrefSwitch("왼쪽 가장자리에 두기", Prefs.handleOnLeft)
-        Text("세로 위치")
+        PrefSwitch(stringResource(R.string.route_show_handle), Prefs.overlayEnabled)
+        PrefSwitch(stringResource(R.string.route_gesture_exclusion), Prefs.gestureExclusion)
+        PrefSwitch(stringResource(R.string.route_handle_left), Prefs.handleOnLeft)
+        Text(stringResource(R.string.route_vertical_position))
         Slider(value = handleY, onValueChange = { Prefs.handleY.value = it })
 
-        Text("시험 순서", fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.route_test_steps), fontWeight = FontWeight.Bold)
         Text(
-            "1. 제스처 내비게이션에서 다른 앱(유튜브 등)을 띄우고 손잡이를 안쪽으로 밀기\n" +
-                "2. 손잡이를 탭하기\n" +
-                "3. '예외 영역'을 끄고 1~2 반복\n" +
-                "4. 버튼 내비게이션으로 바꿔서 반복\n" +
-                "CANCEL이 찍히면 시스템이 제스처를 가져간 것입니다.",
+            stringResource(R.string.route_handle_test_steps),
             style = MaterialTheme.typography.bodySmall,
         )
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("제스처 기록", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            TextButton(onClick = GestureLog::clear) { Text("지우기") }
+            Text(stringResource(R.string.route_gesture_log), fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            TextButton(onClick = GestureLog::clear) { Text(stringResource(R.string.route_clear)) }
         }
-        if (log.isEmpty()) Text("아직 기록이 없어요.", style = MaterialTheme.typography.bodySmall)
+        if (log.isEmpty()) Text(stringResource(R.string.route_empty_log), style = MaterialTheme.typography.bodySmall)
         log.forEach { Text("${timeFormat.format(Date(it.at))}  ${it.message}", style = MaterialTheme.typography.bodySmall) }
     }
 }

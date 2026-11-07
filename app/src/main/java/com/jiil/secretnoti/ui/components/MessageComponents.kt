@@ -1,5 +1,6 @@
 package com.jiil.secretnoti.ui.components
 
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -12,6 +13,9 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import com.jiil.secretnoti.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,12 +48,13 @@ fun InitialAvatar(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun UnreadBadge(count: Int, modifier: Modifier = Modifier) {
     if (count <= 0) return
+    val description = pluralStringResource(R.plurals.messages_unread, count, count)
     Box(modifier.heightIn(min = 20.dp).widthIn(min = 20.dp)
         .background(NotiColors.Accent, NotiShapes.pill)
         .padding(horizontal = 6.dp, vertical = 2.dp)
-        .clearAndSetSemantics { contentDescription = "이 앱에서 확인하지 않은 메시지 ${count}개" },
+        .clearAndSetSemantics { contentDescription = description },
         contentAlignment = Alignment.Center) {
-        Text(if (count > 99) "99+" else count.toString(), color = NotiColors.OnAccent,
+        Text(if (count > 99) stringResource(R.string.messages_badge_overflow) else count.toString(), color = NotiColors.OnAccent,
             style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
     }
 }
@@ -65,7 +70,7 @@ fun AppFilterChips(
     modifier: Modifier = Modifier,
 ) {
     if (availableApps.size < 2) return
-    val filters = listOf(null to "전체") + availableApps.map { it.packageName to it.label }
+    val filters = listOf(null to stringResource(R.string.messages_filter_all)) + availableApps.map { it.packageName to it.label }
     Row(modifier.horizontalScroll(rememberScrollState()).selectableGroup(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         filters.forEach { (packageName, label) ->
@@ -91,7 +96,7 @@ fun NoticeChip(modifier: Modifier = Modifier) {
         .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Icon(NotiIcons.eyeOff, null, Modifier.size(14.dp), tint = NotiColors.NoticeForeground)
-        Text("읽음 표시 안 남음", color = NotiColors.NoticeForeground, style = MaterialTheme.typography.labelMedium)
+        Text(stringResource(R.string.messages_no_read_receipt), color = NotiColors.NoticeForeground, style = MaterialTheme.typography.labelMedium)
     }
 }
 
@@ -101,7 +106,7 @@ fun NoticeBanner(modifier: Modifier = Modifier) {
         .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Icon(NotiIcons.eyeOff, null, Modifier.size(16.dp), tint = NotiColors.NoticeForeground)
-        Text("알림으로 받은 내용이라 상대방에게 읽음 표시가 안 남아요",
+        Text(stringResource(R.string.messages_notice),
             color = NotiColors.NoticeForeground, style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium)
     }
@@ -117,7 +122,7 @@ fun ConversationRow(
 ) {
     Row(modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
         .combinedClickable(onClick = onClick, onLongClick = onLongClick,
-            onLongClickLabel = "대화방 관리", role = Role.Button)
+            onLongClickLabel = stringResource(R.string.messages_manage_conversation), role = Role.Button)
         .padding(horizontal = 4.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box {
@@ -128,16 +133,16 @@ fun ConversationRow(
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (conversation.isPinned) Icon(NotiIcons.pin, "상단 고정됨", Modifier.size(14.dp), tint = NotiColors.Secondary)
+                if (conversation.isPinned) Icon(NotiIcons.pin, stringResource(R.string.messages_pinned), Modifier.size(14.dp), tint = NotiColors.Secondary)
                 Text(conversation.title, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(formatRelativeTime(conversation.lastAt), style = MaterialTheme.typography.labelSmall,
+                Text(formatRelativeTime(LocalContext.current, conversation.lastAt), style = MaterialTheme.typography.labelSmall,
                     color = NotiColors.Secondary)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val preview = if (conversation.previewHidden) "잠금 중 · 열어서 확인"
+                val preview = if (conversation.previewHidden) stringResource(R.string.preview_locked)
                 else if (conversation.isGroup)
-                    "${conversation.lastSender?.takeIf { it.isNotBlank() } ?: "나"}: ${conversation.preview}"
+                    stringResource(R.string.messages_sender_preview, conversation.lastSender?.takeIf { it.isNotBlank() } ?: stringResource(R.string.me), conversation.preview)
                 else conversation.preview
                 Text(preview, Modifier.weight(1f), color = if (conversation.previewHidden) NotiColors.Secondary else NotiColors.Body,
                     style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -145,8 +150,8 @@ fun ConversationRow(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 SourceLabel(conversation.appLabel, Modifier.weight(1f, fill = false))
-                if (conversation.deletedCount > 0) MessageTag("삭제 ${conversation.deletedCount}")
-                if (conversation.hasKeyword) MessageTag("키워드", accent = true)
+                if (conversation.deletedCount > 0) MessageTag(pluralStringResource(R.plurals.messages_deleted_count, conversation.deletedCount, conversation.deletedCount))
+                if (conversation.hasKeyword) MessageTag(stringResource(R.string.messages_keyword), accent = true)
             }
         }
     }
@@ -165,7 +170,7 @@ fun MessageBubble(message: MessageUi, isGroup: Boolean, modifier: Modifier = Mod
         horizontalAlignment = if (message.isMine) Alignment.End else Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(4.dp)) {
         if (isGroup && !message.isMine) {
-            Text(message.sender ?: "알 수 없는 보낸 사람", color = NotiColors.Secondary,
+            Text(message.sender ?: stringResource(R.string.messages_unknown_sender), color = NotiColors.Secondary,
                 style = MaterialTheme.typography.labelMedium)
         }
         Row(Modifier.fillMaxWidth(),
@@ -190,7 +195,7 @@ fun MessageBubble(message: MessageUi, isGroup: Boolean, modifier: Modifier = Mod
                 .then(border).background(background, shape).padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (message.deletedBySender) {
-                    Text("삭제된 메시지 · 원문 보관됨", color = NotiColors.Secondary,
+                    Text(stringResource(R.string.messages_deleted_original_saved), color = NotiColors.Secondary,
                         style = MaterialTheme.typography.labelMedium)
                 }
                 // The UI contract supplies preserved original content in text.
@@ -213,7 +218,7 @@ fun MessageBubble(message: MessageUi, isGroup: Boolean, modifier: Modifier = Mod
 @Composable
 fun DateDivider(date: LocalDate, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Text(formatDateLabel(date), Modifier.background(NotiColors.Divider, NotiShapes.pill)
+        Text(formatDateLabel(LocalContext.current, date), Modifier.background(NotiColors.Divider, NotiShapes.pill)
             .padding(horizontal = 12.dp, vertical = 4.dp),
             color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall)
     }
@@ -224,8 +229,8 @@ fun EmptyConversations(modifier: Modifier = Modifier) {
     Column(modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Icon(NotiIcons.message, null, Modifier.size(32.dp), tint = NotiColors.Secondary)
-        Text("아직 받은 메시지가 없어요", style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center)
-        Text("새 알림이 오면 여기에 모아 보여드려요.", color = NotiColors.Secondary,
+        Text(stringResource(R.string.messages_empty_title), style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center)
+        Text(stringResource(R.string.messages_empty_body), color = NotiColors.Secondary,
             style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
     }
 }

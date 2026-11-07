@@ -1,5 +1,9 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import com.jiil.secretnoti.R
+
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.jiil.secretnoti.capture.Source
@@ -11,35 +15,38 @@ import java.time.ZoneId
 private fun sampleAt(hour: Int, minute: Int, daysAgo: Long = 0) =
     LocalDate.now().minusDays(daysAgo).atTime(hour, minute).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-private val sampleApps = listOf(AppRef("com.kakao.talk", "카카오톡"), AppRef("com.microsoft.teams", "Teams"), AppRef("com.samsung.android.messaging", "문자"))
+@Composable
+private fun sampleApps() = listOf(AppRef("com.kakao.talk", stringResource(R.string.screen_preview_kakao)), AppRef("com.microsoft.teams", stringResource(R.string.screen_preview_teams)), AppRef("com.samsung.android.messaging", stringResource(R.string.screen_preview_sms)))
 
+@Composable
 private fun sampleConversations() = listOf(
-    ConversationUi(1, Source.KAKAO, "com.kakao.talk", "카카오톡", "엄마", false, "엄마", "주말에 김치 가지러 올 거지? 미리 말해줘", sampleAt(20, 52), 1, isPinned = true, hasKeyword = true),
-    ConversationUi(2, Source.KAKAO, "com.kakao.talk", "카카오톡", "회사 동기 단톡방", true, "민수", "다음 주 금요일 회식 장소 투표 올렸어요", sampleAt(20, 47), 12, deletedCount = 2),
-    ConversationUi(3, Source.TEAMS, "com.microsoft.teams", "Teams", "김팀장님", false, "김팀장님", "월요일 보고 자료 오전 중에 한번 볼 수 있을까요?", sampleAt(20, 30), 1),
-    ConversationUi(4, Source.SMS, "com.samsung.android.messaging", "문자", "택배 알림", false, null, "[배송완료] 주문하신 상품이 문 앞에 도착했습니다.", sampleAt(19, 15), 1),
-    ConversationUi(5, Source.KAKAO, "com.kakao.talk", "카카오톡", "대학 친구들", true, "지훈", "사진 3장을 보냈습니다", sampleAt(18, 2), 5, previewHidden = true),
+    ConversationUi(1, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_mom), false, stringResource(R.string.screen_preview_mom), stringResource(R.string.screen_preview_mom_message), sampleAt(20, 52), 1, isPinned = true, hasKeyword = true),
+    ConversationUi(2, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_coworkers), true, stringResource(R.string.screen_preview_minsu), stringResource(R.string.screen_preview_poll), sampleAt(20, 47), 12, deletedCount = 2),
+    ConversationUi(3, Source.TEAMS, "com.microsoft.teams", stringResource(R.string.screen_preview_teams), stringResource(R.string.screen_preview_manager), false, stringResource(R.string.screen_preview_manager), stringResource(R.string.screen_preview_report), sampleAt(20, 30), 1),
+    ConversationUi(4, Source.SMS, "com.samsung.android.messaging", stringResource(R.string.screen_preview_sms), stringResource(R.string.screen_preview_delivery), false, null, stringResource(R.string.screen_preview_delivered), sampleAt(19, 15), 1),
+    ConversationUi(5, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_friends), true, stringResource(R.string.screen_preview_jihoon), pluralStringResource(R.plurals.screen_preview_photos, 3, 3), sampleAt(18, 2), 5, previewHidden = true),
 )
 
+@Composable
 private fun sampleMessages() = listOf(
-    MessageUi(1, "민수", false, "다들 다음 주 금요일 시간 돼요?", sampleAt(20, 31, 1), false),
-    MessageUi(2, "지영", false, "저 가능해요!", sampleAt(20, 33), false),
-    MessageUi(3, "현우", false, "저 그날 반차라 조금 늦을 수도 있어요", sampleAt(20, 35), true),
-    MessageUi(4, null, true, "저도 가능해요. 장소 정해지면 알려주세요.", sampleAt(20, 38), false),
-    MessageUi(5, "민수", false, "장소는 강남역이랑 판교 중에 고르면 될 듯", sampleAt(20, 40), false),
-    MessageUi(6, "민수", false, "다음 주 금요일 회식 장소 투표 올렸어요", sampleAt(20, 47), false),
+    MessageUi(1, stringResource(R.string.screen_preview_minsu), false, stringResource(R.string.screen_preview_invite), sampleAt(20, 31, 1), false),
+    MessageUi(2, stringResource(R.string.screen_preview_jiyoung), false, stringResource(R.string.screen_preview_available), sampleAt(20, 33), false),
+    MessageUi(3, stringResource(R.string.screen_preview_hyunwoo), false, stringResource(R.string.screen_preview_late), sampleAt(20, 35), true),
+    MessageUi(4, null, true, stringResource(R.string.screen_preview_reply), sampleAt(20, 38), false),
+    MessageUi(5, stringResource(R.string.screen_preview_minsu), false, stringResource(R.string.screen_preview_venue), sampleAt(20, 40), false),
+    MessageUi(6, stringResource(R.string.screen_preview_minsu), false, stringResource(R.string.screen_preview_poll), sampleAt(20, 47), false),
 )
 
 @Preview(name = "오른쪽 엣지패널", widthDp = 316, heightDp = 652, showBackground = true)
 @Composable
 private fun EdgePanelPreview() {
-    NotiTheme { EdgePanel(sampleConversations(), sampleApps, null, {}, {}, {}, {}, false) }
+    NotiTheme { EdgePanel(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, false) }
 }
 
 @Preview(name = "왼쪽 엣지패널", widthDp = 316, heightDp = 652, showBackground = true)
 @Composable
 private fun LeftPanelPreview() {
-    NotiTheme { EdgePanel(sampleConversations(), sampleApps.take(2), null, {}, {}, {}, {}, true) }
+    NotiTheme { EdgePanel(sampleConversations(), sampleApps().take(2), null, {}, {}, {}, {}, true) }
 }
 
 @Preview(name = "빈 엣지패널", widthDp = 316, heightDp = 652, showBackground = true)
@@ -51,20 +58,20 @@ private fun EmptyPanelPreview() {
 @Preview(name = "전체 대화 목록", widthDp = 390, heightDp = 844, showBackground = true)
 @Composable
 private fun ConversationListPreview() {
-    NotiTheme { ConversationListScreen(sampleConversations(), sampleApps, null, {}, {}, {}, {}, {}, {}, {}) }
+    NotiTheme { ConversationListScreen(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, {}, {}, {}) }
 }
 
 @Preview(name = "그룹 대화 기록", widthDp = 390, heightDp = 844, showBackground = true)
 @Composable
 private fun RoomPreview() {
-    NotiTheme { RoomScreen("회사 동기 단톡방", "카카오톡", "com.kakao.talk", true, sampleMessages(), listOf("금요일", "장소"), {}, {}) }
+    NotiTheme { RoomScreen(stringResource(R.string.screen_preview_coworkers), stringResource(R.string.screen_preview_kakao), "com.kakao.talk", true, sampleMessages(), listOf(stringResource(R.string.screen_preview_friday), stringResource(R.string.screen_preview_place)), {}, {}) }
 }
 
 @Preview(name = "큰 글자 · 문자", widthDp = 390, heightDp = 844, fontScale = 1.5f, showBackground = true)
 @Composable
 private fun LargeTextRoomPreview() {
-    NotiTheme { RoomScreen("택배 알림", "문자", "com.samsung.android.messaging", false,
-        listOf(MessageUi(1, "택배 알림", false, "[배송완료] 주문하신 상품이 문 앞에 도착했습니다.", sampleAt(19, 15), false)), emptyList(), {}, {}) }
+    NotiTheme { RoomScreen(stringResource(R.string.screen_preview_delivery), stringResource(R.string.screen_preview_sms), "com.samsung.android.messaging", false,
+        listOf(MessageUi(1, stringResource(R.string.screen_preview_delivery), false, stringResource(R.string.screen_preview_delivered), sampleAt(19, 15), false)), emptyList(), {}, {}) }
 }
 
 @Preview(name = "손잡이 안내", showBackground = true)
@@ -76,14 +83,14 @@ private fun HandleTooltipPreview() {
 @Preview(name = "어두운 엣지패널", widthDp = 316, heightDp = 652)
 @Composable
 private fun DarkPanelPreview() {
-    NotiTheme(ThemeMode.DARK) { EdgePanel(sampleConversations(), sampleApps, null, {}, {}, {}, {}, false) }
+    NotiTheme(ThemeMode.DARK) { EdgePanel(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, false) }
 }
 
 @Preview(name = "어두운 대화방", widthDp = 390, heightDp = 844)
 @Composable
 private fun DarkRoomPreview() {
     NotiTheme(ThemeMode.DARK) {
-        RoomScreen("회사 동기 단톡방", "카카오톡", "com.kakao.talk", true, sampleMessages(), listOf("금요일"), {}, {})
+        RoomScreen(stringResource(R.string.screen_preview_coworkers), stringResource(R.string.screen_preview_kakao), "com.kakao.talk", true, sampleMessages(), listOf(stringResource(R.string.screen_preview_friday)), {}, {})
     }
 }
 
@@ -91,14 +98,14 @@ private fun DarkRoomPreview() {
 @Composable
 private fun SearchPreview() {
     NotiTheme {
-        SearchScreen("금요일", {}, listOf(SearchResultUi(2, 1, "회사 동기 단톡방", "com.kakao.talk", "카카오톡",
-            "민수", false, "다음 주 금요일 회식 장소 투표 올렸어요", sampleAt(20, 47), true)), listOf("장소"), {}, {})
+        SearchScreen(stringResource(R.string.screen_preview_friday), {}, listOf(SearchResultUi(2, 1, stringResource(R.string.screen_preview_coworkers), "com.kakao.talk", stringResource(R.string.screen_preview_kakao),
+            stringResource(R.string.screen_preview_minsu), false, stringResource(R.string.screen_preview_poll), sampleAt(20, 47), true)), listOf(stringResource(R.string.screen_preview_place)), {}, {})
     }
 }
 
 @Preview(name = "잠금", widthDp = 390, heightDp = 844)
 @Composable
-private fun LockPreview() { NotiTheme(ThemeMode.DARK) { LockScreen({}, "다시 시도해 주세요") } }
+private fun LockPreview() { NotiTheme(ThemeMode.DARK) { LockScreen({}, stringResource(R.string.screen_preview_retry)) } }
 
 @Preview(name = "설정 · 권한 필요", widthDp = 390, heightDp = 1800)
 @Composable
@@ -114,14 +121,15 @@ private fun DarkSettingsPreview() {
     }
 }
 
+@Composable
 private fun sampleSettings() = SettingsUi(
-    apps = listOf(AppSettingUi("com.kakao.talk", "카카오톡", true, "메시지 알림을 보낸 적 있음", true),
-        AppSettingUi("com.samsung.android.messaging", "문자", true, "기본 문자 앱", true),
-        AppSettingUi("com.example.app", "다른 앱", false, "설치됨", false)),
+    apps = listOf(AppSettingUi("com.kakao.talk", stringResource(R.string.screen_preview_kakao), true, stringResource(R.string.screen_preview_sent_notifications), true),
+        AppSettingUi("com.samsung.android.messaging", stringResource(R.string.screen_preview_sms), true, stringResource(R.string.screen_preview_default_sms), true),
+        AppSettingUi("com.example.app", stringResource(R.string.screen_preview_other_app), false, stringResource(R.string.screen_preview_installed), false)),
     handleEnabled = true, handleOnLeft = true, handlePosition = 0.35f, handleSize = HandleSize.MEDIUM,
     gestureExclusion = true, retentionDays = 30, permissions = PermissionSummaryUi(true, false, true),
     lockEnabled = false, lockAvailable = true, hidePreviews = true, deletionAlerts = true,
-    notificationPermission = false, savePhotos = true, keywords = listOf("금요일", "장소"),
+    notificationPermission = false, savePhotos = true, keywords = listOf(stringResource(R.string.screen_preview_friday), stringResource(R.string.screen_preview_place)),
     hiddenConversations = sampleConversations().take(1), themeMode = ThemeMode.SYSTEM,
 )
 

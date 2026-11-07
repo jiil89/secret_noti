@@ -1,10 +1,13 @@
 package com.jiil.secretnoti.ui.model
 
+import androidx.annotation.StringRes
+import com.jiil.secretnoti.R
+
 /** 손잡이 크기. heightDp는 터치 영역 높이. */
-enum class HandleSize(val label: String, val heightDp: Int) {
-    SMALL("작게", 96),
-    MEDIUM("보통", 120),
-    LARGE("크게", 160),
+enum class HandleSize(@StringRes val labelRes: Int, val heightDp: Int) {
+    SMALL(R.string.settings_handle_size_small, 96),
+    MEDIUM(R.string.settings_handle_size_medium, 120),
+    LARGE(R.string.settings_handle_size_large, 160),
 }
 
 /** 보관 기간 선택지(일). 0은 기간 없이 계속 보관. */

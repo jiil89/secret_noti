@@ -1,5 +1,8 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import com.jiil.secretnoti.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,7 +39,7 @@ fun EdgePanel(
                 end = if (onLeftSide) 20.dp else 16.dp, top = 20.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("최근 메시지", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.conversations_recent), style = MaterialTheme.typography.titleLarge)
                     NoticeChip()
                 }
                 AppFilterChips(availableApps, filter, onFilterChange)
@@ -49,7 +52,7 @@ fun EdgePanel(
                         verticalAlignment = Alignment.CenterVertically) {
                         TextButton(onClick = onShowAll, modifier = Modifier.heightIn(min = 48.dp),
                             contentPadding = PaddingValues(horizontal = 4.dp)) {
-                            Text("모든 기록 보기", color = NotiColors.NoticeForeground)
+                            Text(stringResource(R.string.conversations_all_history), color = NotiColors.NoticeForeground)
                         }
                         SettingsButton(onOpenSettings)
                     }
@@ -81,8 +84,8 @@ fun ConversationListScreen(
             Row(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("모든 메시지", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                IconButton(onClick = onOpenSearch) { Icon(NotiIcons.search, "검색") }
+                Text(stringResource(R.string.conversations_all_messages), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                IconButton(onClick = onOpenSearch) { Icon(NotiIcons.search, stringResource(R.string.conversations_search)) }
                 SettingsButton(onOpenSettings)
             }
             NoticeChip()
@@ -95,12 +98,12 @@ fun ConversationListScreen(
     }
     pendingDelete?.let { conversation ->
         AlertDialog(onDismissRequest = { pendingDelete = null },
-            title = { Text("기록 삭제") },
-            text = { Text("이 대화방의 저장된 기록을 모두 지울까요?") },
-            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("취소") } },
+            title = { Text(stringResource(R.string.conversations_delete_history)) },
+            text = { Text(stringResource(R.string.conversations_delete_confirm)) },
+            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.conversations_cancel)) } },
             confirmButton = {
                 TextButton(onClick = { pendingDelete = null; onDelete(conversation.id) }) {
-                    Text("삭제", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.conversations_delete), color = MaterialTheme.colorScheme.error)
                 }
             })
     }
@@ -125,11 +128,11 @@ private fun ConversationItems(
                     ConversationRow(conversation, onClick = { onOpenConversation(conversation.id) },
                         onLongClick = if (onTogglePin != null) ({ menuOpen = true }) else null)
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                        DropdownMenuItem(text = { Text(if (conversation.isPinned) "고정 해제" else "상단 고정") },
+                        DropdownMenuItem(text = { Text(if (conversation.isPinned) stringResource(R.string.conversations_unpin) else stringResource(R.string.conversations_pin)) },
                             onClick = { menuOpen = false; onTogglePin?.invoke(conversation.id) })
-                        DropdownMenuItem(text = { Text("대화방 숨기기") },
+                        DropdownMenuItem(text = { Text(stringResource(R.string.conversations_hide)) },
                             onClick = { menuOpen = false; onHide?.invoke(conversation.id) })
-                        DropdownMenuItem(text = { Text("기록 삭제", color = MaterialTheme.colorScheme.error) },
+                        DropdownMenuItem(text = { Text(stringResource(R.string.conversations_delete_history), color = MaterialTheme.colorScheme.error) },
                             onClick = { menuOpen = false; onDelete?.invoke(conversation) })
                     }
                 }
@@ -141,6 +144,6 @@ private fun ConversationItems(
 @Composable
 private fun SettingsButton(onClick: () -> Unit) {
     IconButton(onClick, Modifier.size(NotiSpacing.button).background(NotiColors.DetailBackground, NotiShapes.pill)) {
-        Icon(NotiIcons.sliders, "설정", Modifier.size(20.dp), tint = NotiColors.Body)
+        Icon(NotiIcons.sliders, stringResource(R.string.conversations_settings), Modifier.size(20.dp), tint = NotiColors.Body)
     }
 }

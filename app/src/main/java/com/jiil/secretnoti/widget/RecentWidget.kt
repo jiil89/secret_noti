@@ -89,7 +89,7 @@ private fun WidgetBody(items: List<ConversationUi>) {
                     )
                 }
                 Text(
-                    formatRelativeTime(c.lastAt),
+                    formatRelativeTime(context, c.lastAt),
                     style = TextStyle(fontSize = 11.sp, color = GlanceTheme.colors.onSurfaceVariant),
                 )
             }

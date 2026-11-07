@@ -1,5 +1,8 @@
 package com.jiil.secretnoti.ui.model
 
+import androidx.annotation.StringRes
+import com.jiil.secretnoti.R
+
 import com.jiil.secretnoti.capture.Source
 
 /** 화면 계층이 받는 데이터. 데이터 계층(Room)과 디자인 계층 사이의 계약. */
@@ -56,8 +59,8 @@ data class SearchResultUi(
     val deletedBySender: Boolean,
 )
 
-enum class ThemeMode(val label: String) {
-    SYSTEM("시스템 설정"),
-    LIGHT("밝게"),
-    DARK("어둡게"),
+enum class ThemeMode(@StringRes val labelRes: Int) {
+    SYSTEM(R.string.settings_theme_system),
+    LIGHT(R.string.settings_theme_light),
+    DARK(R.string.settings_theme_dark),
 }

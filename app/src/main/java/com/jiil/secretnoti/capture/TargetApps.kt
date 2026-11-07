@@ -1,16 +1,19 @@
 package com.jiil.secretnoti.capture
 
+import androidx.annotation.StringRes
+import com.jiil.secretnoti.R
+
 import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.Telephony
 import java.util.concurrent.ConcurrentHashMap
 
 /** 저장 방식이 달라지는 앱 종류. 카톡·문자·Teams 외의 앱은 OTHER(표준 메시지 알림으로 처리). */
-enum class Source(val label: String) {
-    KAKAO("카카오톡"),
-    SMS("문자"),
-    TEAMS("Teams"),
-    OTHER("기타"),
+enum class Source(@StringRes val labelRes: Int) {
+    KAKAO(R.string.source_kakao),
+    SMS(R.string.source_sms),
+    TEAMS(R.string.source_teams),
+    OTHER(R.string.source_other),
 }
 
 object TargetApps {

@@ -11,6 +11,7 @@ import android.graphics.Typeface
 import android.os.Build
 import android.view.MotionEvent
 import android.view.View
+import com.jiil.secretnoti.R
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -20,6 +21,10 @@ import kotlin.math.max
  */
 @SuppressLint("ViewConstructor")
 class HandleView(context: Context, private val onOpen: () -> Unit) : View(context) {
+
+    init {
+        contentDescription = context.getString(R.string.overlay_handle_description)
+    }
 
     var onLeft = false
         set(v) { field = v; invalidate() }
@@ -66,7 +71,7 @@ class HandleView(context: Context, private val onOpen: () -> Unit) : View(contex
             val cy = bar.top + r / 2
             canvas.drawCircle(cx, cy, r, badgePaint)
             canvas.drawCircle(cx, cy, r, badgeStroke)
-            val label = if (badge > 99) "99+" else badge.toString()
+            val label = if (badge > 99) context.getString(R.string.overlay_badge_overflow) else badge.toString()
             canvas.drawText(label, cx, cy - (textPaint.descent() + textPaint.ascent()) / 2, textPaint)
         }
     }
@@ -96,21 +101,21 @@ class HandleView(context: Context, private val onOpen: () -> Unit) : View(contex
                 maxInward = max(maxInward, inward)
                 if (!opened && inward > openDistance) {
                     opened = true
-                    GestureLog.add("스와이프로 열림 (${dp(inward)}dp)")
+                    GestureLog.add(context.getString(R.string.gesture_open_swipe, dp(inward)))
                     onOpen()
                 }
             }
             MotionEvent.ACTION_UP -> if (!opened) {
                 val moved = abs(e.rawX - downX) + abs(e.rawY - downY)
                 if (moved < tapSlop && e.eventTime - e.downTime < 400) {
-                    GestureLog.add("탭으로 열림")
+                    GestureLog.add(context.getString(R.string.gesture_open_tap))
                     performClick()
                 } else {
-                    GestureLog.add("손 뗌, 안 열림 (안쪽으로 최대 ${dp(maxInward)}dp)")
+                    GestureLog.add(context.getString(R.string.gesture_release_closed, dp(maxInward)))
                 }
             }
             MotionEvent.ACTION_CANCEL ->
-                GestureLog.add("CANCEL: 시스템이 제스처를 가져감 (안쪽으로 최대 ${dp(maxInward)}dp)")
+                GestureLog.add(context.getString(R.string.gesture_cancelled, dp(maxInward)))
         }
         return true
     }

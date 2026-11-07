@@ -1,5 +1,7 @@
 package com.jiil.secretnoti.ui
 
+import com.jiil.secretnoti.R
+import androidx.compose.ui.res.stringResource
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -86,39 +88,39 @@ fun PermissionsScreen() {
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             PermissionCard(
-                title = "1. 알림 접근 권한",
-                body = "카카오톡·문자·Teams 알림을 읽어서 이 폰 안에만 저장합니다.",
+                title = stringResource(R.string.route_permission_listener_title),
+                body = stringResource(R.string.route_permission_listener_body),
                 granted = state.listener,
                 note = when {
                     !state.listener ->
-                        "스위치가 회색으로 눌리지 않으면: '앱 정보' → 오른쪽 위 ⋮ → '제한된 설정 허용'을 누른 뒤 다시 시도하세요."
-                    connected -> "리스너 연결됨"
-                    else -> "권한은 있지만 리스너가 아직 연결되지 않았어요. 잠시 후 다시 확인하세요."
+                        stringResource(R.string.route_permission_restricted)
+                    connected -> stringResource(R.string.route_listener_connected)
+                    else -> stringResource(R.string.route_listener_waiting)
                 },
                 actions = listOf(
-                    "설정 열기" to { context.openListenerSettings() },
-                    "앱 정보" to { context.launch(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkgUri)) },
+                    stringResource(R.string.route_open_settings) to { context.openListenerSettings() },
+                    stringResource(R.string.route_app_info) to { context.launch(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkgUri)) },
                 ),
             )
         }
         item {
             PermissionCard(
-                title = "2. 다른 앱 위에 표시",
-                body = "화면 가장자리 손잡이와 엣지패널을 띄우는 데 필요합니다.",
+                title = stringResource(R.string.route_permission_overlay_title),
+                body = stringResource(R.string.route_permission_overlay_body),
                 granted = state.overlay,
                 actions = listOf(
-                    "설정 열기" to { context.launch(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkgUri)) },
+                    stringResource(R.string.route_open_settings) to { context.launch(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkgUri)) },
                 ),
             )
         }
         item {
             PermissionCard(
-                title = "3. 배터리 최적화 제외",
-                body = "절전 기능이 알림 수집을 멈추지 않게 합니다.",
+                title = stringResource(R.string.route_permission_battery_title),
+                body = stringResource(R.string.route_permission_battery_body),
                 granted = state.battery,
-                note = "갤럭시는 추가로: 설정 → 배터리 → 백그라운드 사용 한도 → '절전 예외 앱'에 시크릿노티를 넣어 주세요.",
+                note = stringResource(R.string.route_permission_battery_note),
                 actions = listOf(
-                    "제외 요청" to {
+                    stringResource(R.string.route_request_exemption) to {
                         context.launch(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, pkgUri))
                     },
                 ),
@@ -127,11 +129,10 @@ fun PermissionsScreen() {
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("대상 앱", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("어떤 앱의 알림을 저장할지는 설정 → 대상 앱에서 고를 수 있어요.")
+                    Text(stringResource(R.string.route_target_apps), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.route_target_apps_help))
                     Text(
-                        "카카오톡 설정 → 알림에서 '메시지 미리보기'가 켜져 있어야 내용이 저장됩니다. " +
-                            "알림을 끈 채팅방, PC 사용 중 알림이 꺼지는 경우는 저장되지 않아요.",
+                        stringResource(R.string.route_kakao_preview_help),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -159,7 +160,7 @@ private fun PermissionCard(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(
-                    if (granted) "허용됨" else "필요",
+                    if (granted) stringResource(R.string.route_permission_granted) else stringResource(R.string.route_permission_required),
                     color = if (granted) Color(0xFF1B7F3B) else MaterialTheme.colorScheme.onPrimaryContainer,
                     fontWeight = FontWeight.Bold,
                 )

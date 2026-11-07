@@ -85,7 +85,7 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
         if (uri == null || pw == null) return@rememberLauncherForActivityResult
         scope.launch {
             val result = withContext(Dispatchers.IO) { runCatching { backup.export(uri, pw) } }
-            toast(result.fold({ context.getString(R.string.backup_done, it) }, { context.getString(R.string.backup_failed) }))
+            toast(result.fold({ context.resources.getQuantityString(R.plurals.backup_done, it, it) }, { context.getString(R.string.backup_failed) }))
         }
     }
     val openBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
@@ -96,7 +96,7 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
             WidgetUpdater.request(context)
             toast(
                 result.fold(
-                    { context.getString(R.string.restore_done, it) },
+                    { context.resources.getQuantityString(R.plurals.restore_done, it, it) },
                     {
                         if (it is WrongPasswordException) context.getString(R.string.restore_wrong_password)
                         else context.getString(R.string.restore_failed)
