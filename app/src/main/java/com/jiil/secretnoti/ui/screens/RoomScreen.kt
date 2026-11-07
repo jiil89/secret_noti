@@ -21,6 +21,7 @@ import com.jiil.secretnoti.ui.model.MessageUi
 fun RoomScreen(
     title: String,
     source: Source,
+    packageName: String,
     isGroup: Boolean,
     messages: List<MessageUi>,
     onBack: () -> Unit,
@@ -39,7 +40,11 @@ fun RoomScreen(
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                     Text(title, style = MaterialTheme.typography.titleMedium,
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(source.label, color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall)
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        AppIcon(packageName, 16.dp)
+                        Text(source.label, color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
             HorizontalDivider(color = NotiColors.Divider)

@@ -22,6 +22,7 @@ class NotiListenerService : NotificationListenerService() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val dao by lazy { NotiApp.instance.db.dumpDao() }
+    private val chat by lazy { NotiApp.instance.chat }
     private var overlay: EdgeOverlayController? = null
     private var overlayJob: Job? = null
 
@@ -35,6 +36,9 @@ class NotiListenerService : NotificationListenerService() {
                 enabled && Settings.canDrawOverlays(this@NotiListenerService)
             }.collect { show -> if (show) controller.show() else controller.hide() }
         }
+        // 연결이 끊겨 있던 동안 쌓인 알림도 저장하고, 하루 한 번 보관 기간이 지난 기록을 지운다.
+        runCatching { activeNotifications }.getOrNull()?.forEach { ingest(it) }
+        cleanupIfDue()
     }
 
     override fun onListenerDisconnected() {
@@ -53,6 +57,7 @@ class NotiListenerService : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         record(sbn, "posted", null)
+        ingest(sbn)
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification, rankingMap: RankingMap, reason: Int) {
@@ -64,6 +69,23 @@ class NotiListenerService : NotificationListenerService() {
         overlayJob = null
         overlay?.hide()
         overlay = null
+    }
+
+    private fun ingest(sbn: StatusBarNotification) {
+        val source = TargetApps.sourceOf(this, sbn.packageName) ?: return
+        val parsed = NotificationParser.parse(SnapshotExtractor.from(sbn)) ?: return
+        val contentIntent = sbn.notification.contentIntent
+        scope.launch(Dispatchers.IO) {
+            runCatching { chat.ingest(source, sbn.packageName, parsed, System.currentTimeMillis()) }
+                .onSuccess { id -> contentIntent?.let { AppLauncher.remember(id, it) } }
+        }
+    }
+
+    private fun cleanupIfDue() {
+        val now = System.currentTimeMillis()
+        if (now - Prefs.lastCleanupAt.value < 24L * 60 * 60 * 1000) return
+        Prefs.lastCleanupAt.value = now
+        scope.launch(Dispatchers.IO) { runCatching { chat.deleteOlderThan(Prefs.retentionDays.value, now) } }
     }
 
     private fun record(sbn: StatusBarNotification, event: String, reason: Int?) {

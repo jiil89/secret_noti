@@ -2,11 +2,13 @@ package com.jiil.secretnoti
 
 import android.app.Application
 import com.jiil.secretnoti.data.AppDatabase
+import com.jiil.secretnoti.data.ChatRepository
 import com.jiil.secretnoti.settings.Prefs
 
 class NotiApp : Application() {
     lateinit var db: AppDatabase
         private set
+    val chat by lazy { ChatRepository(db) }
 
     override fun onCreate() {
         super.onCreate()

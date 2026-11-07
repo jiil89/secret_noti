@@ -12,11 +12,11 @@ private fun sampleAt(hour: Int, minute: Int, daysAgo: Long = 0) =
     LocalDate.now().minusDays(daysAgo).atTime(hour, minute).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
 private fun sampleConversations() = listOf(
-    ConversationUi(1, Source.KAKAO, "엄마", false, "엄마", "주말에 김치 가지러 올 거지? 미리 말해줘", sampleAt(20, 52), 1),
-    ConversationUi(2, Source.KAKAO, "회사 동기 단톡방", true, "민수", "다음 주 금요일 회식 장소 투표 올렸어요", sampleAt(20, 47), 12),
-    ConversationUi(3, Source.TEAMS, "김팀장님", false, "김팀장님", "월요일 보고 자료 오전 중에 한번 볼 수 있을까요?", sampleAt(20, 30), 1),
-    ConversationUi(4, Source.SMS, "택배 알림", false, null, "[배송완료] 주문하신 상품이 문 앞에 도착했습니다.", sampleAt(19, 15), 1),
-    ConversationUi(5, Source.KAKAO, "대학 친구들", true, "지훈", "사진 3장을 보냈습니다", sampleAt(18, 2), 5),
+    ConversationUi(1, Source.KAKAO, "com.kakao.talk", "엄마", false, "엄마", "주말에 김치 가지러 올 거지? 미리 말해줘", sampleAt(20, 52), 1),
+    ConversationUi(2, Source.KAKAO, "com.kakao.talk", "회사 동기 단톡방", true, "민수", "다음 주 금요일 회식 장소 투표 올렸어요", sampleAt(20, 47), 12),
+    ConversationUi(3, Source.TEAMS, "com.microsoft.teams", "김팀장님", false, "김팀장님", "월요일 보고 자료 오전 중에 한번 볼 수 있을까요?", sampleAt(20, 30), 1),
+    ConversationUi(4, Source.SMS, "com.samsung.android.messaging", "택배 알림", false, null, "[배송완료] 주문하신 상품이 문 앞에 도착했습니다.", sampleAt(19, 15), 1),
+    ConversationUi(5, Source.KAKAO, "com.kakao.talk", "대학 친구들", true, "지훈", "사진 3장을 보냈습니다", sampleAt(18, 2), 5),
 )
 
 private fun sampleMessages() = listOf(
@@ -55,13 +55,13 @@ private fun ConversationListPreview() {
 @Preview(name = "그룹 대화 기록", widthDp = 390, heightDp = 844, showBackground = true)
 @Composable
 private fun RoomPreview() {
-    NotiTheme { RoomScreen("회사 동기 단톡방", Source.KAKAO, true, sampleMessages(), {}, {}) }
+    NotiTheme { RoomScreen("회사 동기 단톡방", Source.KAKAO, "com.kakao.talk", true, sampleMessages(), {}, {}) }
 }
 
 @Preview(name = "큰 글자 · 문자", widthDp = 390, heightDp = 844, fontScale = 1.5f, showBackground = true)
 @Composable
 private fun LargeTextRoomPreview() {
-    NotiTheme { RoomScreen("택배 알림", Source.SMS, false,
+    NotiTheme { RoomScreen("택배 알림", Source.SMS, "com.samsung.android.messaging", false,
         listOf(MessageUi(1, "택배 알림", false, "[배송완료] 주문하신 상품이 문 앞에 도착했습니다.", sampleAt(19, 15), false)), {}, {}) }
 }
 

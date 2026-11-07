@@ -1,6 +1,7 @@
 package com.jiil.secretnoti.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -52,9 +53,15 @@ interface DumpDao {
     suspend fun trim(keep: Int)
 }
 
-@Database(entities = [NotificationDump::class], version = 1, exportSchema = true)
+@Database(
+    entities = [NotificationDump::class, ConversationEntity::class, MessageEntity::class],
+    version = 2,
+    exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dumpDao(): DumpDao
+    abstract fun chatDao(): ChatDao
 
     companion object {
         fun create(context: Context): AppDatabase =

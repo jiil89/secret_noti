@@ -1,0 +1,164 @@
+[
+  {
+    "event": "posted",
+    "package": "com.kakao.talk",
+    "id": 1,
+    "tag": null,
+    "key": "0|com.kakao.talk|1|null|10085",
+    "groupKey": "0|com.kakao.talk|g:chat_message",
+    "postTime": 1794060400049,
+    "isOngoing": false,
+    "isClearable": true,
+    "flags": 512,
+    "isGroupSummary": true,
+    "category": "msg",
+    "group": "chat_message",
+    "sortKey": null,
+    "when": 1794060399496,
+    "number": 0,
+    "tickerText": null,
+    "hasContentIntent": true,
+    "channelId": "quiet_new_message",
+    "shortcutId": null,
+    "locusId": null,
+    "actions": [],
+    "extras": {
+      "android.appInfo": "<android.content.pm.ApplicationInfo> ApplicationInfo{3eca5da com.kakao.talk}",
+      "android.infoText": null,
+      "android.largeIcon": null,
+      "android.progress": 0,
+      "android.progressIndeterminate": false,
+      "android.progressMax": 0,
+      "android.reduced.images": true,
+      "android.remoteInputHistory": null,
+      "android.showChronometer": false,
+      "android.showWhen": true,
+      "android.subText": null,
+      "android.text": null,
+      "android.title": null
+    }
+  },
+  {
+    "event": "posted",
+    "package": "com.kakao.talk",
+    "id": 2,
+    "tag": "1000000000001",
+    "key": "0|com.kakao.talk|2|1000000000001|10085",
+    "groupKey": "0|com.kakao.talk|g:chat_message",
+    "postTime": 1794060400052,
+    "isOngoing": false,
+    "isClearable": true,
+    "flags": 17,
+    "isGroupSummary": false,
+    "category": "msg",
+    "group": "chat_message",
+    "sortKey": "9223370242794375771",
+    "when": 1794060400042,
+    "number": 2,
+    "tickerText": "상대방 : ㅎ",
+    "hasContentIntent": true,
+    "channelId": "new_message_v3",
+    "shortcutId": "1000000000001",
+    "locusId": null,
+    "actions": [
+      {
+        "title": "읽음",
+        "hasRemoteInputs": false,
+        "semanticAction": 0
+      },
+      {
+        "title": "답장",
+        "hasRemoteInputs": true,
+        "semanticAction": 0
+      }
+    ],
+    "extras": {
+      "android.appInfo": "<android.content.pm.ApplicationInfo> ApplicationInfo{6e73a0b com.kakao.talk}",
+      "android.conversationUnreadMessageCount": 0,
+      "android.hiddenConversationTitle": null,
+      "android.infoText": null,
+      "android.isGroupConversation": false,
+      "android.largeIcon": "<Icon>",
+      "android.messages": [
+        {
+          "extras": {
+            "chatLogId": 3968845044553160705,
+            "flags": 1,
+            "threadId": 0
+          },
+          "sender": "상대방",
+          "sender_person": {
+            "_type": "Person",
+            "name": "상대방",
+            "key": "peer-key",
+            "uri": null,
+            "isBot": false,
+            "isImportant": false
+          },
+          "text": "ㅎㅎ",
+          "time": 1794060399438
+        },
+        {
+          "extras": {
+            "chatLogId": 3968845049594714113,
+            "flags": 1,
+            "threadId": 0
+          },
+          "sender": "상대방",
+          "sender_person": {
+            "_type": "Person",
+            "name": "상대방",
+            "key": "peer-key",
+            "uri": null,
+            "isBot": false,
+            "isImportant": false
+          },
+          "text": "ㅎ",
+          "time": 1794060400035
+        }
+      ],
+      "android.messagingStyleUser": {
+        "icon": {
+          "int1": 0,
+          "int2": 0,
+          "obj": "<Bitmap 168x168>",
+          "string1": null,
+          "type": 1
+        },
+        "isBot": false,
+        "isImportant": false,
+        "key": "self-key",
+        "name": "나",
+        "uri": null
+      },
+      "android.messagingUser": {
+        "_type": "Person",
+        "name": "나",
+        "key": "self-key",
+        "uri": null,
+        "isBot": false,
+        "isImportant": false
+      },
+      "android.progress": 0,
+      "android.progressIndeterminate": false,
+      "android.progressMax": 0,
+      "android.reduced.images": true,
+      "android.remoteInputHistory": null,
+      "android.selfDisplayName": "나",
+      "android.showChronometer": false,
+      "android.showWhen": true,
+      "android.subText": null,
+      "android.template": "android.app.Notification$MessagingStyle",
+      "android.text": "ㅎ",
+      "android.title": "상대방",
+      "android.wearable.EXTENSIONS": {
+        "bridgeTag": "message"
+      },
+      "androidx.core.app.extra.COMPAT_TEMPLATE": "androidx.core.app.NotificationCompat$MessagingStyle",
+      "chatLogId": 3968845049594714113,
+      "flags": 1,
+      "notificationStyle": "messaging",
+      "threadId": 0
+    }
+  }
+]

@@ -6,6 +6,8 @@ import com.jiil.secretnoti.capture.Source
 data class ConversationUi(
     val id: Long,
     val source: Source,
+    /** 알림을 보낸 앱의 패키지. 출처 앱 아이콘을 그릴 때 쓴다. */
+    val packageName: String,
     val title: String,
     val isGroup: Boolean,
     val lastSender: String?,

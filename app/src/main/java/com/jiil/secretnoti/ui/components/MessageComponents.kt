@@ -127,7 +127,12 @@ fun ConversationRow(
         .clickable(onClick = onClick, role = Role.Button)
         .padding(horizontal = 4.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        InitialAvatar(conversation.title)
+        Box {
+            InitialAvatar(conversation.title)
+            AppIcon(conversation.packageName, 18.dp,
+                Modifier.align(Alignment.BottomEnd)
+                    .background(Color.White, CircleShape).padding(2.dp))
+        }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(conversation.title, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,

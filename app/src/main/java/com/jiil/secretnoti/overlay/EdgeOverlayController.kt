@@ -14,6 +14,7 @@ import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.jiil.secretnoti.NotiApp
 import com.jiil.secretnoti.settings.Prefs
+import com.jiil.secretnoti.ui.MainActivity
 import com.jiil.secretnoti.ui.NotiTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,7 +28,7 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
 
     private val wm = context.getSystemService(WindowManager::class.java)
     private val density = context.resources.displayMetrics.density
-    private val dao = NotiApp.instance.db.dumpDao()
+    private val chat = NotiApp.instance.chat
 
     private var handle: HandleView? = null
     private var handleParams: WindowManager.LayoutParams? = null
@@ -62,7 +63,7 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         }
         jobs += scope.launch {
             Prefs.lastPanelOpenedAt.flow
-                .flatMapLatest { since -> dao.observePostedSince(since) }
+                .flatMapLatest { since -> chat.observeIncomingSince(since) }
                 .collect { view.badge = it }
         }
     }
@@ -104,7 +105,13 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
             ComposeView(context).apply {
                 setContent {
                     NotiTheme {
-                        PanelContent(onLeft = Prefs.handleOnLeft.value, onClose = ::closePanel)
+                        PanelContent(
+                            onLeft = Prefs.handleOnLeft.value,
+                            onClose = ::closePanel,
+                            onOpenConversation = { openApp(MainActivity.routeRoom(it)) },
+                            onShowAll = { openApp(MainActivity.ROUTE_LIST) },
+                            onOpenSettings = { openApp(MainActivity.ROUTE_SETTINGS) },
+                        )
                     }
                 }
             },
@@ -131,6 +138,11 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         panelOwner?.destroy()
         panelOwner = null
         handle?.visibility = View.VISIBLE
+    }
+
+    private fun openApp(route: String) {
+        closePanel()
+        context.startActivity(MainActivity.intent(context, route))
     }
 
     private fun dp(v: Int) = (v * density).toInt()

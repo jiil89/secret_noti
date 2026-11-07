@@ -36,8 +36,12 @@ object Prefs {
     val handleY = float("handle_y", 0.35f)
     val dumpAllApps = bool("dump_all_apps", false)
     val lastPanelOpenedAt = long("last_panel_opened_at", 0L)
+    val retentionDays = int("retention_days", 30)
+    val lastCleanupAt = long("last_cleanup_at", 0L)
 
-    private val all = listOf(overlayEnabled, gestureExclusion, handleOnLeft, handleY, dumpAllApps, lastPanelOpenedAt)
+    private val all = listOf(
+        overlayEnabled, gestureExclusion, handleOnLeft, handleY, dumpAllApps, lastPanelOpenedAt, retentionDays, lastCleanupAt,
+    )
 
     fun init(context: Context) {
         sp = context.getSharedPreferences("prefs", Context.MODE_PRIVATE)
@@ -46,6 +50,9 @@ object Prefs {
 
     private fun bool(key: String, default: Boolean) =
         Pref(key, default, { k, d -> getBoolean(k, d) }, { k, v -> putBoolean(k, v) })
+
+    private fun int(key: String, default: Int) =
+        Pref(key, default, { k, d -> getInt(k, d) }, { k, v -> putInt(k, v) })
 
     private fun float(key: String, default: Float) =
         Pref(key, default, { k, d -> getFloat(k, d) }, { k, v -> putFloat(k, v) })
