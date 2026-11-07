@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.jiil.secretnoti.capture.TargetApps
 import com.jiil.secretnoti.ui.model.HandleSize
+import com.jiil.secretnoti.ui.model.PanelWidth
 import com.jiil.secretnoti.ui.model.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +39,8 @@ object Prefs {
     val handleOnLeft = bool("handle_on_left", false)
     val handleY = float("handle_y", 0.35f)
     val handleSize = enum("handle_size", HandleSize.MEDIUM)
+    /** 엣지패널 폭(dp). */
+    val panelWidthDp = int("panel_width_dp", PanelWidth.NORMAL.dp)
     val dumpAllApps = bool("dump_all_apps", false)
     val lastPanelOpenedAt = long("last_panel_opened_at", 0L)
 
@@ -56,7 +59,7 @@ object Prefs {
     val themeMode = enum("theme_mode", ThemeMode.SYSTEM)
 
     private val all = listOf(
-        overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, dumpAllApps, lastPanelOpenedAt,
+        overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, dumpAllApps, lastPanelOpenedAt,
         retentionDays, lastCleanupAt, enabledApps, lockEnabled, hidePreviews, deletionAlerts, savePhotos,
         keywords, themeMode,
     )

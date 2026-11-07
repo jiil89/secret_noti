@@ -256,4 +256,11 @@
     <plurals name="settings_screen_retention_warning">
         <item quantity="other">%1$d일보다 오래된 메시지가 지금 지워져요. 계속할까요?</item>
     </plurals>
+    <string name="settings_panel_width_narrow">좁게</string>
+    <string name="settings_panel_width_normal">보통</string>
+    <string name="settings_panel_width_wide">넓게</string>
+    <string name="settings_panel_width">패널 폭</string>
+    <string name="settings_panel_width_custom">패널 가장자리를 끌어서 맞춘 폭이에요 (%1$ddp)</string>
+    <string name="settings_panel_width_hint">패널을 연 상태에서 가장자리 막대를 끌어서도 바꿀 수 있어요</string>
+    <string name="panel_resize_description">패널 폭 조절</string>
 </resources>

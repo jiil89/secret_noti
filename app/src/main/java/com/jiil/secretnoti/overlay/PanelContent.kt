@@ -16,7 +16,11 @@ import androidx.compose.ui.Modifier
 import com.jiil.secretnoti.ui.design.NotiColors
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalConfiguration
 import com.jiil.secretnoti.NotiApp
+import com.jiil.secretnoti.settings.Prefs
+import com.jiil.secretnoti.ui.model.PanelWidth
+import kotlin.math.roundToInt
 import com.jiil.secretnoti.ui.apps
 import com.jiil.secretnoti.ui.screens.EdgePanel
 
@@ -32,6 +36,11 @@ fun PanelContent(
     val chat = remember { NotiApp.instance.chat }
     val conversations by remember { chat.observeConversations() }.collectAsState(initial = emptyList())
     var filter by remember { mutableStateOf<String?>(null) }
+
+    // 폭: 끄는 동안은 화면에만 반영하고, 손을 떼면 저장한다.
+    val screenWidth = LocalConfiguration.current.screenWidthDp
+    val maxWidth = (screenWidth - PanelWidth.SCREEN_MARGIN_DP).coerceAtLeast(PanelWidth.MIN_DP)
+    var width by remember { mutableStateOf(Prefs.panelWidthDp.value.coerceIn(PanelWidth.MIN_DP, maxWidth).dp) }
 
     Box(
         Modifier
@@ -55,6 +64,11 @@ fun PanelContent(
                 onShowAll = onShowAll,
                 onOpenSettings = onOpenSettings,
                 onLeftSide = onLeft,
+                width = width,
+                minWidth = PanelWidth.MIN_DP.dp,
+                maxWidth = maxWidth.dp,
+                onWidthChange = { width = it },
+                onWidthChangeFinished = { Prefs.panelWidthDp.value = width.value.roundToInt() },
             )
         }
     }

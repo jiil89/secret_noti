@@ -3,12 +3,20 @@ package com.jiil.secretnoti.ui.screens
 import androidx.compose.ui.res.stringResource
 import com.jiil.secretnoti.R
 
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.AbsoluteAlignment
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -29,8 +37,20 @@ fun EdgePanel(
     onShowAll: () -> Unit,
     onOpenSettings: () -> Unit,
     onLeftSide: Boolean,
+    width: Dp,
+    minWidth: Dp,
+    maxWidth: Dp,
+    onWidthChange: (Dp) -> Unit,
+    onWidthChangeFinished: () -> Unit,
 ) {
-    Surface(Modifier.width(NotiSpacing.panelWidth).heightIn(max = 652.dp),
+    var resizing by remember { mutableStateOf(false) }
+    val currentWidth by rememberUpdatedState(width)
+    val changeWidth by rememberUpdatedState(onWidthChange)
+    val finishWidthChange by rememberUpdatedState(onWidthChangeFinished)
+    val resizeDescription = stringResource(R.string.panel_resize_description)
+    val widenLabel = stringResource(R.string.settings_panel_width_wide)
+    val narrowLabel = stringResource(R.string.settings_panel_width_narrow)
+    Surface(Modifier.width(width).heightIn(max = 652.dp),
         shape = NotiShapes.panel(onLeftSide), color = NotiColors.Background,
         shadowElevation = 16.dp) {
         Box {
@@ -44,7 +64,7 @@ fun EdgePanel(
                 }
                 AppFilterChips(availableApps, filter, onFilterChange)
                 ConversationItems(visibleConversations(conversations, filter).take(10),
-                    onOpenConversation, Modifier.weight(1f))
+                    onOpenConversation, Modifier.weight(1f), maxLines = if (width >= 340.dp) 3 else 2)
                 Column {
                     HorizontalDivider(color = NotiColors.Divider)
                     Row(Modifier.fillMaxWidth().padding(top = 10.dp),
@@ -58,9 +78,45 @@ fun EdgePanel(
                     }
                 }
             }
-            Box(Modifier.align(if (onLeftSide) Alignment.CenterEnd else Alignment.CenterStart)
-                .padding(horizontal = 8.dp).width(4.dp).height(48.dp)
-                .background(NotiColors.Outline, NotiShapes.pill))
+            Box(
+                Modifier.align(if (onLeftSide) AbsoluteAlignment.CenterRight else AbsoluteAlignment.CenterLeft)
+                    .width(24.dp).height(96.dp)
+                    .semantics {
+                        contentDescription = resizeDescription
+                        customActions = listOf(
+                            CustomAccessibilityAction(widenLabel) {
+                                changeWidth((currentWidth + 20.dp).coerceIn(minWidth, maxWidth))
+                                finishWidthChange()
+                                true
+                            },
+                            CustomAccessibilityAction(narrowLabel) {
+                                changeWidth((currentWidth - 20.dp).coerceIn(minWidth, maxWidth))
+                                finishWidthChange()
+                                true
+                            },
+                        )
+                    }
+                    .pointerInput(onLeftSide, minWidth, maxWidth) {
+                        var dragWidth = currentWidth
+                        detectHorizontalDragGestures(
+                            onDragStart = {
+                                dragWidth = currentWidth.coerceIn(minWidth, maxWidth)
+                                resizing = true
+                            },
+                            onDragEnd = { resizing = false; finishWidthChange() },
+                            onDragCancel = { resizing = false; finishWidthChange() },
+                        ) { change, dragAmount ->
+                            change.consume()
+                            val delta = dragAmount.toDp() * (if (onLeftSide) 1f else -1f)
+                            dragWidth = (dragWidth + delta).coerceIn(minWidth, maxWidth)
+                            changeWidth(dragWidth)
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(Modifier.width(4.dp).height(40.dp)
+                    .background(if (resizing) NotiColors.Accent else NotiColors.Outline, NotiShapes.pill))
+            }
         }
     }
 }
@@ -117,6 +173,7 @@ private fun ConversationItems(
     onTogglePin: ((Long) -> Unit)? = null,
     onHide: ((Long) -> Unit)? = null,
     onDelete: ((ConversationUi) -> Unit)? = null,
+    maxLines: Int = 2,
 ) {
     if (conversations.isEmpty()) {
         Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { EmptyConversations() }
@@ -126,6 +183,7 @@ private fun ConversationItems(
                 var menuOpen by remember { mutableStateOf(false) }
                 Box {
                     ConversationRow(conversation, onClick = { onOpenConversation(conversation.id) },
+                        maxLines = maxLines,
                         onLongClick = if (onTogglePin != null) ({ menuOpen = true }) else null)
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                         DropdownMenuItem(text = { Text(if (conversation.isPinned) stringResource(R.string.conversations_unpin) else stringResource(R.string.conversations_pin)) },

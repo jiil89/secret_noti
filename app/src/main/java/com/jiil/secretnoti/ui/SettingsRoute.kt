@@ -71,6 +71,7 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
     val savePhotos by Prefs.savePhotos.flow.collectAsStateWithLifecycle()
     val keywords by Prefs.keywords.flow.collectAsStateWithLifecycle()
     val themeMode by Prefs.themeMode.flow.collectAsStateWithLifecycle()
+    val panelWidth by Prefs.panelWidthDp.flow.collectAsStateWithLifecycle()
 
     val launcherApps = remember { installedLauncherApps(context) }
     val apps = remember(enabledApps, seenApps, launcherApps) {
@@ -127,6 +128,7 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
         keywords = keywords.sorted(),
         hiddenConversations = hidden,
         themeMode = themeMode,
+        panelWidthDp = panelWidth,
     )
 
     val actions = remember {
@@ -169,6 +171,7 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
                 scope.launch { chat.setHidden(id, false); WidgetUpdater.request(context) }
             }
             override fun setThemeMode(mode: ThemeMode) { Prefs.themeMode.value = mode }
+            override fun setPanelWidth(dp: Int) { Prefs.panelWidthDp.value = dp }
             override fun backup(password: String) {
                 pendingPassword = password
                 val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())

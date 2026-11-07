@@ -5,6 +5,7 @@ import androidx.compose.ui.res.pluralStringResource
 import com.jiil.secretnoti.R
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import com.jiil.secretnoti.capture.Source
 import com.jiil.secretnoti.ui.NotiTheme
@@ -40,19 +41,19 @@ private fun sampleMessages() = listOf(
 @Preview(name = "오른쪽 엣지패널", widthDp = 316, heightDp = 652, showBackground = true)
 @Composable
 private fun EdgePanelPreview() {
-    NotiTheme { EdgePanel(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, false) }
+    NotiTheme { EdgePanel(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, false, 316.dp, 260.dp, 360.dp, {}, {}) }
 }
 
-@Preview(name = "왼쪽 엣지패널", widthDp = 316, heightDp = 652, showBackground = true)
+@Preview(name = "왼쪽 엣지패널", widthDp = 360, heightDp = 652, showBackground = true)
 @Composable
 private fun LeftPanelPreview() {
-    NotiTheme { EdgePanel(sampleConversations(), sampleApps().take(2), null, {}, {}, {}, {}, true) }
+    NotiTheme { EdgePanel(sampleConversations(), sampleApps().take(2), null, {}, {}, {}, {}, true, 360.dp, 260.dp, 360.dp, {}, {}) }
 }
 
 @Preview(name = "빈 엣지패널", widthDp = 316, heightDp = 652, showBackground = true)
 @Composable
 private fun EmptyPanelPreview() {
-    NotiTheme { EdgePanel(emptyList(), emptyList(), null, {}, {}, {}, {}, false) }
+    NotiTheme { EdgePanel(emptyList(), emptyList(), null, {}, {}, {}, {}, false, 316.dp, 260.dp, 360.dp, {}, {}) }
 }
 
 @Preview(name = "전체 대화 목록", widthDp = 390, heightDp = 844, showBackground = true)
@@ -83,7 +84,7 @@ private fun HandleTooltipPreview() {
 @Preview(name = "어두운 엣지패널", widthDp = 316, heightDp = 652)
 @Composable
 private fun DarkPanelPreview() {
-    NotiTheme(ThemeMode.DARK) { EdgePanel(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, false) }
+    NotiTheme(ThemeMode.DARK) { EdgePanel(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, false, 316.dp, 260.dp, 360.dp, {}, {}) }
 }
 
 @Preview(name = "어두운 대화방", widthDp = 390, heightDp = 844)
@@ -117,7 +118,7 @@ private fun SettingsPreview() {
 @Composable
 private fun DarkSettingsPreview() {
     NotiTheme(ThemeMode.DARK) {
-        SettingsScreen(sampleSettings().copy(handleEnabled = false, themeMode = ThemeMode.DARK), PreviewSettingsActions)
+        SettingsScreen(sampleSettings().copy(handleEnabled = false, themeMode = ThemeMode.DARK, panelWidthDp = 300), PreviewSettingsActions)
     }
 }
 
@@ -131,6 +132,7 @@ private fun sampleSettings() = SettingsUi(
     lockEnabled = false, lockAvailable = true, hidePreviews = true, deletionAlerts = true,
     notificationPermission = false, savePhotos = true, keywords = listOf(stringResource(R.string.screen_preview_friday), stringResource(R.string.screen_preview_place)),
     hiddenConversations = sampleConversations().take(1), themeMode = ThemeMode.SYSTEM,
+    panelWidthDp = PanelWidth.NORMAL.dp,
 )
 
 private object PreviewSettingsActions : SettingsActions {
@@ -140,6 +142,7 @@ private object PreviewSettingsActions : SettingsActions {
     override fun setHandleSide(onLeft: Boolean) {}
     override fun setHandlePosition(position: Float) {}
     override fun setHandleSize(size: HandleSize) {}
+    override fun setPanelWidth(dp: Int) {}
     override fun setGestureExclusion(enabled: Boolean) {}
     override fun setRetention(days: Int) {}
     override fun openPermissions() {}

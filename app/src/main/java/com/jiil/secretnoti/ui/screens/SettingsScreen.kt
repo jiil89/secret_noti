@@ -124,6 +124,23 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             ) { Text(stringResource(handleSize.labelRes)) }
                         }
                     }
+                    Text(stringResource(R.string.settings_panel_width), style = MaterialTheme.typography.titleSmall)
+                    val panelWidthPreset = PanelWidth.of(state.panelWidthDp)
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        PanelWidth.entries.forEachIndexed { index, preset ->
+                            SegmentedButton(
+                                selected = panelWidthPreset == preset,
+                                onClick = { actions.setPanelWidth(preset.dp) },
+                                shape = SegmentedButtonDefaults.itemShape(index, PanelWidth.entries.size),
+                                modifier = Modifier.heightIn(min = NotiSpacing.button),
+                                icon = {},
+                            ) { Text(stringResource(preset.labelRes)) }
+                        }
+                    }
+                    if (panelWidthPreset == null) {
+                        SettingsHelper(stringResource(R.string.settings_panel_width_custom, state.panelWidthDp))
+                    }
+                    SettingsHelper(stringResource(R.string.settings_panel_width_hint))
                     SettingsSwitchRow(
                         label = stringResource(R.string.settings_screen_gesture),
                         detail = stringResource(R.string.settings_screen_gesture_hint),

@@ -119,6 +119,7 @@ fun ConversationRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
+    maxLines: Int = 2,
 ) {
     Row(modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
         .combinedClickable(onClick = onClick, onLongClick = onLongClick,
@@ -145,7 +146,7 @@ fun ConversationRow(
                     stringResource(R.string.messages_sender_preview, conversation.lastSender?.takeIf { it.isNotBlank() } ?: stringResource(R.string.me), conversation.preview)
                 else conversation.preview
                 Text(preview, Modifier.weight(1f), color = if (conversation.previewHidden) NotiColors.Secondary else NotiColors.Body,
-                    style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    style = MaterialTheme.typography.bodyMedium, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
                 UnreadBadge(conversation.unread)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {

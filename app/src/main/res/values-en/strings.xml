@@ -262,4 +262,11 @@
         <item quantity="one">Messages older than %1$d day will be deleted now. Continue?</item>
         <item quantity="other">Messages older than %1$d days will be deleted now. Continue?</item>
     </plurals>
+    <string name="settings_panel_width_narrow">Narrow</string>
+    <string name="settings_panel_width_normal">Normal</string>
+    <string name="settings_panel_width_wide">Wide</string>
+    <string name="settings_panel_width">Panel width</string>
+    <string name="settings_panel_width_custom">Custom width set by dragging the panel edge (%1$ddp)</string>
+    <string name="settings_panel_width_hint">You can also drag the edge bar while the panel is open to change its width</string>
+    <string name="panel_resize_description">Resize panel width</string>
 </resources>

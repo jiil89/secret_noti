@@ -10,6 +10,20 @@ enum class HandleSize(@StringRes val labelRes: Int, val heightDp: Int) {
     LARGE(R.string.settings_handle_size_large, 160),
 }
 
+/** 엣지패널 폭 프리셋(dp). 패널 가장자리를 끌어서 그 사이 값으로도 맞출 수 있다. */
+enum class PanelWidth(@StringRes val labelRes: Int, val dp: Int) {
+    NARROW(R.string.settings_panel_width_narrow, 280),
+    NORMAL(R.string.settings_panel_width_normal, 316),
+    WIDE(R.string.settings_panel_width_wide, 360);
+
+    companion object {
+        const val MIN_DP = 260
+        /** 바깥을 눌러 닫을 자리로 화면 폭에서 이만큼은 남긴다. */
+        const val SCREEN_MARGIN_DP = 48
+        fun of(dp: Int): PanelWidth? = entries.firstOrNull { it.dp == dp }
+    }
+}
+
 /** 보관 기간 선택지(일). 0은 기간 없이 계속 보관. */
 val RETENTION_OPTIONS = listOf(7, 30, 90, 180, 365, 0)
 
@@ -57,6 +71,8 @@ data class SettingsUi(
     val keywords: List<String>,
     val hiddenConversations: List<ConversationUi>,
     val themeMode: ThemeMode,
+    /** 엣지패널 폭(dp). 프리셋 값이 아니면 사용자가 끌어서 맞춘 폭. */
+    val panelWidthDp: Int,
 )
 
 /** 설정 화면에서 일어나는 모든 조작. */
@@ -80,6 +96,7 @@ interface SettingsActions {
     fun removeKeyword(keyword: String)
     fun unhideConversation(id: Long)
     fun setThemeMode(mode: ThemeMode)
+    fun setPanelWidth(dp: Int)
     /** 비밀번호를 받아 암호화한 백업 파일을 만든다. */
     fun backup(password: String)
     /** 백업 파일을 고른 뒤 비밀번호로 풀어서 합친다. */
