@@ -8,16 +8,21 @@
 필요: JDK 21, Android SDK (platform 37, build-tools 37). `local.properties`에 `sdk.dir`을 적는다.
 
 ```
-./gradlew assembleDebug testDebugUnitTest
+./gradlew assembleRelease testDebugUnitTest
 ```
 
-APK: `app/build/outputs/apk/debug/app-debug.apk`
+- 실사용: `app/build/outputs/apk/release/app-release.apk` (R8 최적화, 릴리스 키 서명)
+- 개발용: `assembleDebug` → `com.jiil.secretnoti.dev` "시크릿노티 dev"로 따로 설치됨
+
+릴리스 서명: `local.properties`에 `secretnoti.signing=<서명 정보 파일 경로>`를 적는다.
+그 파일에는 `storeFile`, `storePassword`, `keyAlias`, `keyPassword`가 들어 있다. 키와 비밀번호는 저장소에 올리지 않는다.
+**키를 잃어버리면 기존 앱 위에 업데이트를 설치할 수 없으니 따로 백업해 둔다.**
 
 ## 설치 (갤럭시)
 
 1. 설정 → 휴대전화 정보 → 소프트웨어 정보 → 빌드번호 7번 탭 → 개발자 옵션 → USB 디버깅 켜기
 2. 설정 → 보안 및 개인정보 보호 → **자동 차단(Auto Blocker) 끄기**
-3. `adb install -r app/build/outputs/apk/debug/app-debug.apk`
+3. `adb install -r app/build/outputs/apk/release/app-release.apk`
 
 ## 진행 상황
 

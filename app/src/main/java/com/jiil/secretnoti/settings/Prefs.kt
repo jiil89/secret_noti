@@ -34,7 +34,7 @@ class Pref<T>(
 object Prefs {
     internal lateinit var sp: SharedPreferences
 
-    val overlayEnabled = bool("overlay_enabled", false)
+    val overlayEnabled = bool("overlay_enabled", true)
     val gestureExclusion = bool("gesture_exclusion", true)
     val handleOnLeft = bool("handle_on_left", false)
     val handleY = float("handle_y", 0.35f)

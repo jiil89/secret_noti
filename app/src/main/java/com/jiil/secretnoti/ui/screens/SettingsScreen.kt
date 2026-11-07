@@ -96,14 +96,16 @@ fun SettingsScreen(
                         }
                     }
                     Surface(shape = NotiShapes.banner, color = NotiColors.DetailBackground) {
-                        Column(
+                        Row(
                             Modifier.fillMaxWidth().padding(NotiSpacing.content),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(NotiSpacing.medium),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(NotiSpacing.content),
                         ) {
-                            Text("손잡이 미리보기", style = MaterialTheme.typography.labelLarge)
                             HandlePreview(state.handleOnLeft, position, state.handleSize, state.handleEnabled)
-                            SettingsHelper("갤럭시 엣지 패널 손잡이와 겹치지 않는 위치로 맞춰 주세요.")
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text("손잡이 미리보기", style = MaterialTheme.typography.labelLarge)
+                                SettingsHelper("갤럭시 엣지 패널 손잡이와 겹치지 않는 위치로 맞춰 주세요.")
+                            }
                         }
                     }
                     Text("세로 위치", style = MaterialTheme.typography.titleSmall)
@@ -271,15 +273,15 @@ private fun HandlePreview(onLeft: Boolean, position: Float, handleSize: HandleSi
     val description = if (enabled) {
         "${if (onLeft) "왼쪽" else "오른쪽"} 손잡이, 위에서 ${(position * 100).toInt()}%, ${handleSize.label}"
     } else "손잡이 숨김"
-    Canvas(Modifier.size(120.dp, 220.dp).semantics { contentDescription = description }) {
+    Canvas(Modifier.size(56.dp, 104.dp).semantics { contentDescription = description }) {
         val inset = 2.dp.toPx()
         val phoneSize = Size(size.width - inset * 2, size.height - inset * 2)
-        drawRoundRect(NotiColors.Background, Offset(inset, inset), phoneSize, CornerRadius(18.dp.toPx()))
+        drawRoundRect(NotiColors.Background, Offset(inset, inset), phoneSize, CornerRadius(10.dp.toPx()))
         drawRoundRect(NotiColors.Secondary, Offset(inset, inset), phoneSize,
-            CornerRadius(18.dp.toPx()), style = Stroke(1.5.dp.toPx()))
+            CornerRadius(10.dp.toPx()), style = Stroke(1.5.dp.toPx()))
         if (enabled) {
             val barHeight = phoneSize.height * handleSize.heightDp / 800f
-            val barWidth = 4.dp.toPx()
+            val barWidth = 3.dp.toPx()
             val x = if (onLeft) inset else size.width - inset - barWidth
             val y = inset + (phoneSize.height - barHeight) * position
             drawRoundRect(NotiColors.Accent, Offset(x, y), Size(barWidth, barHeight), CornerRadius(barWidth))
