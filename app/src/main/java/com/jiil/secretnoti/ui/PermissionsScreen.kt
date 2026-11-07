@@ -40,7 +40,6 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jiil.secretnoti.capture.ListenerStatus
 import com.jiil.secretnoti.capture.NotiListenerService
-import com.jiil.secretnoti.capture.Source
 import com.jiil.secretnoti.capture.TargetApps
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.model.PermissionSummaryUi
@@ -128,15 +127,8 @@ fun PermissionsScreen() {
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("대상 앱 선택", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(
-                        "켠 앱의 알림만 저장하고 목록·엣지패널에 보여줍니다. 끄면 이미 저장된 기록은 숨겨지고 지워지지는 않아요.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    SourceSwitch(Source.KAKAO, if (state.kakaoInstalled) "설치됨" else "설치 안 됨")
-                    SourceSwitch(Source.SMS, state.smsPackage?.let { "기본 문자 앱: $it" } ?: "기본 문자 앱 확인 불가")
-                    SourceSwitch(Source.TEAMS, if (state.teamsInstalled) "설치됨" else "설치 안 됨")
+                    Text("대상 앱", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("어떤 앱의 알림을 저장할지는 설정 → 대상 앱에서 고를 수 있어요.")
                     Text(
                         "카카오톡 설정 → 알림에서 '메시지 미리보기'가 켜져 있어야 내용이 저장됩니다. " +
                             "알림을 끈 채팅방, PC 사용 중 알림이 꺼지는 경우는 저장되지 않아요.",
@@ -146,19 +138,6 @@ fun PermissionsScreen() {
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SourceSwitch(source: Source, detail: String) {
-    val pref = Prefs.sourcePref(source)
-    val checked by pref.flow.collectAsStateWithLifecycle()
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text(source.label, fontWeight = FontWeight.Bold)
-            Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Switch(checked = checked, onCheckedChange = { pref.value = it })
     }
 }
 

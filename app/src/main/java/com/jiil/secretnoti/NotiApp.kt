@@ -8,7 +8,7 @@ import com.jiil.secretnoti.settings.Prefs
 class NotiApp : Application() {
     lateinit var db: AppDatabase
         private set
-    val chat by lazy { ChatRepository(db) }
+    val chat by lazy { ChatRepository(this, db) }
 
     override fun onCreate() {
         super.onCreate()

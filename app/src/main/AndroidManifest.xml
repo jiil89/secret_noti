@@ -4,12 +4,20 @@
     <!-- 네트워크 권한(INTERNET)은 의도적으로 넣지 않는다. 모든 데이터는 기기 안에만 저장. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- 삭제된 메시지 알림 (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
     <queries>
         <package android:name="com.kakao.talk" />
         <package android:name="com.microsoft.teams" />
         <package android:name="com.samsung.android.messaging" />
         <package android:name="com.google.android.apps.messaging" />
+        <!-- 대상 앱 고르기: 설치된 앱 이름·아이콘을 보여주기 위함 -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
         <intent>
             <action android:name="android.intent.action.SENDTO" />
             <data android:scheme="smsto" />
@@ -46,5 +54,16 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+        <receiver
+            android:name=".widget.RecentWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/recent_widget_info" />
+        </receiver>
     </application>
 </manifest>

@@ -1,5 +1,8 @@
-﻿package com.jiil.secretnoti.ui.screens
+package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,39 +20,27 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.jiil.secretnoti.capture.Source
-import com.jiil.secretnoti.ui.NotiTheme
 import com.jiil.secretnoti.ui.components.AppIcon
 import com.jiil.secretnoti.ui.design.*
 import com.jiil.secretnoti.ui.model.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun SettingsScreen(
-    state: SettingsUi,
-    onBack: () -> Unit,
-    onSourceToggle: (Source, Boolean) -> Unit,
-    onHandleEnabledChange: (Boolean) -> Unit,
-    onHandleSideChange: (onLeft: Boolean) -> Unit,
-    onHandlePositionChange: (Float) -> Unit,
-    onHandleSizeChange: (HandleSize) -> Unit,
-    onGestureExclusionChange: (Boolean) -> Unit,
-    onRetentionChange: (Int) -> Unit,
-    onOpenPermissions: () -> Unit,
-    onOpenDiagnostics: () -> Unit,
-) {
+fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
+    var expandedApps by remember { mutableStateOf(false) }
+    var keyword by remember { mutableStateOf("") }
+    var passwordDialog by remember { mutableStateOf<Boolean?>(null) }
     var pendingRetention by remember(state.retentionDays) { mutableStateOf<Int?>(null) }
     val position = state.handlePosition.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: 0.5f
 
     Surface(color = NotiColors.Background) {
-        Column(Modifier.fillMaxSize().safeDrawingPadding()) {
+        Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
             Row(
                 Modifier.fillMaxWidth().padding(NotiSpacing.small),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBack, modifier = Modifier.size(NotiSpacing.button)) {
+                IconButton(onClick = actions::back, modifier = Modifier.size(NotiSpacing.button)) {
                     Icon(NotiIcons.chevronLeft, contentDescription = "뒤로", tint = NotiColors.Body)
                 }
                 Text("설정", style = MaterialTheme.typography.titleLarge, color = NotiColors.Text)
@@ -58,36 +49,30 @@ fun SettingsScreen(
                 Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(NotiSpacing.content),
                 verticalArrangement = Arrangement.spacedBy(NotiSpacing.panel),
             ) {
-                SettingsPermissions(state.permissions, onOpenPermissions)
+                SettingsPermissions(state.permissions, actions::openPermissions)
                 SettingsSection("대상 앱") {
-                    state.sources.forEach { source ->
-                        SettingsSwitchRow(
-                            label = source.source.label,
-                            detail = source.detail,
-                            checked = source.enabled,
-                            onCheckedChange = { onSourceToggle(source.source, it) },
-                            leading = {
-                                val packageName = source.packageName
-                                if (packageName != null) {
-                                    AppIcon(packageName, 24.dp)
-                                } else {
-                                    Icon(NotiIcons.message, null, Modifier.size(24.dp), tint = NotiColors.Secondary)
-                                }
-                            },
-                        )
+                    val suggested = state.apps.filter { it.suggested }
+                    val others = state.apps.filterNot { it.suggested }
+                    (suggested + if (expandedApps) others else emptyList()).forEach { app ->
+                        SettingsSwitchRow(app.label, app.enabled,
+                            onCheckedChange = { actions.toggleApp(app.packageName, it) }, detail = app.detail,
+                            leading = { AppIcon(app.packageName, 24.dp) })
                     }
-                    SettingsHelper("켠 앱의 알림만 저장하고 보여줘요. 끄면 기존 기록은 숨겨지고 지워지지 않아요.")
+                    if (others.isNotEmpty()) TextButton(onClick = { expandedApps = !expandedApps }) {
+                        Text(if (expandedApps) "다른 앱 접기" else "다른 앱 더 보기 (${others.size})")
+                    }
+                    SettingsHelper("메시지 알림을 보내는 앱이면 대부분 쓸 수 있어요. 켠 앱의 알림만 저장해요.")
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection("엣지 손잡이") {
                     SettingsSwitchRow("손잡이 표시", checked = state.handleEnabled,
-                        onCheckedChange = onHandleEnabledChange)
+                        onCheckedChange = actions::setHandleEnabled)
                     Text("표시 방향", style = MaterialTheme.typography.titleSmall)
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         listOf(true, false).forEachIndexed { index, onLeft ->
                             SegmentedButton(
                                 selected = state.handleOnLeft == onLeft,
-                                onClick = { onHandleSideChange(onLeft) },
+                                onClick = { actions.setHandleSide(onLeft) },
                                 enabled = state.handleEnabled,
                                 shape = SegmentedButtonDefaults.itemShape(index, 2),
                                 modifier = Modifier.heightIn(min = NotiSpacing.button),
@@ -111,7 +96,7 @@ fun SettingsScreen(
                     Text("세로 위치", style = MaterialTheme.typography.titleSmall)
                     Slider(
                         value = position,
-                        onValueChange = onHandlePositionChange,
+                        onValueChange = actions::setHandlePosition,
                         valueRange = 0f..1f,
                         enabled = state.handleEnabled,
                         modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)
@@ -126,7 +111,7 @@ fun SettingsScreen(
                         HandleSize.entries.forEachIndexed { index, handleSize ->
                             SegmentedButton(
                                 selected = state.handleSize == handleSize,
-                                onClick = { onHandleSizeChange(handleSize) },
+                                onClick = { actions.setHandleSize(handleSize) },
                                 enabled = state.handleEnabled,
                                 shape = SegmentedButtonDefaults.itemShape(index, HandleSize.entries.size),
                                 modifier = Modifier.heightIn(min = NotiSpacing.button),
@@ -138,9 +123,73 @@ fun SettingsScreen(
                         label = "뒤로 가기 제스처와 겹치지 않게",
                         detail = "손잡이를 밀 때 뒤로 가기가 실행되면 켜 두세요",
                         checked = state.gestureExclusion,
-                        onCheckedChange = onGestureExclusionChange,
+                        onCheckedChange = actions::setGestureExclusion,
                         enabled = state.handleEnabled,
                     )
+                }
+                HorizontalDivider(color = NotiColors.Divider)
+                SettingsSection("개인정보 보호") {
+                    SettingsSwitchRow("앱 잠금", state.lockEnabled, actions::setLock,
+                        enabled = state.lockAvailable,
+                        detail = if (state.lockAvailable) "지문·얼굴·화면 잠금으로 열어요" else "폰에 화면 잠금을 먼저 설정하세요")
+                    SettingsSwitchRow("엣지패널·위젯에서 내용 가리기", state.hidePreviews, actions::setHidePreviews)
+                    if (state.hiddenConversations.isNotEmpty()) {
+                        Text("숨긴 대화방", style = MaterialTheme.typography.titleSmall)
+                        state.hiddenConversations.forEach { conversation ->
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(conversation.title, style = MaterialTheme.typography.bodyLarge)
+                                    SettingsHelper(conversation.appLabel)
+                                }
+                                TextButton(onClick = { actions.unhideConversation(conversation.id) }) { Text("다시 보이기") }
+                            }
+                        }
+                    }
+                }
+                HorizontalDivider(color = NotiColors.Divider)
+                SettingsSection("삭제된 메시지") {
+                    SettingsSwitchRow("삭제되면 알림 받기", state.deletionAlerts, actions::setDeletionAlerts)
+                    if (state.deletionAlerts && !state.notificationPermission) {
+                        Surface(color = NotiColors.NoticeBackground, shape = NotiShapes.banner) {
+                            Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                                Text("삭제 알림을 받으려면 알림 권한이 필요해요", color = NotiColors.NoticeForeground)
+                                TextButton(onClick = actions::requestNotificationPermission) { Text("알림 권한 허용") }
+                            }
+                        }
+                    }
+                }
+                SettingsSection("사진") {
+                    SettingsSwitchRow("사진 미리보기 저장", state.savePhotos, actions::setSavePhotos,
+                        detail = "알림에 사진이 함께 오면 미리보기를 폰 안에 저장해요")
+                }
+                SettingsSection("키워드") {
+                    SettingsHelper("이 단어가 들어간 메시지를 강조해요")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        state.keywords.forEach { word ->
+                            InputChip(selected = true, onClick = { actions.removeKeyword(word) },
+                                label = { Text(word) }, modifier = Modifier.heightIn(min = 48.dp)
+                                    .semantics { contentDescription = "${word} 삭제" },
+                                trailingIcon = { Icon(NotiIcons.close, null, Modifier.size(16.dp)) })
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(keyword, { keyword = it }, Modifier.weight(1f),
+                            label = { Text("키워드") }, singleLine = true)
+                        Button(onClick = { actions.addKeyword(keyword.trim()); keyword = "" },
+                            enabled = keyword.isNotBlank() && state.keywords.none { it.equals(keyword.trim(), ignoreCase = true) }) {
+                            Text("추가")
+                        }
+                    }
+                }
+                SettingsSection("화면") {
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        ThemeMode.entries.forEachIndexed { index, mode ->
+                            SegmentedButton(selected = state.themeMode == mode, onClick = { actions.setThemeMode(mode) },
+                                shape = SegmentedButtonDefaults.itemShape(index, ThemeMode.entries.size), icon = {},
+                                modifier = Modifier.heightIn(min = 48.dp)) { Text(mode.label) }
+                        }
+                    }
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection("보관 기간") {
@@ -156,7 +205,7 @@ fun SettingsScreen(
                                         if (requiresRetentionConfirmation(state.retentionDays, days)) {
                                             pendingRetention = days
                                         } else {
-                                            onRetentionChange(days)
+                                            actions.setRetention(days)
                                         }
                                     }
                                 },
@@ -167,12 +216,28 @@ fun SettingsScreen(
                     }
                     SettingsHelper("기간이 지난 메시지는 자동으로 지워져요.")
                 }
-                TextButton(onClick = onOpenDiagnostics,
+                SettingsSection("백업") {
+                    SettingsHelper("백업 파일은 비밀번호로 암호화돼요. 비밀번호를 잊으면 복원할 수 없어요.")
+                    OutlinedButton(onClick = { passwordDialog = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                        Text("백업 파일 만들기")
+                    }
+                    OutlinedButton(onClick = { passwordDialog = false }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                        Text("백업에서 복원")
+                    }
+                }
+                TextButton(onClick = actions::openDiagnostics,
                     modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)) {
                     Text("진단 도구 (알림 덤프·제스처 기록)", color = NotiColors.Secondary)
                 }
             }
         }
+    }
+
+    passwordDialog?.let { backup ->
+        BackupPasswordDialog(backup, onDismiss = { passwordDialog = null }, onConfirm = { password ->
+            passwordDialog = null
+            if (backup) actions.backup(password) else actions.restore(password)
+        })
     }
 
     pendingRetention?.let { days ->
@@ -183,7 +248,7 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     pendingRetention = null
-                    onRetentionChange(days)
+                    actions.setRetention(days)
                 }, modifier = Modifier.heightIn(min = NotiSpacing.button)) { Text("지우기") }
             },
             dismissButton = {
@@ -273,52 +338,56 @@ private fun HandlePreview(onLeft: Boolean, position: Float, handleSize: HandleSi
     val description = if (enabled) {
         "${if (onLeft) "왼쪽" else "오른쪽"} 손잡이, 위에서 ${(position * 100).toInt()}%, ${handleSize.label}"
     } else "손잡이 숨김"
+    val background = NotiColors.Background
+    val secondary = NotiColors.Secondary
+    val accent = NotiColors.Accent
     Canvas(Modifier.size(56.dp, 104.dp).semantics { contentDescription = description }) {
         val inset = 2.dp.toPx()
         val phoneSize = Size(size.width - inset * 2, size.height - inset * 2)
-        drawRoundRect(NotiColors.Background, Offset(inset, inset), phoneSize, CornerRadius(10.dp.toPx()))
-        drawRoundRect(NotiColors.Secondary, Offset(inset, inset), phoneSize,
+        drawRoundRect(background, Offset(inset, inset), phoneSize, CornerRadius(10.dp.toPx()))
+        drawRoundRect(secondary, Offset(inset, inset), phoneSize,
             CornerRadius(10.dp.toPx()), style = Stroke(1.5.dp.toPx()))
         if (enabled) {
             val barHeight = phoneSize.height * handleSize.heightDp / 800f
             val barWidth = 3.dp.toPx()
             val x = if (onLeft) inset else size.width - inset - barWidth
             val y = inset + (phoneSize.height - barHeight) * position
-            drawRoundRect(NotiColors.Accent, Offset(x, y), Size(barWidth, barHeight), CornerRadius(barWidth))
+            drawRoundRect(accent, Offset(x, y), Size(barWidth, barHeight), CornerRadius(barWidth))
         }
     }
 }
 
-@Preview(name = "설정 · 권한 필요 · 왼쪽 손잡이", widthDp = 390, heightDp = 1800, showBackground = true)
 @Composable
-private fun SettingsMissingPermissionPreview() {
-    SettingsPreview(handleEnabled = true, permissions = PermissionSummaryUi(true, false, true))
-}
-
-@Preview(name = "설정 · 손잡이 끔 · 큰 글자", widthDp = 390, heightDp = 2100, fontScale = 1.3f, showBackground = true)
-@Composable
-private fun SettingsDisabledHandlePreview() {
-    SettingsPreview(handleEnabled = false, permissions = PermissionSummaryUi(true, true, true))
-}
-
-@Composable
-private fun SettingsPreview(handleEnabled: Boolean, permissions: PermissionSummaryUi) {
-    NotiTheme {
-        SettingsScreen(
-            state = SettingsUi(
-                sources = listOf(
-                    SourceSettingUi(Source.KAKAO, "com.kakao.talk", true, "설치됨"),
-                    SourceSettingUi(Source.SMS, null, true, "기본 문자 앱"),
-                    SourceSettingUi(Source.TEAMS, "com.microsoft.teams", false, "개인 프로필의 알림"),
-                ),
-                handleEnabled = handleEnabled, handleOnLeft = true, handlePosition = 0.35f,
-                handleSize = HandleSize.MEDIUM, gestureExclusion = true, retentionDays = 30,
-                permissions = permissions,
-            ),
-            onBack = {}, onSourceToggle = { _, _ -> }, onHandleEnabledChange = {},
-            onHandleSideChange = {}, onHandlePositionChange = {}, onHandleSizeChange = {},
-            onGestureExclusionChange = {}, onRetentionChange = {}, onOpenPermissions = {},
-            onOpenDiagnostics = {},
-        )
+private fun BackupPasswordDialog(backup: Boolean, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+    // Passwords stay in transient composition state, never saved instance state.
+    var password by remember { mutableStateOf("") }
+    var confirmation by remember { mutableStateOf("") }
+    var submitted by remember { mutableStateOf(false) }
+    val error = when {
+        backup && password.length < 6 -> "비밀번호는 6자 이상 입력하세요"
+        backup && password != confirmation -> "비밀번호가 일치하지 않아요"
+        !backup && password.isEmpty() -> "비밀번호를 입력하세요"
+        else -> null
     }
+    AlertDialog(onDismissRequest = onDismiss,
+        title = { Text(if (backup) "백업 파일 만들기" else "백업에서 복원") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(password, { password = it }, label = { Text("비밀번호") }, singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = submitted && error != null)
+                if (backup) OutlinedTextField(confirmation, { confirmation = it }, label = { Text("비밀번호 확인") }, singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = submitted && password != confirmation)
+                if (submitted && error != null) Text(error, color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("취소") } },
+        confirmButton = {
+            TextButton(onClick = {
+                submitted = true
+                if (error == null) onConfirm(password)
+            }) { Text(if (backup) "백업" else "복원") }
+        })
 }

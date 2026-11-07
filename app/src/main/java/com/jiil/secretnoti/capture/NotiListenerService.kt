@@ -9,6 +9,7 @@ import com.jiil.secretnoti.NotiApp
 import com.jiil.secretnoti.data.NotificationDump
 import com.jiil.secretnoti.overlay.EdgeOverlayController
 import com.jiil.secretnoti.settings.Prefs
+import com.jiil.secretnoti.widget.WidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -25,6 +26,12 @@ class NotiListenerService : NotificationListenerService() {
     private val chat by lazy { NotiApp.instance.chat }
     private var overlay: EdgeOverlayController? = null
     private var overlayJob: Job? = null
+
+    /** 알림 key → 그 알림에 마지막으로 담겨 있던 메시지 키들. 중간에서 빠진 메시지(삭제) 찾기용. 메인 스레드 전용. */
+    private val lastKeys = HashMap<String, List<String>>()
+
+    /** 같은 앱을 '메시지 알림을 보낸 앱'으로 너무 자주 기록하지 않게. */
+    private val seenRecordedAt = HashMap<String, Long>()
 
     override fun onListenerConnected() {
         ListenerStatus.connected.value = true
@@ -62,6 +69,7 @@ class NotiListenerService : NotificationListenerService() {
 
     override fun onNotificationRemoved(sbn: StatusBarNotification, rankingMap: RankingMap, reason: Int) {
         record(sbn, "removed", reason)
+        lastKeys.remove(sbn.key)
     }
 
     private fun stopOverlay() {
@@ -71,13 +79,53 @@ class NotiListenerService : NotificationListenerService() {
         overlay = null
     }
 
+    private fun isTarget(pkg: String) =
+        TargetApps.isEnabled(pkg, Prefs.enabledApps.value, TargetApps.defaultSmsPackage(this))
+
     private fun ingest(sbn: StatusBarNotification) {
-        val source = TargetApps.sourceOf(this, sbn.packageName)?.takeIf(Prefs::isSourceEnabled) ?: return
-        val parsed = NotificationParser.parse(SnapshotExtractor.from(sbn)) ?: return
+        val pkg = sbn.packageName
+        if (pkg == packageName) return
+        val snapshot = SnapshotExtractor.from(sbn)
+        val now = System.currentTimeMillis()
+
+        val messageLike = !snapshot.isOngoing && (snapshot.messages.isNotEmpty() || snapshot.category == Notification.CATEGORY_MESSAGE)
+        if (messageLike && now - (seenRecordedAt[pkg] ?: 0) > 60_000) {
+            seenRecordedAt[pkg] = now
+            scope.launch(Dispatchers.IO) { runCatching { chat.recordSeenApp(pkg, now) } }
+        }
+        if (!isTarget(pkg)) return
+
+        val source = TargetApps.sourceOf(this, pkg)
+        // 카톡·문자 외의 앱은 메시지형 알림만 받는다 (광고·통화·상태 알림 제외).
+        val messagesOnly = source == Source.OTHER || source == Source.TEAMS
+        val parsed = NotificationParser.parse(snapshot, messagesOnly) ?: return
+
+        val keys = parsed.messages.map { it.dedupKey }
+        val removed = if (keys.isNotEmpty() && keys.all { it.startsWith("id:") }) {
+            lastKeys[sbn.key]?.let { NotificationParser.removedFromMiddle(it, keys) }.orEmpty()
+        } else {
+            emptyList()
+        }
+        lastKeys[sbn.key] = keys
+
         val contentIntent = sbn.notification.contentIntent
+        val context = applicationContext
         scope.launch(Dispatchers.IO) {
-            runCatching { chat.ingest(source, sbn.packageName, parsed, System.currentTimeMillis()) }
-                .onSuccess { id -> contentIntent?.let { AppLauncher.remember(id, it) } }
+            val result = runCatching { chat.ingest(source, pkg, parsed, now, removed) }.getOrNull() ?: return@launch
+            contentIntent?.let { AppLauncher.remember(result.conversationId, it) }
+            if (Prefs.savePhotos.value) {
+                for ((messageId, m) in result.inserted) {
+                    val uri = m.imageUri ?: continue
+                    PhotoSaver.save(context, uri, result.conversationId, messageId)
+                        ?.let { chat.setImagePath(messageId, it) }
+                }
+            }
+            if (result.deleted.isNotEmpty() && Prefs.deletionAlerts.value) {
+                DeletionNotifier.notify(
+                    context, result.conversationId, result.roomTitle, AppLabels.label(context, pkg), result.deleted,
+                )
+            }
+            WidgetUpdater.request(context)
         }
     }
 
@@ -91,7 +139,7 @@ class NotiListenerService : NotificationListenerService() {
     private fun record(sbn: StatusBarNotification, event: String, reason: Int?) {
         val pkg = sbn.packageName
         if (pkg == packageName) return
-        if (!Prefs.dumpAllApps.value && TargetApps.sourceOf(this, pkg)?.takeIf(Prefs::isSourceEnabled) == null) return
+        if (!Prefs.dumpAllApps.value && !isTarget(pkg)) return
 
         val json = try {
             NotificationDumper.toJson(sbn, event, reason)

@@ -13,11 +13,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import com.jiil.secretnoti.ui.design.NotiColors
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.jiil.secretnoti.NotiApp
-import com.jiil.secretnoti.ui.model.SourceFilter
+import com.jiil.secretnoti.ui.apps
 import com.jiil.secretnoti.ui.screens.EdgePanel
 
 /** 오버레이 창 전체: 반투명 배경 + 가장자리 엣지패널 카드. 바깥을 누르면 닫힌다. */
@@ -31,12 +31,12 @@ fun PanelContent(
 ) {
     val chat = remember { NotiApp.instance.chat }
     val conversations by remember { chat.observeConversations() }.collectAsState(initial = emptyList())
-    var filter by remember { mutableStateOf(SourceFilter.ALL) }
+    var filter by remember { mutableStateOf<String?>(null) }
 
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color(0x800A0C10))
+            .background(NotiColors.Scrim)
             .pointerInput(Unit) { detectTapGestures { onClose() } },
     ) {
         Box(
@@ -48,7 +48,7 @@ fun PanelContent(
         ) {
             EdgePanel(
                 conversations = conversations,
-                availableSources = conversations.map { it.source }.toSet(),
+                availableApps = conversations.apps(),
                 filter = filter,
                 onFilterChange = { filter = it },
                 onOpenConversation = onOpenConversation,

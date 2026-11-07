@@ -8,6 +8,8 @@ data class NotificationSnapshot(
     val locusId: String?,
     val postTime: Long,
     val isGroupSummary: Boolean,
+    val isOngoing: Boolean = false,
+    val category: String? = null,
     val title: String?,
     val text: String?,
     val bigText: String?,
@@ -27,6 +29,9 @@ data class RawMessage(
     val time: Long,
     /** 앱이 붙여 주는 메시지 고유번호. 카톡은 `chatLogId`. */
     val messageId: String?,
+    /** 메시지에 붙은 데이터(사진 미리보기 등)의 MIME 타입과 주소. */
+    val dataMimeType: String? = null,
+    val dataUri: String? = null,
 )
 
 data class ParsedMessage(
@@ -35,6 +40,8 @@ data class ParsedMessage(
     val isMine: Boolean,
     val text: String,
     val postedAt: Long,
+    /** 사진 미리보기 주소(content://…). 앱이 알림에 넣어 준 경우에만. */
+    val imageUri: String? = null,
 )
 
 data class ParsedNotification(
@@ -52,16 +59,34 @@ object NotificationParser {
         "이 메시지는 삭제되었습니다",
         "This message was deleted",
         "This message has been deleted",
+        "You deleted this message",
+        "메시지 전송이 취소되었습니다",
+        "메시지를 보내지 않았습니다",
+        "unsent a message",
     )
 
     fun isDeletionMarker(text: String): Boolean = deletionMarkers.any { text.contains(it) }
 
     /**
+     * 같은 알림이 갱신될 때 목록 "중간"에서 빠진 메시지를 찾는다.
+     * 카톡 같은 앱은 알림에 최근 몇 개만 담고 오래된 것부터 빼므로, 앞쪽에서 빠진 것은 삭제가 아니다.
+     * 빠진 메시지보다 앞선 메시지가 아직 남아 있으면 중간에서 빠진 것 → 상대가 삭제한 것으로 본다.
+     */
+    fun removedFromMiddle(previous: List<String>, current: List<String>): List<String> {
+        val now = current.toSet()
+        return previous.filterIndexed { i, key ->
+            key !in now && previous.subList(0, i).any { it in now }
+        }
+    }
+
+    /**
      * 그룹 요약 알림이나 내용 없는 알림이면 null.
      * 방 키는 shortcutId → locusId → tag → 방 이름 순으로 고른다 (카톡은 shortcutId = 채팅방 번호).
+     * [messagesOnly]가 true면 메시지형 알림(MessagingStyle 또는 메시지 카테고리)만 받는다. 일반 앱의 광고·상태 알림을 거르기 위함.
      */
-    fun parse(s: NotificationSnapshot): ParsedNotification? {
-        if (s.isGroupSummary) return null
+    fun parse(s: NotificationSnapshot, messagesOnly: Boolean = false): ParsedNotification? {
+        if (s.isGroupSummary || s.isOngoing) return null
+        if (messagesOnly && s.messages.isEmpty() && s.category != "msg") return null
 
         val isGroup = s.isGroupConversation ?: (s.conversationTitle != null)
         val roomTitle = if (isGroup) {
@@ -81,6 +106,7 @@ object NotificationParser {
                     isMine = mine,
                     text = m.text,
                     postedAt = m.time,
+                    imageUri = m.dataUri?.takeIf { m.dataMimeType?.startsWith("image/") == true },
                 )
             }
         } else {

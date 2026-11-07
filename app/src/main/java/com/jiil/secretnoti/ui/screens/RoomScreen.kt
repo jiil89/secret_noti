@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.jiil.secretnoti.capture.Source
 import com.jiil.secretnoti.ui.components.*
 import com.jiil.secretnoti.ui.design.*
 import com.jiil.secretnoti.ui.model.MessageUi
@@ -20,10 +19,11 @@ import com.jiil.secretnoti.ui.model.MessageUi
 @Composable
 fun RoomScreen(
     title: String,
-    source: Source,
+    appLabel: String,
     packageName: String,
     isGroup: Boolean,
     messages: List<MessageUi>,
+    keywords: List<String>,
     onBack: () -> Unit,
     onOpenInApp: () -> Unit,
 ) {
@@ -43,7 +43,7 @@ fun RoomScreen(
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         AppIcon(packageName, 16.dp)
-                        Text(source.label, color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall)
+                        Text(appLabel, color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -59,24 +59,20 @@ fun RoomScreen(
                     if (index == 0 || date != messageDate(ordered[index - 1].at)) {
                         item(key = "date-$date") { DateDivider(date) }
                     }
-                    item(key = message.id) { MessageBubble(message, isGroup) }
+                    item(key = message.id) { MessageBubble(message, isGroup, keywords = keywords) }
                 }
             }
             Column(Modifier.background(NotiColors.Background)) {
                 HorizontalDivider(color = NotiColors.Divider)
                 Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val objectParticle = when (source) {
-                        Source.KAKAO -> "을"
-                        Source.SMS, Source.TEAMS -> "를"
-                    }
-                    Text("답장하려면 ${source.label}$objectParticle 열어야 해요. 열면 읽음 처리돼요.",
+                    Text("답장하려면 ${appLabel} 앱을 열어야 해요. 열면 읽음 처리돼요.",
                         Modifier.fillMaxWidth(), color = NotiColors.Secondary,
                         style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
                     OutlinedButton(onOpenInApp, Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         shape = NotiShapes.banner, border = BorderStroke(1.dp, NotiColors.Outline),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = NotiColors.Text)) {
-                        Text("${source.label}에서 열기", style = MaterialTheme.typography.labelLarge)
+                        Text("${appLabel}에서 열기", style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }

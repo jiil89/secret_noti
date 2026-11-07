@@ -1,4 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">시크릿노티</string>
+    <string name="me">나</string>
+
+    <string name="channel_deleted">삭제된 메시지</string>
+    <string name="deleted_alert_title">%1$s · 삭제된 메시지를 보관했어요</string>
+    <string name="deleted_alert_hidden">원문 %1$d개를 보관했어요. 열어서 확인하세요.</string>
+    <string name="deleted_alert_public">삭제된 메시지가 있어요</string>
+
+    <string name="widget_name">시크릿노티 최근 메시지</string>
+    <string name="widget_description">최근 대화방을 홈 화면에서 바로 봐요</string>
+    <string name="widget_empty">아직 저장된 메시지가 없어요</string>
+    <string name="preview_locked">잠금 중 · 열어서 확인</string>
+
+    <string name="lock_prompt_title">시크릿노티 잠금 해제</string>
+    <string name="lock_prompt_subtitle">지문·얼굴 또는 화면 잠금으로 열어요</string>
+
+    <string name="backup_done">백업을 만들었어요 (메시지 %1$d개)</string>
+    <string name="backup_failed">백업을 만들지 못했어요. 저장 위치를 확인해 주세요.</string>
+    <string name="restore_done">복원했어요 (새 메시지 %1$d개)</string>
+    <string name="restore_wrong_password">비밀번호가 맞지 않거나 백업 파일이 손상됐어요.</string>
+    <string name="restore_failed">백업 파일을 읽지 못했어요.</string>
+
+    <string name="app_not_found">%1$s 앱을 찾을 수 없어요</string>
+    <string name="sms_label">문자 (기본 문자 앱)</string>
+    <string name="sms_not_found">기본 문자 앱을 찾지 못했어요</string>
+    <string name="detail_seen">메시지 알림을 보낸 적 있음</string>
+    <string name="detail_messenger">메신저</string>
+    <string name="detail_installed">설치된 앱</string>
 </resources>

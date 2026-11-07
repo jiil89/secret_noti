@@ -2,7 +2,8 @@ package com.jiil.secretnoti.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -24,12 +24,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.jiil.secretnoti.capture.Source
 import com.jiil.secretnoti.ui.design.*
 import com.jiil.secretnoti.ui.model.*
 import java.time.LocalDate
@@ -51,43 +49,35 @@ fun UnreadBadge(count: Int, modifier: Modifier = Modifier) {
         .padding(horizontal = 6.dp, vertical = 2.dp)
         .clearAndSetSemantics { contentDescription = "이 앱에서 확인하지 않은 메시지 ${count}개" },
         contentAlignment = Alignment.Center) {
-        Text(if (count > 99) "99+" else count.toString(), color = Color.White,
+        Text(if (count > 99) "99+" else count.toString(), color = NotiColors.OnAccent,
             style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-fun SourceLabel(source: Source, modifier: Modifier = Modifier) {
-    Text(source.label, modifier, color = NotiColors.Secondary, style = MaterialTheme.typography.labelSmall)
+fun SourceLabel(appLabel: String, modifier: Modifier = Modifier) {
+    Text(appLabel, modifier, color = NotiColors.Secondary, style = MaterialTheme.typography.labelSmall)
 }
 
 @Composable
-fun SourceFilterChips(
-    availableSources: Set<Source>,
-    filter: SourceFilter,
-    onFilterChange: (SourceFilter) -> Unit,
+fun AppFilterChips(
+    availableApps: List<AppRef>, filter: String?, onFilterChange: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val filters = listOf(SourceFilter.ALL) + Source.entries
-        .filter { it in availableSources }.map { SourceFilter.valueOf(it.name) }
+    if (availableApps.size < 2) return
+    val filters = listOf(null to "전체") + availableApps.map { it.packageName to it.label }
     Row(modifier.horizontalScroll(rememberScrollState()).selectableGroup(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        filters.forEach { item ->
-            val selected = item == filter
-            val label = when (item) {
-                SourceFilter.ALL -> "전체"
-                SourceFilter.KAKAO -> "카톡"
-                SourceFilter.SMS -> "문자"
-                SourceFilter.TEAMS -> "Teams"
-            }
+        filters.forEach { (packageName, label) ->
+            val selected = packageName == filter
             Box(Modifier.heightIn(min = 48.dp).widthIn(min = 48.dp)
-                .selectable(selected, onClick = { onFilterChange(item) }, role = Role.Tab),
+                .selectable(selected, onClick = { onFilterChange(packageName) }, role = Role.Tab),
                 contentAlignment = Alignment.Center) {
                 Surface(shape = NotiShapes.pill,
-                    color = if (selected) NotiColors.Text else Color.White,
+                    color = if (selected) NotiColors.Text else NotiColors.Background,
                     border = if (selected) null else BorderStroke(1.dp, NotiColors.Outline)) {
                     Text(label, Modifier.heightIn(min = 36.dp).padding(horizontal = 14.dp, vertical = 8.dp),
-                        color = if (selected) Color.White else NotiColors.Body,
+                        color = if (selected) NotiColors.Background else NotiColors.Body,
                         style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                 }
             }
@@ -117,49 +107,59 @@ fun NoticeBanner(modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ConversationRow(
     conversation: ConversationUi,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
 ) {
     Row(modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-        .clickable(onClick = onClick, role = Role.Button)
+        .combinedClickable(onClick = onClick, onLongClick = onLongClick,
+            onLongClickLabel = "대화방 관리", role = Role.Button)
         .padding(horizontal = 4.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box {
             InitialAvatar(conversation.title)
             AppIcon(conversation.packageName, 18.dp,
                 Modifier.align(Alignment.BottomEnd)
-                    .background(Color.White, CircleShape).padding(2.dp))
+                    .background(NotiColors.Background, CircleShape).padding(2.dp))
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (conversation.isPinned) Icon(NotiIcons.pin, "상단 고정됨", Modifier.size(14.dp), tint = NotiColors.Secondary)
                 Text(conversation.title, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(formatRelativeTime(conversation.lastAt), style = MaterialTheme.typography.labelSmall,
                     color = NotiColors.Secondary)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val preview = if (conversation.isGroup)
+                val preview = if (conversation.previewHidden) "잠금 중 · 열어서 확인"
+                else if (conversation.isGroup)
                     "${conversation.lastSender?.takeIf { it.isNotBlank() } ?: "나"}: ${conversation.preview}"
                 else conversation.preview
-                Text(preview, Modifier.weight(1f), color = NotiColors.Body,
+                Text(preview, Modifier.weight(1f), color = if (conversation.previewHidden) NotiColors.Secondary else NotiColors.Body,
                     style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 UnreadBadge(conversation.unread)
             }
-            SourceLabel(conversation.source)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                SourceLabel(conversation.appLabel, Modifier.weight(1f, fill = false))
+                if (conversation.deletedCount > 0) MessageTag("삭제 ${conversation.deletedCount}")
+                if (conversation.hasKeyword) MessageTag("키워드", accent = true)
+            }
         }
     }
 }
 
 @Composable
-fun MessageBubble(message: MessageUi, isGroup: Boolean, modifier: Modifier = Modifier) {
+fun MessageBubble(message: MessageUi, isGroup: Boolean, modifier: Modifier = Modifier, keywords: List<String> = emptyList()) {
+    val deletedOutline = NotiColors.DeletedOutline
     val shape = if (message.isMine) NotiShapes.mine else NotiShapes.bubble
     val background = when {
         message.deletedBySender -> NotiColors.DeletedBackground
         message.isMine -> NotiColors.NoticeBackground
-        else -> Color.White
+        else -> NotiColors.Background
     }
     Column(modifier.fillMaxWidth(),
         horizontalAlignment = if (message.isMine) Alignment.End else Alignment.Start,
@@ -183,7 +183,7 @@ fun MessageBubble(message: MessageUi, isGroup: Boolean, modifier: Modifier = Mod
                     floatArrayOf(4.dp.toPx(), 3.dp.toPx())))
                 onDrawWithContent {
                     drawContent()
-                    drawPath(path, NotiColors.DeletedOutline, style = stroke)
+                    drawPath(path, deletedOutline, style = stroke)
                 }
             } else Modifier
             Column(Modifier.weight(1f, fill = false).widthIn(max = if (message.deletedBySender) 270.dp else 250.dp)
@@ -194,8 +194,12 @@ fun MessageBubble(message: MessageUi, isGroup: Boolean, modifier: Modifier = Mod
                         style = MaterialTheme.typography.labelMedium)
                 }
                 // The UI contract supplies preserved original content in text.
-                Text(message.text, color = if (message.deletedBySender) NotiColors.Body else NotiColors.Text,
-                    style = MaterialTheme.typography.bodyLarge)
+                message.imagePath?.let { MessagePhoto(it) }
+                if (message.imagePath == null || message.text.trim().removeSuffix(".") != "사진을 보냈습니다") {
+                    Text(highlightedText(message.text, keywords),
+                        color = if (message.deletedBySender) NotiColors.Body else NotiColors.Text,
+                        style = MaterialTheme.typography.bodyLarge)
+                }
             }
             if (!message.isMine && !message.deletedBySender) {
                 Spacer(Modifier.width(6.dp))
@@ -224,4 +228,12 @@ fun EmptyConversations(modifier: Modifier = Modifier) {
         Text("새 알림이 오면 여기에 모아 보여드려요.", color = NotiColors.Secondary,
             style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
     }
+}
+
+@Composable
+fun MessageTag(text: String, accent: Boolean = false) {
+    Text(text, Modifier.background(if (accent) NotiColors.NoticeBackground else NotiColors.DetailBackground,
+        NotiShapes.pill).padding(horizontal = 6.dp, vertical = 2.dp),
+        color = if (accent) NotiColors.NoticeForeground else NotiColors.Secondary,
+        style = MaterialTheme.typography.labelSmall)
 }

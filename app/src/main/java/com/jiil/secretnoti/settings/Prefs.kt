@@ -2,13 +2,12 @@ package com.jiil.secretnoti.settings
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.jiil.secretnoti.capture.Source
-import com.jiil.secretnoti.ui.model.HandleSize
 import androidx.core.content.edit
+import com.jiil.secretnoti.capture.TargetApps
+import com.jiil.secretnoti.ui.model.HandleSize
+import com.jiil.secretnoti.ui.model.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 
 class Pref<T>(
     private val key: String,
@@ -38,43 +37,49 @@ object Prefs {
     val gestureExclusion = bool("gesture_exclusion", true)
     val handleOnLeft = bool("handle_on_left", false)
     val handleY = float("handle_y", 0.35f)
-    val handleSize = Pref(
-        "handle_size", HandleSize.MEDIUM,
-        { k, d -> runCatching { HandleSize.valueOf(getString(k, d.name)!!) }.getOrDefault(d) },
-        { k, v -> putString(k, v.name) },
-    )
+    val handleSize = enum("handle_size", HandleSize.MEDIUM)
     val dumpAllApps = bool("dump_all_apps", false)
     val lastPanelOpenedAt = long("last_panel_opened_at", 0L)
+
     /** 보관 기간(일). 0이면 지우지 않고 계속 보관. */
     val retentionDays = int("retention_days", 30)
     val lastCleanupAt = long("last_cleanup_at", 0L)
 
-    /** 설정에서 고른 대상 앱. 꺼진 앱의 알림은 저장하지 않고 목록에서도 숨긴다. */
-    val sourceKakao = bool("source_kakao", true)
-    val sourceSms = bool("source_sms", true)
-    val sourceTeams = bool("source_teams", true)
+    /** 대상 앱 패키지 목록. 기본 문자 앱은 [TargetApps.SMS_TOKEN]. */
+    val enabledApps = stringSet("enabled_apps", TargetApps.DEFAULT_ENABLED)
 
-    fun sourcePref(source: Source): Pref<Boolean> = when (source) {
-        Source.KAKAO -> sourceKakao
-        Source.SMS -> sourceSms
-        Source.TEAMS -> sourceTeams
-    }
-
-    fun isSourceEnabled(source: Source): Boolean = sourcePref(source).value
-
-    val enabledSources: Flow<Set<Source>> =
-        combine(sourceKakao.flow, sourceSms.flow, sourceTeams.flow) { _, _, _ ->
-            Source.entries.filter { isSourceEnabled(it) }.toSet()
-        }
+    val lockEnabled = bool("lock_enabled", false)
+    val hidePreviews = bool("hide_previews", false)
+    val deletionAlerts = bool("deletion_alerts", true)
+    val savePhotos = bool("save_photos", true)
+    val keywords = stringSet("keywords", emptySet())
+    val themeMode = enum("theme_mode", ThemeMode.SYSTEM)
 
     private val all = listOf(
-        overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, dumpAllApps, lastPanelOpenedAt, retentionDays, lastCleanupAt,
-        sourceKakao, sourceSms, sourceTeams,
+        overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, dumpAllApps, lastPanelOpenedAt,
+        retentionDays, lastCleanupAt, enabledApps, lockEnabled, hidePreviews, deletionAlerts, savePhotos,
+        keywords, themeMode,
     )
 
     fun init(context: Context) {
         sp = context.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+        migrateSourceSwitches()
         all.forEach { it.load(sp) }
+    }
+
+    fun setAppEnabled(packageName: String, enabled: Boolean) {
+        enabledApps.value = if (enabled) enabledApps.value + packageName else enabledApps.value - packageName
+    }
+
+    /** 이전 버전의 카톡·문자·Teams 스위치를 대상 앱 목록으로 옮긴다. */
+    private fun migrateSourceSwitches() {
+        if (sp.contains("enabled_apps") || !sp.contains("source_kakao")) return
+        val set = buildSet {
+            if (sp.getBoolean("source_kakao", true)) add(TargetApps.KAKAO)
+            if (sp.getBoolean("source_sms", true)) add(TargetApps.SMS_TOKEN)
+            if (sp.getBoolean("source_teams", true)) add(TargetApps.TEAMS)
+        }
+        sp.edit { putStringSet("enabled_apps", set) }
     }
 
     private fun bool(key: String, default: Boolean) =
@@ -88,4 +93,13 @@ object Prefs {
 
     private fun long(key: String, default: Long) =
         Pref(key, default, { k, d -> getLong(k, d) }, { k, v -> putLong(k, v) })
+
+    private fun stringSet(key: String, default: Set<String>) =
+        Pref(key, default, { k, d -> getStringSet(k, d)?.toSet() ?: d }, { k, v -> putStringSet(k, v) })
+
+    private inline fun <reified E : Enum<E>> enum(key: String, default: E) = Pref(
+        key, default,
+        { k, d -> runCatching { enumValueOf<E>(getString(k, d.name)!!) }.getOrDefault(d) },
+        { k, v -> putString(k, v.name) },
+    )
 }

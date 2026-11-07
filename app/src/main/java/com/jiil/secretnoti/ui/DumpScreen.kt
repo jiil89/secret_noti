@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jiil.secretnoti.NotiApp
-import com.jiil.secretnoti.capture.TargetApps
+import com.jiil.secretnoti.capture.AppLabels
 import com.jiil.secretnoti.data.NotificationDump
 import com.jiil.secretnoti.settings.Prefs
 import kotlinx.coroutines.Dispatchers
@@ -108,7 +108,7 @@ private fun DumpRow(dump: NotificationDump, expanded: Boolean, onToggle: () -> U
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(timeFormat.format(Date(dump.receivedAt)), style = MaterialTheme.typography.labelSmall)
                 Text(
-                    TargetApps.classify(dump.packageName, null)?.label ?: dump.packageName,
+                    AppLabels.label(LocalContext.current, dump.packageName),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                 )

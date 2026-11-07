@@ -5,25 +5,23 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jiil.secretnoti.capture.Source
 import com.jiil.secretnoti.ui.components.*
 import com.jiil.secretnoti.ui.design.*
 import com.jiil.secretnoti.ui.model.*
 
-private fun visibleConversations(conversations: List<ConversationUi>, filter: SourceFilter) =
-    conversations.filter { filter == SourceFilter.ALL || it.source.name == filter.name }
-        .sortedByDescending { it.lastAt }
+private fun visibleConversations(conversations: List<ConversationUi>, filter: String?) =
+    conversations.filter { filter == null || it.packageName == filter }
 
 @Composable
 fun EdgePanel(
     conversations: List<ConversationUi>,
-    availableSources: Set<Source>,
-    filter: SourceFilter,
-    onFilterChange: (SourceFilter) -> Unit,
+    availableApps: List<AppRef>,
+    filter: String?,
+    onFilterChange: (String?) -> Unit,
     onOpenConversation: (Long) -> Unit,
     onShowAll: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -41,7 +39,7 @@ fun EdgePanel(
                     Text("최근 메시지", style = MaterialTheme.typography.titleLarge)
                     NoticeChip()
                 }
-                SourceFilterChips(availableSources, filter, onFilterChange)
+                AppFilterChips(availableApps, filter, onFilterChange)
                 ConversationItems(visibleConversations(conversations, filter).take(10),
                     onOpenConversation, Modifier.weight(1f))
                 Column {
@@ -67,26 +65,44 @@ fun EdgePanel(
 @Composable
 fun ConversationListScreen(
     conversations: List<ConversationUi>,
-    availableSources: Set<Source>,
-    filter: SourceFilter,
-    onFilterChange: (SourceFilter) -> Unit,
+    availableApps: List<AppRef>,
+    filter: String?,
+    onFilterChange: (String?) -> Unit,
     onOpenConversation: (Long) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenSearch: () -> Unit,
+    onTogglePin: (Long) -> Unit,
+    onHide: (Long) -> Unit,
+    onDelete: (Long) -> Unit,
 ) {
+    var pendingDelete by remember { mutableStateOf<ConversationUi?>(null) }
     Surface(color = NotiColors.Background) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = NotiSpacing.content)) {
             Row(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("모든 메시지", style = MaterialTheme.typography.titleLarge)
+                Text("모든 메시지", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                IconButton(onClick = onOpenSearch) { Icon(NotiIcons.search, "검색") }
                 SettingsButton(onOpenSettings)
             }
             NoticeChip()
             Spacer(Modifier.height(14.dp))
-            SourceFilterChips(availableSources, filter, onFilterChange)
+            AppFilterChips(availableApps, filter, onFilterChange)
             Spacer(Modifier.height(8.dp))
-            ConversationItems(visibleConversations(conversations, filter), onOpenConversation, Modifier.weight(1f))
+            ConversationItems(visibleConversations(conversations, filter), onOpenConversation, Modifier.weight(1f),
+                onTogglePin = onTogglePin, onHide = onHide, onDelete = { pendingDelete = it })
         }
+    }
+    pendingDelete?.let { conversation ->
+        AlertDialog(onDismissRequest = { pendingDelete = null },
+            title = { Text("기록 삭제") },
+            text = { Text("이 대화방의 저장된 기록을 모두 지울까요?") },
+            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("취소") } },
+            confirmButton = {
+                TextButton(onClick = { pendingDelete = null; onDelete(conversation.id) }) {
+                    Text("삭제", color = MaterialTheme.colorScheme.error)
+                }
+            })
     }
 }
 
@@ -95,13 +111,28 @@ private fun ConversationItems(
     conversations: List<ConversationUi>,
     onOpenConversation: (Long) -> Unit,
     modifier: Modifier,
+    onTogglePin: ((Long) -> Unit)? = null,
+    onHide: ((Long) -> Unit)? = null,
+    onDelete: ((ConversationUi) -> Unit)? = null,
 ) {
     if (conversations.isEmpty()) {
         Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { EmptyConversations() }
     } else {
         LazyColumn(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             items(conversations, key = { it.id }) { conversation ->
-                ConversationRow(conversation, onClick = { onOpenConversation(conversation.id) })
+                var menuOpen by remember { mutableStateOf(false) }
+                Box {
+                    ConversationRow(conversation, onClick = { onOpenConversation(conversation.id) },
+                        onLongClick = if (onTogglePin != null) ({ menuOpen = true }) else null)
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(text = { Text(if (conversation.isPinned) "고정 해제" else "상단 고정") },
+                            onClick = { menuOpen = false; onTogglePin?.invoke(conversation.id) })
+                        DropdownMenuItem(text = { Text("대화방 숨기기") },
+                            onClick = { menuOpen = false; onHide?.invoke(conversation.id) })
+                        DropdownMenuItem(text = { Text("기록 삭제", color = MaterialTheme.colorScheme.error) },
+                            onClick = { menuOpen = false; onDelete?.invoke(conversation) })
+                    }
+                }
             }
         }
     }

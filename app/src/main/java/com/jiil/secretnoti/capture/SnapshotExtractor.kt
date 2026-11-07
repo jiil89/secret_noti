@@ -5,6 +5,7 @@ import android.app.Person
 import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
+import android.net.Uri
 import android.service.notification.StatusBarNotification
 
 /** StatusBarNotification → [NotificationSnapshot]. */
@@ -20,6 +21,8 @@ object SnapshotExtractor {
             locusId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) n.locusId?.id else null,
             postTime = sbn.postTime,
             isGroupSummary = n.flags and Notification.FLAG_GROUP_SUMMARY != 0,
+            isOngoing = n.flags and (Notification.FLAG_ONGOING_EVENT or Notification.FLAG_FOREGROUND_SERVICE) != 0,
+            category = n.category,
             title = e.getCharSequence(Notification.EXTRA_TITLE)?.toString(),
             text = e.getCharSequence(Notification.EXTRA_TEXT)?.toString(),
             bigText = e.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString(),
@@ -61,6 +64,8 @@ object SnapshotExtractor {
                     @Suppress("DEPRECATION")
                     x.get("chatLogId")?.toString()
                 },
+                dataMimeType = b.getString("type"),
+                dataUri = b.parcelable<Uri>("uri")?.toString(),
             )
         }
     }

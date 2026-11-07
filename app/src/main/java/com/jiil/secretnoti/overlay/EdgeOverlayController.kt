@@ -105,7 +105,7 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         root.addView(
             ComposeView(context).apply {
                 setContent {
-                    NotiTheme {
+                    NotiTheme(Prefs.themeMode.value) {
                         PanelContent(
                             onLeft = Prefs.handleOnLeft.value,
                             onClose = ::closePanel,

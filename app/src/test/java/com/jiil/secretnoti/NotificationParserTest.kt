@@ -124,4 +124,29 @@ class NotificationParserTest {
         assertTrue(NotificationParser.isDeletionMarker("삭제된 메시지입니다."))
         assertFalse(NotificationParser.isDeletionMarker("메시지 삭제 기능 써봤어?"))
     }
+
+    @Test
+    fun middleRemovalIsDeletionButSlidingWindowIsNot() {
+        // 오래된 것부터 빠지는 건 삭제가 아님
+        assertEquals(emptyList<String>(), NotificationParser.removedFromMiddle(listOf("a", "b", "c"), listOf("b", "c", "d")))
+        // 가운데 b가 빠지면 삭제
+        assertEquals(listOf("b"), NotificationParser.removedFromMiddle(listOf("a", "b", "c"), listOf("a", "c", "d")))
+    }
+
+    @Test
+    fun otherAppsOnlyAcceptMessageNotifications() {
+        val promo = base(emptyList()).copy(isGroupConversation = false, conversationTitle = null, category = "promo")
+        assertNull(NotificationParser.parse(promo, messagesOnly = true))
+        val msg = promo.copy(category = "msg")
+        assertTrue(NotificationParser.parse(msg, messagesOnly = true) != null)
+        assertNull(NotificationParser.parse(msg.copy(isOngoing = true)))
+    }
+
+    @Test
+    fun keepsPhotoUriForImageMessages() {
+        val parsed = NotificationParser.parse(
+            base(listOf(RawMessage("엄마", "mom", "사진을 보냈습니다.", 10, "9", "image/", "content://x/1"))),
+        )!!
+        assertEquals("content://x/1", parsed.messages.single().imageUri)
+    }
 }

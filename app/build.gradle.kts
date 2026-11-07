@@ -23,8 +23,8 @@ android {
         applicationId = "com.jiil.secretnoti"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.3.0"
     }
 
     signingConfigs {
@@ -74,6 +74,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.savedstate)
+    implementation(libs.androidx.fragment)
+    implementation(libs.androidx.biometric)
+    implementation(libs.glance.appwidget)
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

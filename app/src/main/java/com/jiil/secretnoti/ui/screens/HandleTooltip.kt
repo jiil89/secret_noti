@@ -6,13 +6,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.jiil.secretnoti.ui.design.*
 
 @Composable
 fun HandleTooltip() {
-    Surface(color = NotiColors.Text, contentColor = Color.White,
+    Surface(color = NotiColors.Text, contentColor = NotiColors.Background,
         shape = RoundedCornerShape(10.dp), shadowElevation = 6.dp) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
