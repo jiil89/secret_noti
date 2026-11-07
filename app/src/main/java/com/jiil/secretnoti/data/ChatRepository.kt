@@ -87,10 +87,13 @@ class ChatRepository(private val db: AppDatabase) {
 
     suspend fun markSeen(conversationId: Long) = dao.markSeen(conversationId)
 
-    /** 보관 기간이 지난 메시지와 빈 대화방을 지운다. */
-    suspend fun deleteOlderThan(days: Int, now: Long = System.currentTimeMillis()) = db.withTransaction {
-        dao.deleteMessagesBefore(now - days * 24L * 60 * 60 * 1000)
-        dao.deleteEmptyConversations()
+    /** 보관 기간이 지난 메시지와 빈 대화방을 지운다. days가 0 이하면 아무것도 지우지 않는다. */
+    suspend fun deleteOlderThan(days: Int, now: Long = System.currentTimeMillis()) {
+        if (days <= 0) return
+        db.withTransaction {
+            dao.deleteMessagesBefore(now - days * 24L * 60 * 60 * 1000)
+            dao.deleteEmptyConversations()
+        }
     }
 }
 

@@ -3,6 +3,7 @@ package com.jiil.secretnoti.settings
 import android.content.Context
 import android.content.SharedPreferences
 import com.jiil.secretnoti.capture.Source
+import com.jiil.secretnoti.ui.model.HandleSize
 import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.Flow
@@ -37,8 +38,14 @@ object Prefs {
     val gestureExclusion = bool("gesture_exclusion", true)
     val handleOnLeft = bool("handle_on_left", false)
     val handleY = float("handle_y", 0.35f)
+    val handleSize = Pref(
+        "handle_size", HandleSize.MEDIUM,
+        { k, d -> runCatching { HandleSize.valueOf(getString(k, d.name)!!) }.getOrDefault(d) },
+        { k, v -> putString(k, v.name) },
+    )
     val dumpAllApps = bool("dump_all_apps", false)
     val lastPanelOpenedAt = long("last_panel_opened_at", 0L)
+    /** 보관 기간(일). 0이면 지우지 않고 계속 보관. */
     val retentionDays = int("retention_days", 30)
     val lastCleanupAt = long("last_cleanup_at", 0L)
 
@@ -61,7 +68,7 @@ object Prefs {
         }
 
     private val all = listOf(
-        overlayEnabled, gestureExclusion, handleOnLeft, handleY, dumpAllApps, lastPanelOpenedAt, retentionDays, lastCleanupAt,
+        overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, dumpAllApps, lastPanelOpenedAt, retentionDays, lastCleanupAt,
         sourceKakao, sourceSms, sourceTeams,
     )
 

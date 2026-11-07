@@ -43,6 +43,7 @@ import com.jiil.secretnoti.capture.NotiListenerService
 import com.jiil.secretnoti.capture.Source
 import com.jiil.secretnoti.capture.TargetApps
 import com.jiil.secretnoti.settings.Prefs
+import com.jiil.secretnoti.ui.model.PermissionSummaryUi
 
 private data class PermissionState(
     val listener: Boolean,
@@ -66,6 +67,11 @@ private data class PermissionState(
         }
     }
 }
+
+fun readPermissionSummary(context: Context): PermissionSummaryUi =
+    PermissionState.read(context).let { PermissionSummaryUi(it.listener, it.overlay, it.battery) }
+
+internal fun Context.isPackageInstalled(pkg: String) = isInstalled(pkg)
 
 @Composable
 fun PermissionsScreen() {

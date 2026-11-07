@@ -41,7 +41,7 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         if (handle != null) return
         val view = HandleView(context, onOpen = ::openPanel)
         val params = WindowManager.LayoutParams(
-            dp(44), dp(120),
+            dp(44), dp(Prefs.handleSize.value.heightDp),
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT,
@@ -52,11 +52,12 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         handleParams = params
 
         jobs += scope.launch {
-            combine(Prefs.handleOnLeft.flow, Prefs.handleY.flow, Prefs.gestureExclusion.flow) { left, _, exclusion ->
-                left to exclusion
-            }.collect { (left, exclusion) ->
+            combine(
+                Prefs.handleOnLeft.flow, Prefs.handleY.flow, Prefs.handleSize.flow, Prefs.gestureExclusion.flow,
+            ) { left, _, size, exclusion -> Triple(left, size, exclusion) }.collect { (left, size, exclusion) ->
                 view.onLeft = left
                 view.useExclusion = exclusion
+                params.height = dp(size.heightDp)
                 applyPosition(params)
                 if (view.isAttachedToWindow) wm.updateViewLayout(view, params)
             }

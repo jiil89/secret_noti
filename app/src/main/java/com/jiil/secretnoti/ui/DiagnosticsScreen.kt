@@ -23,9 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jiil.secretnoti.ui.design.NotiIcons
 
-private val tabs = listOf("권한·대상 앱", "알림 덤프", "손잡이")
+private val tabs = listOf("권한", "알림 덤프", "손잡이 시험")
 
-/** 권한 상태·알림 덤프·손잡이 설정. 정식 설정 화면은 M5. */
+/** 진단 도구: 권한 상태·알림 덤프·손잡이 제스처 기록. */
 @Composable
 fun DiagnosticsScreen(onBack: () -> Unit) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -34,7 +34,7 @@ fun DiagnosticsScreen(onBack: () -> Unit) {
             Column(Modifier.statusBarsPadding()) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp, top = 4.dp)) {
                     IconButton(onClick = onBack) { Icon(NotiIcons.chevronLeft, contentDescription = "뒤로") }
-                    Text("설정 · 진단", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text("진단 도구", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
                 PrimaryTabRow(selectedTabIndex = tab) {
                     tabs.forEachIndexed { i, title ->
@@ -52,4 +52,20 @@ fun DiagnosticsScreen(onBack: () -> Unit) {
             }
         }
     }
+}
+
+/** 뒤로 가기와 제목만 있는 단순한 화면 틀. */
+@Composable
+fun BackScaffold(title: String, onBack: () -> Unit, content: @Composable () -> Unit) {
+    Scaffold(
+        topBar = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.statusBarsPadding().padding(start = 4.dp, top = 4.dp),
+            ) {
+                IconButton(onClick = onBack) { Icon(NotiIcons.chevronLeft, contentDescription = "뒤로") }
+                Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            }
+        },
+    ) { padding -> Box(Modifier.padding(padding)) { content() } }
 }
