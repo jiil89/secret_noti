@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jiil.secretnoti.ui.design.NotiIcons
 
-private val tabs = listOf("권한", "알림 덤프", "손잡이")
+private val tabs = listOf("권한·대상 앱", "알림 덤프", "손잡이")
 
 /** 권한 상태·알림 덤프·손잡이 설정. 정식 설정 화면은 M5. */
 @Composable

@@ -2,9 +2,12 @@ package com.jiil.secretnoti.settings
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.jiil.secretnoti.capture.Source
 import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 
 class Pref<T>(
     private val key: String,
@@ -39,8 +42,27 @@ object Prefs {
     val retentionDays = int("retention_days", 30)
     val lastCleanupAt = long("last_cleanup_at", 0L)
 
+    /** 설정에서 고른 대상 앱. 꺼진 앱의 알림은 저장하지 않고 목록에서도 숨긴다. */
+    val sourceKakao = bool("source_kakao", true)
+    val sourceSms = bool("source_sms", true)
+    val sourceTeams = bool("source_teams", true)
+
+    fun sourcePref(source: Source): Pref<Boolean> = when (source) {
+        Source.KAKAO -> sourceKakao
+        Source.SMS -> sourceSms
+        Source.TEAMS -> sourceTeams
+    }
+
+    fun isSourceEnabled(source: Source): Boolean = sourcePref(source).value
+
+    val enabledSources: Flow<Set<Source>> =
+        combine(sourceKakao.flow, sourceSms.flow, sourceTeams.flow) { _, _, _ ->
+            Source.entries.filter { isSourceEnabled(it) }.toSet()
+        }
+
     private val all = listOf(
         overlayEnabled, gestureExclusion, handleOnLeft, handleY, dumpAllApps, lastPanelOpenedAt, retentionDays, lastCleanupAt,
+        sourceKakao, sourceSms, sourceTeams,
     )
 
     fun init(context: Context) {

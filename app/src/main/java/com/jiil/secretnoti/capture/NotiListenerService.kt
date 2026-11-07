@@ -72,7 +72,7 @@ class NotiListenerService : NotificationListenerService() {
     }
 
     private fun ingest(sbn: StatusBarNotification) {
-        val source = TargetApps.sourceOf(this, sbn.packageName) ?: return
+        val source = TargetApps.sourceOf(this, sbn.packageName)?.takeIf(Prefs::isSourceEnabled) ?: return
         val parsed = NotificationParser.parse(SnapshotExtractor.from(sbn)) ?: return
         val contentIntent = sbn.notification.contentIntent
         scope.launch(Dispatchers.IO) {
@@ -91,7 +91,7 @@ class NotiListenerService : NotificationListenerService() {
     private fun record(sbn: StatusBarNotification, event: String, reason: Int?) {
         val pkg = sbn.packageName
         if (pkg == packageName) return
-        if (!Prefs.dumpAllApps.value && TargetApps.sourceOf(this, pkg) == null) return
+        if (!Prefs.dumpAllApps.value && TargetApps.sourceOf(this, pkg)?.takeIf(Prefs::isSourceEnabled) == null) return
 
         val json = try {
             NotificationDumper.toJson(sbn, event, reason)

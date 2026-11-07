@@ -4,9 +4,11 @@ import androidx.room.withTransaction
 import com.jiil.secretnoti.capture.NotificationParser
 import com.jiil.secretnoti.capture.ParsedNotification
 import com.jiil.secretnoti.capture.Source
+import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.model.ConversationUi
 import com.jiil.secretnoti.ui.model.MessageUi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 class ChatRepository(private val db: AppDatabase) {
@@ -70,8 +72,11 @@ class ChatRepository(private val db: AppDatabase) {
             conversationId
         }
 
+    /** 설정에서 켠 대상 앱의 대화방만 내보낸다. */
     fun observeConversations(): Flow<List<ConversationUi>> =
-        dao.observeConversations().map { list -> list.map { it.toUi() } }
+        combine(dao.observeConversations(), Prefs.enabledSources) { list, enabled ->
+            list.map { it.toUi() }.filter { it.source in enabled }
+        }
 
     fun observeConversation(id: Long): Flow<ConversationUi?> = dao.observeConversation(id).map { it?.toUi() }
 

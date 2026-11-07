@@ -21,6 +21,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -28,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -35,9 +37,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jiil.secretnoti.capture.ListenerStatus
 import com.jiil.secretnoti.capture.NotiListenerService
+import com.jiil.secretnoti.capture.Source
 import com.jiil.secretnoti.capture.TargetApps
+import com.jiil.secretnoti.settings.Prefs
 
 private data class PermissionState(
     val listener: Boolean,
@@ -117,10 +122,15 @@ fun PermissionsScreen() {
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("대상 앱", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("카카오톡: " + if (state.kakaoInstalled) "설치됨" else "설치 안 됨")
-                    Text("Teams: " + if (state.teamsInstalled) "설치됨" else "설치 안 됨")
-                    Text("기본 문자 앱: ${state.smsPackage ?: "확인 불가"}")
+                    Text("대상 앱 선택", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        "켠 앱의 알림만 저장하고 목록·엣지패널에 보여줍니다. 끄면 이미 저장된 기록은 숨겨지고 지워지지는 않아요.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    SourceSwitch(Source.KAKAO, if (state.kakaoInstalled) "설치됨" else "설치 안 됨")
+                    SourceSwitch(Source.SMS, state.smsPackage?.let { "기본 문자 앱: $it" } ?: "기본 문자 앱 확인 불가")
+                    SourceSwitch(Source.TEAMS, if (state.teamsInstalled) "설치됨" else "설치 안 됨")
                     Text(
                         "카카오톡 설정 → 알림에서 '메시지 미리보기'가 켜져 있어야 내용이 저장됩니다. " +
                             "알림을 끈 채팅방, PC 사용 중 알림이 꺼지는 경우는 저장되지 않아요.",
@@ -130,6 +140,19 @@ fun PermissionsScreen() {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SourceSwitch(source: Source, detail: String) {
+    val pref = Prefs.sourcePref(source)
+    val checked by pref.flow.collectAsStateWithLifecycle()
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(source.label, fontWeight = FontWeight.Bold)
+            Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(checked = checked, onCheckedChange = { pref.value = it })
     }
 }
 
