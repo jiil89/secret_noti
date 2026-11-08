@@ -11,7 +11,7 @@ import android.service.notification.StatusBarNotification
 /** StatusBarNotification → [NotificationSnapshot]. */
 object SnapshotExtractor {
 
-    fun from(sbn: StatusBarNotification): NotificationSnapshot {
+    fun from(sbn: StatusBarNotification, shortcutLabel: String? = null): NotificationSnapshot {
         val n = sbn.notification
         val e = n.extras
         return NotificationSnapshot(
@@ -40,6 +40,7 @@ object SnapshotExtractor {
                 null
             },
             messages = messages(e),
+            shortcutLabel = shortcutLabel,
         )
     }
 

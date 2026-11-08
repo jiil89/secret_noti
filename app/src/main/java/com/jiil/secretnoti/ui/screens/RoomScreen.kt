@@ -13,8 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
-import kotlinx.coroutines.flow.first
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +30,7 @@ fun RoomScreen(
     appLabel: String,
     packageName: String,
     isGroup: Boolean,
+    participants: List<String> = emptyList(),
     messages: List<MessageUi>,
     keywords: List<String>,
     onBack: () -> Unit,
@@ -41,22 +40,20 @@ fun RoomScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var muteDialog by remember { mutableStateOf(false) }
     val ordered = remember(messages) { messages.sortedBy { it.at } }
-    // 채팅처럼 최신 메시지(맨 아래)에서 시작한다. 메시지는 DB에서 늦게 채워지므로 채워진 뒤에 내린다.
-    // 이후 새 메시지가 오면, 바닥 근처를 보고 있을 때만 따라 내려간다 (지난 대화를 읽는 중이면 그대로).
+    val firstInRunIds = remember(ordered) {
+        ordered.filterIndexed { index, message ->
+            val previous = ordered.getOrNull(index - 1)
+            previous == null || previous.sender != message.sender || previous.isMine != message.isMine ||
+                messageDate(previous.at) != messageDate(message.at)
+        }.mapTo(mutableSetOf()) { it.id }
+    }
+    // 채팅 앱처럼 아래에서부터 쌓는다(reverseLayout). 0번 항목이 최신 메시지라 처음부터 맨 아래가 보이고,
+    // 위쪽 사진이 늦게 불러와져 높이가 바뀌어도 아래(최신)는 그대로 붙어 있다.
     val listState = rememberLazyListState()
-    var scrolledInitially by remember { mutableStateOf(false) }
     val lastId = ordered.lastOrNull()?.id
     LaunchedEffect(lastId) {
-        if (lastId == null) return@LaunchedEffect
-        snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it > 0 }
-        val lastIndex = listState.layoutInfo.totalItemsCount - 1
-        if (!scrolledInitially) {
-            listState.scrollToItem(lastIndex)
-            scrolledInitially = true
-        } else {
-            val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            if (lastVisible >= lastIndex - 3) listState.animateScrollToItem(lastIndex)
-        }
+        // 새 메시지가 오면, 바닥 근처를 보고 있을 때만 따라 내려간다 (지난 대화를 읽는 중이면 그대로).
+        if (lastId != null && listState.firstVisibleItemIndex <= 2) listState.animateScrollToItem(0)
     }
     Surface(color = NotiColors.DetailBackground) {
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
@@ -73,7 +70,13 @@ fun RoomScreen(
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         AppIcon(packageName, 16.dp)
-                        Text(appLabel, color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall)
+                        val subtitle = if (isGroup) {
+                            val group = stringResource(R.string.room_screen_group_subtitle, appLabel)
+                            if (participants.isEmpty()) group
+                            else stringResource(R.string.room_screen_group_participants, group, participants.joinToString(", "))
+                        } else appLabel
+                        Text(subtitle, color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
                 Box {
@@ -89,16 +92,20 @@ fun RoomScreen(
             HorizontalDivider(color = NotiColors.Divider)
             NoticeBanner(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp))
             LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = listState, contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                reverseLayout = true,
+                verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.Bottom)) {
                 if (ordered.isEmpty()) {
                     item { EmptyConversations(Modifier.fillMaxWidth()) }
                 }
-                ordered.forEachIndexed { index, message ->
+                // 최신부터 넣는다. 날짜 구분선은 그날의 가장 오래된 메시지 다음에 넣어야 화면에서 그날 메시지들 위에 온다.
+                val newestFirst = ordered.asReversed()
+                newestFirst.forEachIndexed { index, message ->
+                    item(key = message.id) { MessageBubble(message, isGroup, keywords = keywords, kakaoEmoticons = packageName == TargetApps.KAKAO, firstInRun = message.id in firstInRunIds) }
                     val date = messageDate(message.at)
-                    if (index == 0 || date != messageDate(ordered[index - 1].at)) {
+                    val older = newestFirst.getOrNull(index + 1)
+                    if (older == null || messageDate(older.at) != date) {
                         item(key = "date-$date") { DateDivider(date) }
                     }
-                    item(key = message.id) { MessageBubble(message, isGroup, keywords = keywords, kakaoEmoticons = packageName == TargetApps.KAKAO) }
                 }
             }
             Column(Modifier.background(NotiColors.Background)) {

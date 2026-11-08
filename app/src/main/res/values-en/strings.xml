@@ -3,13 +3,13 @@
     <string name="app_name">SecretNoti</string>
     <string name="me">Me</string>
     <string name="channel_deleted">Deleted messages</string>
-    <string name="deleted_alert_title">%1$s ? Deleted messages saved</string>
+    <string name="deleted_alert_title">%1$s · Deleted messages saved</string>
     <string name="deleted_alert_hidden">Saved %1$d original messages. Open to view.</string>
     <string name="deleted_alert_public">You have deleted messages</string>
     <string name="widget_name">SecretNoti recent messages</string>
     <string name="widget_description">See recent conversations on your home screen</string>
     <string name="widget_empty">No saved messages yet</string>
-    <string name="preview_locked">Locked ? Open to view</string>
+    <string name="preview_locked">Locked · Open to view</string>
     <string name="lock_prompt_title">Unlock SecretNoti</string>
     <string name="lock_prompt_subtitle">Use your fingerprint, face, or screen lock</string>
     <string name="backup_done">Backup created (%1$d messages)</string>
@@ -327,4 +327,11 @@
     <string name="settings_muted_conversations_hint">New notifications from these chats are not saved. Turn saving back on to save notifications from then on.</string>
     <string name="settings_muted_records_kept">%1$s · History kept</string>
     <string name="settings_muted_records_deleted">%1$s · History deleted</string>
+    <string name="messages_group">Group chat</string>
+    <plurals name="messages_group_senders">
+        <item quantity="one">Group · %1$d sender</item>
+        <item quantity="other">Group · %1$d senders</item>
+    </plurals>
+    <string name="room_screen_group_subtitle">%1$s · Group chat</string>
+    <string name="room_screen_group_participants">%1$s · %2$s</string>
 </resources>

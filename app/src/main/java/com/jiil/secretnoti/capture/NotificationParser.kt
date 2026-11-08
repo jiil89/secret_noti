@@ -19,6 +19,8 @@ data class NotificationSnapshot(
     val isGroupConversation: Boolean?,
     val selfKey: String?,
     val messages: List<RawMessage>,
+    /** 알림에 붙은 대화 바로가기의 이름. 카톡 단톡방은 알림에 방 이름이 없고 여기에만 있다. */
+    val shortcutLabel: String? = null,
 )
 
 /** MessagingStyle 메시지 하나. sender가 null이면 내가 보낸 메시지다. */
@@ -49,6 +51,8 @@ data class ParsedNotification(
     val roomTitle: String,
     val isGroup: Boolean,
     val messages: List<ParsedMessage>,
+    /** false면 방 이름을 몰라 마지막 보낸 사람 이름을 임시로 쓴 것 (기존 방 이름을 덮어쓰지 않는다). */
+    val titleReliable: Boolean = true,
 )
 
 object NotificationParser {
@@ -94,12 +98,18 @@ object NotificationParser {
         if (s.isGroupSummary || s.isOngoing) return null
         if (messagesOnly && s.messages.isEmpty() && s.category != "msg") return null
 
-        val isGroup = s.isGroupConversation ?: (s.conversationTitle != null)
-        val roomTitle = if (isGroup) {
-            s.conversationTitle ?: s.hiddenConversationTitle ?: s.subText ?: s.title
+        // 보낸 사람이 둘 이상이면 단톡방으로 본다 (앱이 단톡 표시를 빼먹어도).
+        val distinctSenders = s.messages.mapNotNull { m -> m.senderKey ?: m.sender }.filter { it != s.selfKey }.toSet()
+        val isGroup = s.isGroupConversation == true || s.conversationTitle != null || distinctSenders.size >= 2
+        fun String?.clean() = this?.trim()?.takeIf { it.isNotEmpty() }
+        val namedTitle = if (isGroup) {
+            s.conversationTitle.clean() ?: s.shortcutLabel.clean() ?: s.hiddenConversationTitle.clean() ?: s.subText.clean()
         } else {
-            s.hiddenConversationTitle ?: s.title
-        }?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+            s.hiddenConversationTitle.clean()
+        }
+        // 카톡 단톡방은 title이 "마지막 보낸 사람"이라 방 이름으로 믿을 수 없다.
+        val roomTitle = namedTitle ?: s.title.clean() ?: return null
+        val titleReliable = namedTitle != null || !isGroup
 
         val roomKey = s.shortcutId ?: s.locusId ?: s.tag ?: "title:$roomTitle"
 
@@ -128,6 +138,6 @@ object NotificationParser {
                 ),
             )
         }
-        return ParsedNotification(roomKey, roomTitle, isGroup, messages)
+        return ParsedNotification(roomKey, roomTitle, isGroup, messages, titleReliable)
     }
 }

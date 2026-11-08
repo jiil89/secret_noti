@@ -23,7 +23,7 @@ private fun sampleApps() = listOf(AppRef("com.kakao.talk", stringResource(R.stri
 private fun sampleConversations() = listOf(
     ConversationUi(6, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_ad_title), false, null, stringResource(R.string.screen_preview_ad_message), sampleAt(20, 55), 1, looksLikeAd = true),
     ConversationUi(1, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_mom), false, stringResource(R.string.screen_preview_mom), stringResource(R.string.screen_preview_mom_message), sampleAt(20, 52), 1, isPinned = true, hasKeyword = true),
-    ConversationUi(2, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_coworkers), true, stringResource(R.string.screen_preview_minsu), stringResource(R.string.screen_preview_poll), sampleAt(20, 47), 12, deletedCount = 2),
+    ConversationUi(2, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_coworkers), true, stringResource(R.string.screen_preview_minsu), stringResource(R.string.screen_preview_poll), sampleAt(20, 47), 12, deletedCount = 2, senderCount = 3),
     ConversationUi(3, Source.TEAMS, "com.microsoft.teams", stringResource(R.string.screen_preview_teams), stringResource(R.string.screen_preview_manager), false, stringResource(R.string.screen_preview_manager), stringResource(R.string.screen_preview_report), sampleAt(20, 30), 1),
     ConversationUi(4, Source.SMS, "com.samsung.android.messaging", stringResource(R.string.screen_preview_sms), stringResource(R.string.screen_preview_delivery), false, null, stringResource(R.string.screen_preview_delivered), sampleAt(19, 15), 1),
     ConversationUi(5, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_friends), true, stringResource(R.string.screen_preview_jihoon), pluralStringResource(R.plurals.screen_preview_photos, 3, 3), sampleAt(18, 2), 5, previewHidden = true),
@@ -32,6 +32,13 @@ private fun sampleConversations() = listOf(
 @Composable
 private fun sampleMutedConversations() = sampleConversations().filter { it.id == 6L || it.id == 4L }
     .map { it.copy(isMuted = true, hasRecords = it.id == 6L, unread = 0) }
+
+@Composable
+private fun sampleParticipants() = listOf(
+    stringResource(R.string.screen_preview_minsu),
+    stringResource(R.string.screen_preview_hyunwoo),
+    stringResource(R.string.screen_preview_jiyoung),
+)
 
 @Composable
 private fun sampleMessages() = listOf(
@@ -70,13 +77,13 @@ private fun ConversationListPreview() {
 @Preview(name = "그룹 대화 기록", widthDp = 390, heightDp = 844, showBackground = true)
 @Composable
 private fun RoomPreview() {
-    NotiTheme { RoomScreen(stringResource(R.string.screen_preview_coworkers), stringResource(R.string.screen_preview_kakao), "com.kakao.talk", true, sampleMessages(), listOf(stringResource(R.string.screen_preview_friday), stringResource(R.string.screen_preview_place)), {}, {}, {}) }
+    NotiTheme { RoomScreen(stringResource(R.string.screen_preview_coworkers), stringResource(R.string.screen_preview_kakao), "com.kakao.talk", true, sampleParticipants(), sampleMessages(), listOf(stringResource(R.string.screen_preview_friday), stringResource(R.string.screen_preview_place)), {}, {}, {}) }
 }
 
 @Preview(name = "큰 글자 · 문자", widthDp = 390, heightDp = 844, fontScale = 1.5f, showBackground = true)
 @Composable
 private fun LargeTextRoomPreview() {
-    NotiTheme { RoomScreen(stringResource(R.string.screen_preview_delivery), stringResource(R.string.screen_preview_sms), "com.samsung.android.messaging", false,
+    NotiTheme { RoomScreen(stringResource(R.string.screen_preview_delivery), stringResource(R.string.screen_preview_sms), "com.samsung.android.messaging", false, emptyList(),
         listOf(MessageUi(1, stringResource(R.string.screen_preview_delivery), false, stringResource(R.string.screen_preview_delivered), sampleAt(19, 15), false)), emptyList(), {}, {}, {}) }
 }
 
@@ -96,7 +103,7 @@ private fun DarkPanelPreview() {
 @Composable
 private fun DarkRoomPreview() {
     NotiTheme(ThemeMode.DARK) {
-        RoomScreen(stringResource(R.string.screen_preview_coworkers), stringResource(R.string.screen_preview_kakao), "com.kakao.talk", true, sampleMessages(), listOf(stringResource(R.string.screen_preview_friday)), {}, {}, {})
+        RoomScreen(stringResource(R.string.screen_preview_coworkers), stringResource(R.string.screen_preview_kakao), "com.kakao.talk", true, sampleParticipants(), sampleMessages(), listOf(stringResource(R.string.screen_preview_friday)), {}, {}, {})
     }
 }
 

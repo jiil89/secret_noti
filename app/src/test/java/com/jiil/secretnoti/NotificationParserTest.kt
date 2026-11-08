@@ -174,4 +174,20 @@ class NotificationParserTest {
         assertTrue(NotificationParser.looksLikeAd("  [광고] 신상품 안내"))
         assertFalse(NotificationParser.looksLikeAd("광고 봤어? 웃기더라"))
     }
+
+    @Test
+    fun kakaoGroupUsesShortcutLabelAndKeepsKnownTitleOtherwise() {
+        // 실제 카톡 단톡 알림: isGroupConversation=true, conversationTitle 없음, title = 마지막 보낸 사람
+        val group = base(
+            listOf(RawMessage("사촌", "a", "생일 축하해", 10, "1"), RawMessage("친구", "b", "축하해요", 20, "2")),
+        ).copy(conversationTitle = null, title = "친구", isGroupConversation = true)
+        val named = NotificationParser.parse(group.copy(shortcutLabel = "가족 모임"))!!
+        assertEquals("가족 모임", named.roomTitle)
+        assertTrue(named.titleReliable)
+        val unnamed = NotificationParser.parse(group)!!
+        assertEquals("친구", unnamed.roomTitle)
+        assertFalse(unnamed.titleReliable)
+        // 앱이 단톡 표시를 안 해도 보낸 사람이 둘 이상이면 단톡방
+        assertTrue(NotificationParser.parse(group.copy(isGroupConversation = false))!!.isGroup)
+    }
 }

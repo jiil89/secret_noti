@@ -109,7 +109,8 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
         val newer = latest?.takeIf { it.postedAt >= conv.lastMessageAt }
         dao.updateConversation(
             conv.copy(
-                roomTitle = parsed.roomTitle,
+                // 단톡방 이름을 모를 때(보낸 사람 이름만 있을 때)는 이미 아는 방 이름을 지킨다.
+                roomTitle = if (parsed.titleReliable || conv.lastMessageAt == 0L) parsed.roomTitle else conv.roomTitle,
                 isGroup = conv.isGroup || parsed.isGroup,
                 unreadCount = conv.unreadCount + newUnread,
                 lastMessageAt = newer?.postedAt ?: conv.lastMessageAt,
@@ -164,6 +165,8 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
 
     fun observeConversation(id: Long): Flow<ConversationUi?> =
         dao.observeConversation(id).map { it?.toUi(previewHidden = false, hasKeyword = false) }
+
+    fun observeSenders(conversationId: Long): Flow<List<String>> = dao.observeSenders(conversationId)
 
     fun observeMessages(conversationId: Long): Flow<List<MessageUi>> =
         dao.observeMessages(conversationId).map { list -> list.map { it.toUi() } }
@@ -267,6 +270,7 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
         hasKeyword = hasKeyword,
         previewHidden = previewHidden,
         looksLikeAd = conversation.looksLikeAd,
+        senderCount = senderCount,
     )
 }
 

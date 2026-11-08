@@ -15,6 +15,7 @@ object NotiIcons {
         stroke = SolidColor(Color.Black), strokeLineWidth = 2f,
         strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round).build()
 
+    val users = line("Users", "M16 21V19A4 4 0 0 0 12 15H6A4 4 0 0 0 2 19V21M13 7A4 4 0 1 1 5 7A4 4 0 1 1 13 7M22 21V19A4 4 0 0 0 19 15.13M16 3.13A4 4 0 0 1 16 10.87")
     val saveOff = line("SaveOff", "M21 12A9 9 0 1 1 3 12A9 9 0 1 1 21 12M5.64 5.64L18.36 18.36")
     val lock = line("Lock", "M5 10H19V21H5ZM8 10V7A4 4 0 0 1 16 7V10M12 14V17")
     val pin = line("Pin", "M9 3H15L14 9L18 13V15H6V13L10 9ZM12 15V22")

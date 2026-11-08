@@ -70,6 +70,8 @@ fun RoomRoute(conversationId: Long, onBack: () -> Unit) {
     val messages by remember(conversationId) { chat.observeMessages(conversationId) }
         .collectAsStateWithLifecycle(emptyList())
     val keywords by Prefs.keywords.flow.collectAsStateWithLifecycle()
+    val participants by remember(conversationId) { chat.observeSenders(conversationId) }
+        .collectAsStateWithLifecycle(emptyList())
     val scope = rememberCoroutineScope()
 
     // 이 앱 안에서 본 것으로 표시 (카톡·Teams의 읽음과는 무관).
@@ -84,6 +86,7 @@ fun RoomRoute(conversationId: Long, onBack: () -> Unit) {
         appLabel = conv.appLabel,
         packageName = conv.packageName,
         isGroup = conv.isGroup,
+        participants = participants,
         messages = messages,
         keywords = keywords.sorted(),
         onBack = onBack,

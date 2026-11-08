@@ -30,10 +30,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.jiil.secretnoti.ui.design.*
 import com.jiil.secretnoti.ui.model.*
 import java.time.LocalDate
@@ -130,7 +133,13 @@ fun ConversationRow(
         .padding(horizontal = 4.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box {
-            InitialAvatar(conversation.title)
+            if (conversation.isGroup) {
+                Box(Modifier.size(44.dp).background(NotiColors.NoticeBackground, CircleShape),
+                    contentAlignment = Alignment.Center) {
+                    Icon(NotiIcons.users, stringResource(R.string.messages_group), Modifier.size(24.dp),
+                        tint = NotiColors.NoticeForeground)
+                }
+            } else InitialAvatar(conversation.title)
             AppIcon(conversation.packageName, 18.dp,
                 Modifier.align(Alignment.BottomEnd)
                     .background(NotiColors.Background, CircleShape).padding(2.dp))
@@ -149,12 +158,23 @@ fun ConversationRow(
                 else if (conversation.isGroup)
                     stringResource(R.string.messages_sender_preview, conversation.lastSender?.takeIf { it.isNotBlank() } ?: stringResource(R.string.me), conversation.preview)
                 else conversation.preview
-                Text(preview, Modifier.weight(1f), color = if (conversation.previewHidden || (conversation.isMuted && !conversation.hasRecords)) NotiColors.Secondary else NotiColors.Body,
+                val sender = conversation.lastSender?.takeIf { it.isNotBlank() } ?: stringResource(R.string.me)
+                val senderStart = preview.indexOf(sender)
+                val styledPreview = if (conversation.isGroup && !conversation.previewHidden &&
+                    !(conversation.isMuted && !conversation.hasRecords) && senderStart >= 0) {
+                    AnnotatedString(preview, listOf(AnnotatedString.Range(
+                        SpanStyle(fontWeight = FontWeight.Bold), senderStart, senderStart + sender.length)))
+                } else AnnotatedString(preview)
+                Text(styledPreview, Modifier.weight(1f), color = if (conversation.previewHidden || (conversation.isMuted && !conversation.hasRecords)) NotiColors.Secondary else NotiColors.Body,
                     style = MaterialTheme.typography.bodyMedium, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
                 UnreadBadge(conversation.unread)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 SourceLabel(conversation.appLabel, Modifier.weight(1f, fill = false))
+                if (conversation.isGroup && conversation.senderCount >= 2) {
+                    MessageTag(pluralStringResource(R.plurals.messages_group_senders,
+                        conversation.senderCount, conversation.senderCount))
+                }
                 if (conversation.isMuted) {
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -187,60 +207,73 @@ fun MessageBubble(
     modifier: Modifier = Modifier,
     keywords: List<String> = emptyList(),
     kakaoEmoticons: Boolean = false,
+    firstInRun: Boolean = true,
 ) {
     val deletedOutline = NotiColors.DeletedOutline
-    val shape = if (message.isMine) NotiShapes.mine else NotiShapes.bubble
+    val incomingGroup = isGroup && !message.isMine
+    val shape = when {
+        message.isMine -> NotiShapes.mine
+        incomingGroup && !firstInRun -> RoundedCornerShape(18.dp)
+        else -> NotiShapes.bubble
+    }
     val background = when {
         message.deletedBySender -> NotiColors.DeletedBackground
         message.isMine -> NotiColors.NoticeBackground
         else -> NotiColors.Background
     }
-    Column(modifier.fillMaxWidth(),
-        horizontalAlignment = if (message.isMine) Alignment.End else Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        if (isGroup && !message.isMine) {
-            Text(message.sender ?: stringResource(R.string.messages_unknown_sender), color = NotiColors.Secondary,
-                style = MaterialTheme.typography.labelMedium)
+    Row(modifier.fillMaxWidth()) {
+        if (incomingGroup) {
+            if (firstInRun) InitialAvatar(message.sender ?: stringResource(R.string.messages_unknown_sender), Modifier.size(34.dp))
+            else Spacer(Modifier.width(34.dp))
+            Spacer(Modifier.width(8.dp))
         }
-        Row(Modifier.fillMaxWidth(),
-            horizontalArrangement = if (message.isMine) Arrangement.End else Arrangement.Start,
-            verticalAlignment = Alignment.Bottom) {
-            if (message.isMine) {
-                Text(formatClockTime(message.at), color = NotiColors.Secondary,
-                    style = MaterialTheme.typography.labelSmall)
-                Spacer(Modifier.width(6.dp))
+        Column(Modifier.weight(1f),
+            horizontalAlignment = if (message.isMine) Alignment.End else Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (incomingGroup && firstInRun) {
+                Text(message.sender ?: stringResource(R.string.messages_unknown_sender), color = NotiColors.Body,
+                    style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }
-            val border = if (message.deletedBySender) Modifier.drawWithCache {
-                val outline = shape.createOutline(size, layoutDirection, this) as Outline.Rounded
-                val path = Path().apply { addRoundRect(outline.roundRect) }
-                val stroke = Stroke(1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(
-                    floatArrayOf(4.dp.toPx(), 3.dp.toPx())))
-                onDrawWithContent {
-                    drawContent()
-                    drawPath(path, deletedOutline, style = stroke)
+            Row(Modifier.fillMaxWidth(),
+                horizontalArrangement = if (message.isMine) Arrangement.End else Arrangement.Start,
+                verticalAlignment = Alignment.Bottom) {
+                if (message.isMine) {
+                    Text(formatClockTime(message.at), color = NotiColors.Secondary,
+                        style = MaterialTheme.typography.labelSmall)
+                    Spacer(Modifier.width(6.dp))
                 }
-            } else Modifier
-            Column(Modifier.weight(1f, fill = false).widthIn(max = if (message.deletedBySender) 270.dp else 250.dp)
-                .then(border).background(background, shape).padding(horizontal = 14.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (message.deletedBySender) {
-                    Text(stringResource(R.string.messages_deleted_original_saved), color = NotiColors.Secondary,
-                        style = MaterialTheme.typography.labelMedium)
+                val border = if (message.deletedBySender) Modifier.drawWithCache {
+                    val outline = shape.createOutline(size, layoutDirection, this) as Outline.Rounded
+                    val path = Path().apply { addRoundRect(outline.roundRect) }
+                    val stroke = Stroke(1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(
+                        floatArrayOf(4.dp.toPx(), 3.dp.toPx())))
+                    onDrawWithContent {
+                        drawContent()
+                        drawPath(path, deletedOutline, style = stroke)
+                    }
+                } else Modifier
+                Column(Modifier.weight(1f, fill = false).widthIn(max = if (message.deletedBySender) 270.dp else 250.dp)
+                    .then(border).background(background, shape).padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (message.deletedBySender) {
+                        Text(stringResource(R.string.messages_deleted_original_saved), color = NotiColors.Secondary,
+                            style = MaterialTheme.typography.labelMedium)
+                    }
+                    // The UI contract supplies preserved original content in text.
+                    val sticker = KakaoEmoticons.isSticker(message.text)
+                    message.imagePath?.let { MessagePhoto(it, sticker = sticker) }
+                    val placeholder = message.text.trim().removeSuffix(".") == "사진을 보냈습니다" || sticker
+                    if (message.imagePath == null || !placeholder) {
+                        Text(messageText(message.text, kakaoEmoticons, keywords),
+                            color = if (message.deletedBySender) NotiColors.Body else NotiColors.Text,
+                            style = MaterialTheme.typography.bodyLarge)
+                    }
                 }
-                // The UI contract supplies preserved original content in text.
-                val sticker = KakaoEmoticons.isSticker(message.text)
-                message.imagePath?.let { MessagePhoto(it, sticker = sticker) }
-                val placeholder = message.text.trim().removeSuffix(".") == "사진을 보냈습니다" || sticker
-                if (message.imagePath == null || !placeholder) {
-                    Text(messageText(message.text, kakaoEmoticons, keywords),
-                        color = if (message.deletedBySender) NotiColors.Body else NotiColors.Text,
-                        style = MaterialTheme.typography.bodyLarge)
+                if (!message.isMine && !message.deletedBySender) {
+                    Spacer(Modifier.width(6.dp))
+                    Text(formatClockTime(message.at), color = NotiColors.Secondary,
+                        style = MaterialTheme.typography.labelSmall)
                 }
-            }
-            if (!message.isMine && !message.deletedBySender) {
-                Spacer(Modifier.width(6.dp))
-                Text(formatClockTime(message.at), color = NotiColors.Secondary,
-                    style = MaterialTheme.typography.labelSmall)
             }
         }
     }

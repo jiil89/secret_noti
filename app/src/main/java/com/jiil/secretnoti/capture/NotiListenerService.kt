@@ -105,7 +105,7 @@ class NotiListenerService : NotificationListenerService() {
     private fun ingest(sbn: StatusBarNotification) {
         val pkg = sbn.packageName
         if (pkg == packageName) return
-        val snapshot = SnapshotExtractor.from(sbn)
+        val snapshot = SnapshotExtractor.from(sbn, shortcutLabel(sbn))
         val now = System.currentTimeMillis()
 
         val messageLike = !snapshot.isOngoing && (snapshot.messages.isNotEmpty() || snapshot.category == Notification.CATEGORY_MESSAGE)
@@ -160,6 +160,16 @@ class NotiListenerService : NotificationListenerService() {
             else -> raw
         }
         OverlayEvents.newMessage(NewMessageEvent(result.conversationId, pkg, result.roomTitle, text))
+    }
+
+    /** 알림의 대화 바로가기 이름 (Android 11+). 카톡 단톡방 이름은 여기에만 있다. */
+    private fun shortcutLabel(sbn: StatusBarNotification): String? {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.R) return null
+        return runCatching {
+            val ranking = Ranking()
+            if (!currentRanking.getRanking(sbn.key, ranking)) return null
+            ranking.conversationShortcutInfo?.let { it.shortLabel?.toString() ?: it.longLabel?.toString() }
+        }.getOrNull()
     }
 
     private fun cleanupIfDue() {

@@ -82,6 +82,8 @@ data class SeenAppEntity(
 data class ConversationWithStats(
     @Embedded val conversation: ConversationEntity,
     val deletedCount: Int,
+    /** 이 방에서 저장된 서로 다른 보낸 사람 수 (실제 인원수 아님). */
+    val senderCount: Int,
 )
 
 data class SearchRow(
@@ -118,7 +120,9 @@ interface ChatDao {
 
     @Query(
         """
-        SELECT c.*, (SELECT COUNT(*) FROM message m WHERE m.conversationId = c.id AND m.isDeletedBySender = 1) AS deletedCount
+        SELECT c.*, (SELECT COUNT(*) FROM message m WHERE m.conversationId = c.id AND m.isDeletedBySender = 1) AS deletedCount,
+            (SELECT COUNT(DISTINCT m2.sender) FROM message m2 WHERE m2.conversationId = c.id AND m2.isMine = 0
+                AND m2.sender IS NOT NULL) AS senderCount
         FROM conversation c ORDER BY c.isPinned DESC, c.lastMessageAt DESC
         """,
     )
@@ -126,7 +130,9 @@ interface ChatDao {
 
     @Query(
         """
-        SELECT c.*, (SELECT COUNT(*) FROM message m WHERE m.conversationId = c.id AND m.isDeletedBySender = 1) AS deletedCount
+        SELECT c.*, (SELECT COUNT(*) FROM message m WHERE m.conversationId = c.id AND m.isDeletedBySender = 1) AS deletedCount,
+            (SELECT COUNT(DISTINCT m2.sender) FROM message m2 WHERE m2.conversationId = c.id AND m2.isMine = 0
+                AND m2.sender IS NOT NULL) AS senderCount
         FROM conversation c WHERE c.id = :id
         """,
     )
@@ -134,6 +140,15 @@ interface ChatDao {
 
     @Query("SELECT * FROM message WHERE conversationId = :conversationId ORDER BY postedAt ASC, id ASC")
     fun observeMessages(conversationId: Long): Flow<List<MessageEntity>>
+
+    /** 이 방에서 메시지를 보낸 사람들, 최근에 보낸 순. */
+    @Query(
+        """
+        SELECT sender FROM message WHERE conversationId = :conversationId AND isMine = 0 AND sender IS NOT NULL
+        GROUP BY sender ORDER BY MAX(postedAt) DESC
+        """,
+    )
+    fun observeSenders(conversationId: Long): Flow<List<String>>
 
     @Query("SELECT DISTINCT conversationId FROM message WHERE text LIKE '%' || :keyword || '%' ESCAPE '\\'")
     fun observeConversationsWithKeyword(keyword: String): Flow<List<Long>>

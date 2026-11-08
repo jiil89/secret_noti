@@ -31,6 +31,8 @@ data class ConversationUi(
     val looksLikeAd: Boolean = false,
     /** 저장을 끈 대화방. */
     val isMuted: Boolean = false,
+    /** 이 방에서 저장된 서로 다른 보낸 사람 수 (단톡방 꼬리표 "N명이 보냄"). 실제 인원수가 아니다. */
+    val senderCount: Int = 0,
     /** 저장을 끌 때 기록을 남겼는지 (false면 지웠음). */
     val hasRecords: Boolean = true,
 )

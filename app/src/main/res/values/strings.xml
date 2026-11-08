@@ -321,4 +321,11 @@
     <string name="settings_muted_conversations_hint">이 대화방들의 새 알림은 저장하지 않아요. 다시 켜면 그때부터 저장해요.</string>
     <string name="settings_muted_records_kept">%1$s · 기록 남김</string>
     <string name="settings_muted_records_deleted">%1$s · 기록 지움</string>
+    <string name="messages_group">단톡방</string>
+    <plurals name="messages_group_senders">
+        <item quantity="one">단톡 · %1$d명이 보냄</item>
+        <item quantity="other">단톡 · %1$d명이 보냄</item>
+    </plurals>
+    <string name="room_screen_group_subtitle">%1$s · 단톡방</string>
+    <string name="room_screen_group_participants">%1$s · %2$s</string>
 </resources>
