@@ -190,4 +190,20 @@ class NotificationParserTest {
         // 앱이 단톡 표시를 안 해도 보낸 사람이 둘 이상이면 단톡방
         assertTrue(NotificationParser.parse(group.copy(isGroupConversation = false))!!.isGroup)
     }
+
+    @Test
+    fun instagramOneToOneUsesPeerNotOwnAccountName() {
+        // 실제 인스타 DM 알림 구조: conversationTitle·hiddenConversationTitle = 내 계정, isGroupConversation=false
+        val dm = NotificationSnapshot(
+            packageName = "com.instagram.android", tag = "direct|1;thread_id:9", shortcutId = null, locusId = null,
+            postTime = 1000, isGroupSummary = false, category = "msg", title = "my.account: 친구", text = "안녕", bigText = null,
+            subText = null, conversationTitle = "my.account", hiddenConversationTitle = "my.account",
+            isGroupConversation = false, selfKey = "me", messages = listOf(RawMessage("친구", "peer", "안녕", 10, null)),
+        )
+        val parsed = NotificationParser.parse(dm, messagesOnly = true)!!
+        assertFalse(parsed.isGroup)
+        assertTrue(parsed.groupExplicit)
+        assertEquals("친구", parsed.roomTitle)
+        assertEquals("direct|1;thread_id:9", parsed.roomKey)
+    }
 }

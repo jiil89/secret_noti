@@ -23,8 +23,8 @@ android {
         applicationId = "com.jiil.secretnoti"
         minSdk = 26
         targetSdk = 37
-        versionCode = 14
-        versionName = "0.4.7"
+        versionCode = 15
+        versionName = "0.4.8"
     }
 
     signingConfigs {

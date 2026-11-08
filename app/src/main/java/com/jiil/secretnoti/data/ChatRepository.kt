@@ -112,7 +112,7 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
             conv.copy(
                 // 단톡방 이름을 모를 때(보낸 사람 이름만 있을 때)는 이미 아는 방 이름을 지킨다.
                 roomTitle = if (parsed.titleReliable || conv.lastMessageAt == 0L) parsed.roomTitle else conv.roomTitle,
-                isGroup = conv.isGroup || parsed.isGroup,
+                isGroup = if (parsed.groupExplicit) parsed.isGroup else conv.isGroup || parsed.isGroup,
                 unreadCount = conv.unreadCount + newUnread,
                 lastMessageAt = newer?.postedAt ?: conv.lastMessageAt,
                 lastSender = if (newer != null) newer.sender else conv.lastSender,

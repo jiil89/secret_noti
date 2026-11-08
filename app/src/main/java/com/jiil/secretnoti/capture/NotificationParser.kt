@@ -53,6 +53,8 @@ data class ParsedNotification(
     val messages: List<ParsedMessage>,
     /** false면 방 이름을 몰라 마지막 보낸 사람 이름을 임시로 쓴 것 (기존 방 이름을 덮어쓰지 않는다). */
     val titleReliable: Boolean = true,
+    /** 앱이 알림에 1:1/단톡을 직접 밝혔는가. 밝혔으면 그 값을 따른다 (예전에 잘못 단톡으로 저장된 방을 바로잡기 위함). */
+    val groupExplicit: Boolean = false,
 )
 
 object NotificationParser {
@@ -100,12 +102,15 @@ object NotificationParser {
 
         // 보낸 사람이 둘 이상이면 단톡방으로 본다 (앱이 단톡 표시를 빼먹어도).
         val distinctSenders = s.messages.mapNotNull { m -> m.senderKey ?: m.sender }.filter { it != s.selfKey }.toSet()
-        val isGroup = s.isGroupConversation == true || s.conversationTitle != null || distinctSenders.size >= 2
+        val isGroup = (s.isGroupConversation ?: (s.conversationTitle != null)) || distinctSenders.size >= 2
         fun String?.clean() = this?.trim()?.takeIf { it.isNotEmpty() }
         val namedTitle = if (isGroup) {
             s.conversationTitle.clean() ?: s.shortcutLabel.clean() ?: s.hiddenConversationTitle.clean() ?: s.subText.clean()
         } else {
-            s.hiddenConversationTitle.clean()
+            // 1:1은 상대가 보낸 마지막 메시지의 보낸 사람이 가장 정확하다.
+            // (인스타그램은 hiddenConversationTitle·conversationTitle에 "내" 계정 이름을 넣는다)
+            s.messages.lastOrNull { it.sender != null && (it.senderKey == null || it.senderKey != s.selfKey) }?.sender.clean()
+                ?: s.hiddenConversationTitle.clean()
         }
         // 카톡 단톡방은 title이 "마지막 보낸 사람"이라 방 이름으로 믿을 수 없다.
         val roomTitle = namedTitle ?: s.title.clean() ?: return null
@@ -138,6 +143,9 @@ object NotificationParser {
                 ),
             )
         }
-        return ParsedNotification(roomKey, roomTitle, isGroup, messages, titleReliable)
+        return ParsedNotification(
+            roomKey, roomTitle, isGroup, messages, titleReliable,
+            groupExplicit = s.isGroupConversation != null && distinctSenders.size < 2,
+        )
     }
 }
