@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.util.Log
 import java.io.File
 
@@ -29,10 +31,12 @@ object PhotoSaver {
             val bitmap = resolver.openInputStream(u)?.use {
                 BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
             }
-            bitmap?.let { bmp ->
+            bitmap?.let { decoded ->
+                val bmp = rotateByExif(context, u, decoded)
                 val file = File(imageDir(context), "$conversationId-$messageId.jpg")
                 file.outputStream().use { bmp.compress(Bitmap.CompressFormat.JPEG, 85, it) }
                 bmp.recycle()
+                if (bmp !== decoded) decoded.recycle()
                 file.absolutePath
             }
         }
@@ -41,4 +45,22 @@ object PhotoSaver {
         Log.i("PhotoSaver", "사진 미리보기를 읽지 못함: ${t.javaClass.simpleName}")
         null
     }
+
+    /** 카메라 사진은 회전 정보(EXIF)만 붙어 있고 픽셀은 눕혀져 있을 수 있다. 저장 전에 바로 세운다. */
+    private fun rotateByExif(context: Context, uri: Uri, bitmap: Bitmap): Bitmap {
+        val degrees = runCatching {
+            context.contentResolver.openInputStream(uri)?.use {
+                when (ExifInterface(it).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+                    ExifInterface.ORIENTATION_ROTATE_90 -> 90
+                    ExifInterface.ORIENTATION_ROTATE_180 -> 180
+                    ExifInterface.ORIENTATION_ROTATE_270 -> 270
+                    else -> 0
+                }
+            } ?: 0
+        }.getOrDefault(0)
+        if (degrees == 0) return bitmap
+        val m = Matrix().apply { postRotate(degrees.toFloat()) }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, m, true)
+    }
+
 }

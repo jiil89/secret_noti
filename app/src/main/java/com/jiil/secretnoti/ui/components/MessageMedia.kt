@@ -82,9 +82,13 @@ fun MessagePhoto(path: String) {
     var expanded by remember(path) { mutableStateOf(false) }
     val bitmap = photo.bitmap
     if (bitmap != null) {
-        Image(bitmap, stringResource(R.string.messages_photo_expand), Modifier.width(220.dp).heightIn(max = 220.dp)
-            .aspectRatio((bitmap.width.toFloat() / bitmap.height).coerceIn(0.5f, 2f))
-            .clip(NotiShapes.banner).clickable { expanded = true }, contentScale = ContentScale.Fit)
+        // 사진 비율대로 틀 크기를 정한다 (최대 240x300dp). 아주 길쭉한 사진은 틀 안에서 가운데만 보이고, 누르면 전체가 보인다.
+        val ratio = (bitmap.width.toFloat() / bitmap.height).coerceIn(0.4f, 2.5f)
+        val maxW = 240f
+        val maxH = 300f
+        val (w, h) = if (ratio >= maxW / maxH) maxW to maxW / ratio else maxH * ratio to maxH
+        Image(bitmap, stringResource(R.string.messages_photo_expand), Modifier.size(w.dp, h.dp)
+            .clip(NotiShapes.banner).clickable { expanded = true }, contentScale = ContentScale.Crop)
     } else {
         Text(if (photo.loading) stringResource(R.string.messages_photo_loading) else stringResource(R.string.messages_photo_unavailable),
             Modifier.padding(vertical = 16.dp), color = NotiColors.Secondary,
