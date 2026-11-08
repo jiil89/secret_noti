@@ -41,6 +41,8 @@ data class ConversationEntity(
     @ColumnInfo(defaultValue = "0") val looksLikeAd: Boolean = false,
     /** 이 방을 마지막으로 "읽은" 시각: 앱에서 열었거나, 패널에서 뺐거나, 원래 앱에서 읽었을 때. 손잡이 배지 계산용. */
     @ColumnInfo(defaultValue = "0") val readAt: Long = 0,
+    /** 시크릿노티 안에서 이 방을 마지막으로 연 시각. "삭제 N" 꼬리표는 그 뒤에 삭제된 것만 센다. */
+    @ColumnInfo(defaultValue = "0") val seenAt: Long = 0,
 )
 
 @Entity(
@@ -70,6 +72,8 @@ data class MessageEntity(
     val originalText: String?,
     /** 앱 안에 저장한 사진 미리보기 파일 경로. */
     @ColumnInfo(defaultValue = "NULL") val imagePath: String? = null,
+    /** 상대가 삭제한 것을 알아챈 시각. */
+    @ColumnInfo(defaultValue = "0") val deletedAt: Long = 0,
 )
 
 /** 메시지 알림을 보낸 적 있는 앱. 설정의 대상 앱 추천에 쓴다. */
@@ -120,7 +124,8 @@ interface ChatDao {
 
     @Query(
         """
-        SELECT c.*, (SELECT COUNT(*) FROM message m WHERE m.conversationId = c.id AND m.isDeletedBySender = 1) AS deletedCount,
+        SELECT c.*, (SELECT COUNT(*) FROM message m WHERE m.conversationId = c.id AND m.isDeletedBySender = 1
+                AND m.deletedAt > c.seenAt) AS deletedCount,
             (SELECT COUNT(DISTINCT m2.sender) FROM message m2 WHERE m2.conversationId = c.id AND m2.isMine = 0
                 AND m2.sender IS NOT NULL) AS senderCount
         FROM conversation c ORDER BY c.isPinned DESC, c.lastMessageAt DESC
@@ -130,7 +135,8 @@ interface ChatDao {
 
     @Query(
         """
-        SELECT c.*, (SELECT COUNT(*) FROM message m WHERE m.conversationId = c.id AND m.isDeletedBySender = 1) AS deletedCount,
+        SELECT c.*, (SELECT COUNT(*) FROM message m WHERE m.conversationId = c.id AND m.isDeletedBySender = 1
+                AND m.deletedAt > c.seenAt) AS deletedCount,
             (SELECT COUNT(DISTINCT m2.sender) FROM message m2 WHERE m2.conversationId = c.id AND m2.isMine = 0
                 AND m2.sender IS NOT NULL) AS senderCount
         FROM conversation c WHERE c.id = :id
@@ -178,7 +184,7 @@ interface ChatDao {
     )
     fun observeIncomingSince(since: Long): Flow<Int>
 
-    @Query("UPDATE conversation SET unreadCount = 0, readAt = MAX(readAt, :now) WHERE id = :id")
+    @Query("UPDATE conversation SET unreadCount = 0, readAt = MAX(readAt, :now), seenAt = MAX(seenAt, :now) WHERE id = :id")
     suspend fun markSeen(id: Long, now: Long)
 
     @Query("UPDATE conversation SET isPinned = NOT isPinned WHERE id = :id")

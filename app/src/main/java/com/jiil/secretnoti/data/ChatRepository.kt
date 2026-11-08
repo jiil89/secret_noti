@@ -84,6 +84,7 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
                     receivedAt = receivedAt,
                     isDeletedBySender = NotificationParser.isDeletionMarker(m.text),
                     originalText = null,
+                    deletedAt = if (NotificationParser.isDeletionMarker(m.text)) receivedAt else 0,
                 )
                 val id = dao.insertMessage(entity)
                 if (id == -1L) continue
@@ -92,7 +93,7 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
                 if (latest == null || entity.postedAt >= latest.postedAt) latest = entity
             } else if (old.text != m.text && !old.isDeletedBySender && NotificationParser.isDeletionMarker(m.text)) {
                 // 같은 메시지가 "삭제된 메시지입니다"로 바뀌었다 → 원문을 남기고 삭제 표시.
-                val marked = old.copy(isDeletedBySender = true, originalText = old.text)
+                val marked = old.copy(isDeletedBySender = true, originalText = old.text, deletedAt = receivedAt)
                 dao.updateMessage(marked)
                 deleted += marked
             }
@@ -100,7 +101,7 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
         for (key in removedKeys) {
             val old = dao.findMessage(conversationId, key) ?: continue
             if (old.isDeletedBySender || old.isMine) continue
-            val marked = old.copy(isDeletedBySender = true, originalText = old.originalText ?: old.text)
+            val marked = old.copy(isDeletedBySender = true, originalText = old.originalText ?: old.text, deletedAt = receivedAt)
             dao.updateMessage(marked)
             deleted += marked
         }
