@@ -163,7 +163,7 @@ class NotificationParserTest {
     @Test
     fun kakaoStickerUriWithoutMimeIsKept() {
         val parsed = NotificationParser.parse(
-            base(listOf(RawMessage("미숙", "m", "이모티콘을 보냈습니다.", 10, "7", null, "content://kakao/emoticon_dir/83/x"))),
+            base(listOf(RawMessage("친구", "m", "이모티콘을 보냈습니다.", 10, "7", null, "content://kakao/emoticon_dir/83/x"))),
         )!!
         assertEquals("content://kakao/emoticon_dir/83/x", parsed.messages.single().imageUri)
     }
