@@ -189,7 +189,7 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
 
     fun observeIncomingSince(since: Long): Flow<Int> = dao.observeIncomingSince(since)
 
-    suspend fun markSeen(conversationId: Long) = dao.markSeen(conversationId)
+    suspend fun markSeen(conversationId: Long) = dao.markSeen(conversationId, System.currentTimeMillis())
     suspend fun togglePin(conversationId: Long) = dao.togglePin(conversationId)
     suspend fun setHidden(conversationId: Long, hidden: Boolean) = dao.setHidden(conversationId, hidden)
 
@@ -213,8 +213,10 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
     suspend fun dismissAllFromPanel(now: Long = System.currentTimeMillis()) = dao.dismissAllFromPanel(now)
 
     /** 원래 앱에서 먼저 읽었다: 안 읽은 수 0, 설정에 따라 패널에서도 뺀다. */
-    suspend fun markReadElsewhere(packageName: String, roomKey: String, removeFromPanel: Boolean) =
-        dao.markReadElsewhere(packageName, roomKey, if (removeFromPanel) System.currentTimeMillis() else 0)
+    suspend fun markReadElsewhere(packageName: String, roomKey: String, removeFromPanel: Boolean) {
+        val now = System.currentTimeMillis()
+        dao.markReadElsewhere(packageName, roomKey, now, if (removeFromPanel) now else 0)
+    }
 
     suspend fun deleteConversation(conversationId: Long) {
         dao.imagePathsOf(conversationId).forEach { File(it).delete() }

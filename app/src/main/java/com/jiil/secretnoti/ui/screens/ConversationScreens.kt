@@ -256,14 +256,21 @@ private fun ConversationItems(
                 else {
                     // A new message can restore the same conversation while this item is composed.
                     key(conversation.id, conversation.lastAt, conversation.preview, conversation.unread) {
-                        val dismissState = rememberSwipeToDismissBoxState()
+                        // 행 폭의 40%를 넘게 밀어야 빠진다 (뒤의 "패널에서 빼기"가 충분히 보인 뒤).
+                        val dismissState = rememberSwipeToDismissBoxState(positionalThreshold = { it * 0.4f })
                         val dismiss by rememberUpdatedState(onDismiss)
                         LaunchedEffect(dismissState.currentValue) {
                             if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) dismiss?.invoke(conversation.id)
                         }
                         SwipeToDismissBox(state = dismissState, backgroundContent = {
+                            // 글자는 드러나는 쪽 가장자리에 붙여서 조금만 밀어도 바로 보이게 한다.
+                            val alignment = when (dismissState.dismissDirection) {
+                                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                                else -> Alignment.Center
+                            }
                             Box(Modifier.fillMaxSize().background(NotiColors.DetailBackground)
-                                .padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+                                .padding(horizontal = 16.dp), contentAlignment = alignment) {
                                 Text(dismissLabel, color = NotiColors.Secondary,
                                     style = MaterialTheme.typography.labelMedium)
                             }

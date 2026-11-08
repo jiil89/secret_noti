@@ -39,6 +39,8 @@ data class ConversationEntity(
     @ColumnInfo(defaultValue = "0") val panelDismissedAt: Long = 0,
     /** "(광고)"로 시작하는 메시지를 받은 적 있음. */
     @ColumnInfo(defaultValue = "0") val looksLikeAd: Boolean = false,
+    /** 이 방을 마지막으로 "읽은" 시각: 앱에서 열었거나, 패널에서 뺐거나, 원래 앱에서 읽었을 때. 손잡이 배지 계산용. */
+    @ColumnInfo(defaultValue = "0") val readAt: Long = 0,
 )
 
 @Entity(
@@ -151,11 +153,18 @@ interface ChatDao {
     )
     fun search(query: String): Flow<List<SearchRow>>
 
-    @Query("SELECT COUNT(*) FROM message WHERE isMine = 0 AND receivedAt > :since")
+    /** 손잡이 배지: 마지막으로 패널을 연 뒤 온 메시지 중, 그 방을 그 뒤에 읽지 않은 것만 센다. */
+    @Query(
+        """
+        SELECT COUNT(*) FROM message m JOIN conversation c ON c.id = m.conversationId
+        WHERE m.isMine = 0 AND m.receivedAt > :since AND m.receivedAt > c.readAt
+            AND c.isMuted = 0 AND c.isHidden = 0
+        """,
+    )
     fun observeIncomingSince(since: Long): Flow<Int>
 
-    @Query("UPDATE conversation SET unreadCount = 0 WHERE id = :id")
-    suspend fun markSeen(id: Long)
+    @Query("UPDATE conversation SET unreadCount = 0, readAt = MAX(readAt, :now) WHERE id = :id")
+    suspend fun markSeen(id: Long, now: Long)
 
     @Query("UPDATE conversation SET isPinned = NOT isPinned WHERE id = :id")
     suspend fun togglePin(id: Long)
@@ -188,15 +197,21 @@ interface ChatDao {
     @Query("UPDATE conversation SET lastText = '', lastSender = NULL, unreadCount = 0 WHERE id = :id")
     suspend fun clearSummary(id: Long)
 
-    @Query("UPDATE conversation SET panelDismissedAt = :at WHERE id = :id")
+    @Query("UPDATE conversation SET panelDismissedAt = :at, readAt = MAX(readAt, :at) WHERE id = :id")
     suspend fun setPanelDismissedAt(id: Long, at: Long)
 
-    @Query("UPDATE conversation SET panelDismissedAt = :at WHERE lastMessageAt <= :at")
+    @Query("UPDATE conversation SET panelDismissedAt = :at, readAt = MAX(readAt, :at) WHERE lastMessageAt <= :at")
     suspend fun dismissAllFromPanel(at: Long)
 
-    /** 다른 앱에서 읽음: 안 읽은 수 0, [dismissAt]이 0보다 크면 패널에서도 뺀다. */
-    @Query("UPDATE conversation SET unreadCount = 0, panelDismissedAt = MAX(panelDismissedAt, :dismissAt) WHERE packageName = :packageName AND roomKey = :roomKey")
-    suspend fun markReadElsewhere(packageName: String, roomKey: String, dismissAt: Long)
+    /** 다른 앱에서 읽음: 안 읽은 수·배지 0, [dismissAt]이 0보다 크면 패널에서도 뺀다. */
+    @Query(
+        """
+        UPDATE conversation SET unreadCount = 0, readAt = MAX(readAt, :now),
+            panelDismissedAt = MAX(panelDismissedAt, :dismissAt)
+        WHERE packageName = :packageName AND roomKey = :roomKey
+        """,
+    )
+    suspend fun markReadElsewhere(packageName: String, roomKey: String, now: Long, dismissAt: Long)
 
     @Upsert
     suspend fun upsertSeenApp(app: SeenAppEntity)
