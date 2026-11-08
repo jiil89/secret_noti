@@ -287,7 +287,7 @@
     <string name="settings_read_elsewhere_remove_hint">History stays in the app. The chat returns to the panel when a new message arrives.</string>
     <string name="settings_auto_mute_ads">Do not save new chats that look like ads</string>
     <string name="settings_auto_mute_ads_hint">New chats with messages starting with “(광고)” are not saved. Off by default.</string>
-    <string name="settings_muted_conversations">Chats with saving turned off</string>
+    <string name="settings_muted_conversations">Chats with saving turned off (%1$d)</string>
     <string name="settings_unmute_conversation">Turn back on</string>
     <string name="screen_preview_ad_title">Shopping updates</string>
     <string name="screen_preview_ad_message">(광고) See this week’s offers.</string>
@@ -320,4 +320,11 @@
     <string name="glow_live_preview">Glow color preview: %1$s</string>
     <string name="peek_bubble_open_panel">%1$s, %2$s, Open panel</string>
     <string name="peek_hidden">New message</string>
+    <string name="conversations_muted_section">Saving off · %1$d</string>
+    <string name="conversation_saving_off">Saving off</string>
+    <string name="conversation_records_deleted">History deleted</string>
+    <string name="conversation_unmute">Turn saving back on</string>
+    <string name="settings_muted_conversations_hint">New notifications from these chats are not saved. Turn saving back on to save notifications from then on.</string>
+    <string name="settings_muted_records_kept">%1$s · History kept</string>
+    <string name="settings_muted_records_deleted">%1$s · History deleted</string>
 </resources>

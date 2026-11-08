@@ -16,6 +16,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.Alignment
@@ -160,6 +162,8 @@ fun ConversationListScreen(
     onHide: (Long) -> Unit,
     onDelete: (Long) -> Unit,
     onMute: (id: Long, deleteExisting: Boolean) -> Unit,
+    mutedConversations: List<ConversationUi>,
+    onUnmute: (Long) -> Unit,
 ) {
     var pendingMute by remember { mutableStateOf<ConversationUi?>(null) }
     var pendingDelete by remember { mutableStateOf<ConversationUi?>(null) }
@@ -177,7 +181,8 @@ fun ConversationListScreen(
             AppFilterChips(availableApps, filter, onFilterChange)
             Spacer(Modifier.height(8.dp))
             ConversationItems(visibleConversations(conversations, filter), onOpenConversation, Modifier.weight(1f),
-                onTogglePin = onTogglePin, onHide = onHide, onDelete = { pendingDelete = it }, onMute = { pendingMute = it })
+                onTogglePin = onTogglePin, onHide = onHide, onDelete = { pendingDelete = it }, onMute = { pendingMute = it },
+                mutedConversations = visibleConversations(mutedConversations, filter), onUnmute = onUnmute)
         }
     }
     pendingMute?.let { conversation ->
@@ -210,9 +215,11 @@ private fun ConversationItems(
     maxLines: Int = 2,
     onDismiss: ((Long) -> Unit)? = null,
     onMute: (ConversationUi) -> Unit,
+    mutedConversations: List<ConversationUi> = emptyList(),
+    onUnmute: ((Long) -> Unit)? = null,
 ) {
     val dismissLabel = stringResource(R.string.panel_dismiss)
-    if (conversations.isEmpty()) {
+    if (conversations.isEmpty() && mutedConversations.isEmpty()) {
         Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             if (onDismiss == null) EmptyConversations()
             else Column(horizontalAlignment = Alignment.CenterHorizontally,
@@ -225,6 +232,9 @@ private fun ConversationItems(
         }
     } else {
         LazyColumn(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            if (conversations.isEmpty()) item(key = "empty") {
+                EmptyConversations(Modifier.fillMaxWidth())
+            }
             items(conversations, key = { it.id }) { conversation ->
                 var menuOpen by remember { mutableStateOf(false) }
                 val row: @Composable () -> Unit = {
@@ -275,6 +285,34 @@ private fun ConversationItems(
                                     style = MaterialTheme.typography.labelMedium)
                             }
                         }) { row() }
+                    }
+                }
+            }
+            if (mutedConversations.isNotEmpty()) {
+                item(key = "muted_header") {
+                    Row(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(stringResource(R.string.conversations_muted_section, mutedConversations.size),
+                            modifier = Modifier.semantics { heading() },
+                            style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
+                            color = NotiColors.Secondary)
+                        HorizontalDivider(Modifier.weight(1f), thickness = Dp.Hairline, color = NotiColors.Divider)
+                    }
+                }
+                items(mutedConversations, key = { "muted_${it.id}" }) { conversation ->
+                    var menuOpen by remember { mutableStateOf(false) }
+                    Box {
+                        ConversationRow(conversation, onClick = { onOpenConversation(conversation.id) },
+                            maxLines = maxLines, onLongClick = { menuOpen = true })
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            if (onUnmute != null) DropdownMenuItem(
+                                text = { Text(stringResource(R.string.conversation_unmute)) },
+                                onClick = { menuOpen = false; onUnmute(conversation.id) })
+                            if (onDelete != null) DropdownMenuItem(
+                                text = { Text(stringResource(R.string.conversations_delete_history), color = MaterialTheme.colorScheme.error) },
+                                onClick = { menuOpen = false; onDelete(conversation) })
+                        }
                     }
                 }
             }

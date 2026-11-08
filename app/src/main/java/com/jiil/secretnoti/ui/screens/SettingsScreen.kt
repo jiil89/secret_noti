@@ -73,6 +73,27 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     SettingsSwitchRow(stringResource(R.string.settings_auto_mute_ads), state.autoMuteAds,
                         actions::setAutoMuteAds, detail = stringResource(R.string.settings_auto_mute_ads_hint))
                 }
+                if (state.mutedConversations.isNotEmpty()) {
+                    HorizontalDivider(color = NotiColors.Divider)
+                    SettingsSection(stringResource(R.string.settings_muted_conversations, state.mutedConversations.size)) {
+                        SettingsHelper(stringResource(R.string.settings_muted_conversations_hint))
+                        state.mutedConversations.forEach { conversation ->
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                AppIcon(conversation.packageName, 24.dp)
+                                Column(Modifier.weight(1f)) {
+                                    Text(conversation.title, style = MaterialTheme.typography.bodyLarge)
+                                    SettingsHelper(stringResource(if (conversation.hasRecords) R.string.settings_muted_records_kept
+                                        else R.string.settings_muted_records_deleted, conversation.appLabel))
+                                }
+                                TextButton(onClick = { actions.unmuteConversation(conversation.id) },
+                                    modifier = Modifier.heightIn(min = NotiSpacing.button)) {
+                                    Text(stringResource(R.string.settings_unmute_conversation))
+                                }
+                            }
+                        }
+                    }
+                }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_read_elsewhere)) {
                     SettingsHelper(stringResource(R.string.settings_read_elsewhere_hint))
@@ -293,23 +314,6 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         }
                     }
                     SettingsHelper(stringResource(R.string.settings_screen_retention_hint))
-                }
-                if (state.mutedConversations.isNotEmpty()) {
-                    SettingsSection(stringResource(R.string.settings_muted_conversations)) {
-                        state.mutedConversations.forEach { conversation ->
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                AppIcon(conversation.packageName, 24.dp)
-                                Column(Modifier.weight(1f)) {
-                                    Text(conversation.title, style = MaterialTheme.typography.bodyLarge)
-                                    SettingsHelper(conversation.appLabel)
-                                }
-                                TextButton(onClick = { actions.unmuteConversation(conversation.id) }) {
-                                    Text(stringResource(R.string.settings_unmute_conversation))
-                                }
-                            }
-                        }
-                    }
                 }
                 SettingsSection(stringResource(R.string.settings_screen_backup)) {
                     SettingsHelper(stringResource(R.string.settings_screen_backup_hint))

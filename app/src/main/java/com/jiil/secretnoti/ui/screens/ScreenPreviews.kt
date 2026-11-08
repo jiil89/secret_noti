@@ -30,6 +30,10 @@ private fun sampleConversations() = listOf(
 )
 
 @Composable
+private fun sampleMutedConversations() = sampleConversations().filter { it.id == 6L || it.id == 4L }
+    .map { it.copy(isMuted = true, hasRecords = it.id == 6L, unread = 0) }
+
+@Composable
 private fun sampleMessages() = listOf(
     MessageUi(1, stringResource(R.string.screen_preview_minsu), false, stringResource(R.string.screen_preview_invite), sampleAt(20, 31, 1), false),
     MessageUi(2, stringResource(R.string.screen_preview_jiyoung), false, stringResource(R.string.screen_preview_available), sampleAt(20, 33), false),
@@ -60,7 +64,7 @@ private fun EmptyPanelPreview() {
 @Preview(name = "전체 대화 목록", widthDp = 390, heightDp = 844, showBackground = true)
 @Composable
 private fun ConversationListPreview() {
-    NotiTheme { ConversationListScreen(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }) }
+    NotiTheme { ConversationListScreen(sampleConversations().filter { it.id != 6L && it.id != 4L }, sampleApps(), null, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, sampleMutedConversations(), {}) }
 }
 
 @Preview(name = "그룹 대화 기록", widthDp = 390, heightDp = 844, showBackground = true)
@@ -134,7 +138,7 @@ private fun sampleSettings() = SettingsUi(
     notificationPermission = false, savePhotos = true, keywords = listOf(stringResource(R.string.screen_preview_friday), stringResource(R.string.screen_preview_place)),
     hiddenConversations = sampleConversations().take(1), themeMode = ThemeMode.SYSTEM,
     panelWidthDp = PanelWidth.NORMAL.dp,
-    mutedConversations = sampleConversations().filter { it.looksLikeAd },
+    mutedConversations = sampleMutedConversations(),
     readElsewhereAction = ReadElsewhereAction.REMOVE_FROM_PANEL,
     autoMuteAds = false,
     indicatorBadge = true, indicatorGlow = true, glowUsesAppColor = true,
@@ -211,4 +215,16 @@ private fun PeekBubbleLeftPreview() {
             stringResource(R.string.screen_preview_manager), stringResource(R.string.screen_preview_report),
             "com.microsoft.teams", true, {})
     }
+}
+
+@Preview(name = "Muted chats only", widthDp = 390, heightDp = 844, showBackground = true)
+@Composable
+private fun MutedOnlyListPreview() {
+    NotiTheme { ConversationListScreen(emptyList(), sampleApps(), null, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, sampleMutedConversations(), {}) }
+}
+
+@Preview(name = "Muted chats filtered", widthDp = 390, heightDp = 844, showBackground = true)
+@Composable
+private fun FilteredMutedListPreview() {
+    NotiTheme(ThemeMode.DARK) { ConversationListScreen(emptyList(), sampleApps(), "com.samsung.android.messaging", {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, sampleMutedConversations(), {}) }
 }

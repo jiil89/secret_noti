@@ -38,8 +38,9 @@ fun ConversationListRoute(onOpenConversation: (Long) -> Unit, onOpenSettings: ()
     val chat = remember { NotiApp.instance.chat }
     val scope = rememberCoroutineScope()
     val conversations by remember { chat.observeConversations() }.collectAsStateWithLifecycle(emptyList())
+    val muted by remember { chat.observeMutedConversations() }.collectAsStateWithLifecycle(emptyList())
     var filter by rememberSaveable { mutableStateOf<String?>(null) }
-    val apps = conversations.apps()
+    val apps = (conversations + muted).apps()
     // 필터로 고른 앱의 대화방이 사라지면 전체로 돌아간다.
     if (filter != null && apps.none { it.packageName == filter }) filter = null
 
@@ -55,6 +56,8 @@ fun ConversationListRoute(onOpenConversation: (Long) -> Unit, onOpenSettings: ()
         onHide = { id -> scope.launch { chat.setHidden(id, true); WidgetUpdater.request(context) } },
         onDelete = { id -> scope.launch { chat.deleteConversation(id); WidgetUpdater.request(context) } },
         onMute = { id, deleteExisting -> scope.launch { chat.mute(id, deleteExisting); WidgetUpdater.request(context) } },
+        mutedConversations = muted,
+        onUnmute = { id -> scope.launch { chat.unmute(id); WidgetUpdater.request(context) } },
     )
 }
 

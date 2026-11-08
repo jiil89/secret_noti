@@ -136,7 +136,10 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
 
     fun observeMutedConversations(): Flow<List<ConversationUi>> =
         dao.observeConversations().map { list ->
-            list.filter { it.conversation.isMuted }.map { it.toUi(previewHidden = false, hasKeyword = false) }
+            list.filter { it.conversation.isMuted }.map {
+                it.toUi(previewHidden = Prefs.hidePreviews.value, hasKeyword = false)
+                    .copy(isMuted = true, hasRecords = it.conversation.lastText.isNotEmpty())
+            }
         }
 
     private fun observeVisible(includeHidden: Boolean, panelOnly: Boolean): Flow<List<ConversationUi>> =

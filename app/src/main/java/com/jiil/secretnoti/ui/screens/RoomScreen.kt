@@ -8,6 +8,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +41,23 @@ fun RoomScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var muteDialog by remember { mutableStateOf(false) }
     val ordered = remember(messages) { messages.sortedBy { it.at } }
+    // 채팅처럼 최신 메시지(맨 아래)에서 시작한다. 메시지는 DB에서 늦게 채워지므로 채워진 뒤에 내린다.
+    // 이후 새 메시지가 오면, 바닥 근처를 보고 있을 때만 따라 내려간다 (지난 대화를 읽는 중이면 그대로).
+    val listState = rememberLazyListState()
+    var scrolledInitially by remember { mutableStateOf(false) }
+    val lastId = ordered.lastOrNull()?.id
+    LaunchedEffect(lastId) {
+        if (lastId == null) return@LaunchedEffect
+        snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it > 0 }
+        val lastIndex = listState.layoutInfo.totalItemsCount - 1
+        if (!scrolledInitially) {
+            listState.scrollToItem(lastIndex)
+            scrolledInitially = true
+        } else {
+            val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            if (lastVisible >= lastIndex - 3) listState.animateScrollToItem(lastIndex)
+        }
+    }
     Surface(color = NotiColors.DetailBackground) {
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
             Row(Modifier.fillMaxWidth().background(NotiColors.Background)
@@ -64,7 +88,7 @@ fun RoomScreen(
             }
             HorizontalDivider(color = NotiColors.Divider)
             NoticeBanner(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp))
-            LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(16.dp),
+            LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = listState, contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 if (ordered.isEmpty()) {
                     item { EmptyConversations(Modifier.fillMaxWidth()) }

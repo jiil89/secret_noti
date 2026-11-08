@@ -29,6 +29,10 @@ data class ConversationUi(
     val previewHidden: Boolean = false,
     /** 메시지가 "(광고)"로 시작하는 등 광고로 보이는 대화방. "저장 끄기"를 권한다. */
     val looksLikeAd: Boolean = false,
+    /** 저장을 끈 대화방. */
+    val isMuted: Boolean = false,
+    /** 저장을 끌 때 기록을 남겼는지 (false면 지웠음). */
+    val hasRecords: Boolean = true,
 )
 
 data class MessageUi(

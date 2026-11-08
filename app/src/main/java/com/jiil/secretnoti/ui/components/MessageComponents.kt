@@ -20,6 +20,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Outline
@@ -123,7 +124,7 @@ fun ConversationRow(
     maxLines: Int = 2,
     onMute: (() -> Unit)? = null,
 ) {
-    Row(modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+    Row(modifier.alpha(if (conversation.isMuted) 0.55f else 1f).fillMaxWidth().clip(RoundedCornerShape(14.dp))
         .combinedClickable(onClick = onClick, onLongClick = onLongClick,
             onLongClickLabel = stringResource(R.string.messages_manage_conversation), role = Role.Button)
         .padding(horizontal = 4.dp, vertical = 10.dp),
@@ -143,20 +144,28 @@ fun ConversationRow(
                     color = NotiColors.Secondary)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val preview = if (conversation.previewHidden) stringResource(R.string.preview_locked)
+                val preview = if (conversation.isMuted && !conversation.hasRecords) stringResource(R.string.conversation_records_deleted)
+                else if (conversation.previewHidden) stringResource(R.string.preview_locked)
                 else if (conversation.isGroup)
                     stringResource(R.string.messages_sender_preview, conversation.lastSender?.takeIf { it.isNotBlank() } ?: stringResource(R.string.me), conversation.preview)
                 else conversation.preview
-                Text(preview, Modifier.weight(1f), color = if (conversation.previewHidden) NotiColors.Secondary else NotiColors.Body,
+                Text(preview, Modifier.weight(1f), color = if (conversation.previewHidden || (conversation.isMuted && !conversation.hasRecords)) NotiColors.Secondary else NotiColors.Body,
                     style = MaterialTheme.typography.bodyMedium, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
                 UnreadBadge(conversation.unread)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 SourceLabel(conversation.appLabel, Modifier.weight(1f, fill = false))
+                if (conversation.isMuted) {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Icon(NotiIcons.saveOff, null, Modifier.size(12.dp), tint = NotiColors.Secondary)
+                        MessageTag(stringResource(R.string.conversation_saving_off))
+                    }
+                }
                 if (conversation.deletedCount > 0) MessageTag(pluralStringResource(R.plurals.messages_deleted_count, conversation.deletedCount, conversation.deletedCount))
                 if (conversation.hasKeyword) MessageTag(stringResource(R.string.messages_keyword), accent = true)
             }
-            if (conversation.looksLikeAd && onMute != null) {
+            if (!conversation.isMuted && conversation.looksLikeAd && onMute != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.conversation_looks_like_ad), Modifier.weight(1f),
                         color = NotiColors.Secondary, style = MaterialTheme.typography.labelSmall)
