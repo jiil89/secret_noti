@@ -294,38 +294,24 @@ private fun ConversationItems(
                     }
                 }
             }
-            if (mutedConversations.isNotEmpty() && !mutedExpanded) {
-                // 평소에는 접어 두고 한 줄만 보여준다. 누르면 같은 자리에서 펼쳐진다.
-                item(key = "muted_collapsed") {
-                    Row(Modifier.fillMaxWidth().padding(top = 16.dp).clip(NotiShapes.banner)
-                        .background(NotiColors.DetailBackground)
-                        .clickable(role = Role.Button, onClickLabel = stringResource(R.string.conversations_muted_show)) {
-                            mutedExpanded = true
-                        }
+            if (mutedConversations.isNotEmpty()) {
+                // 설정 화면과 같은 한 줄: 누를 때마다 펼치기/접기.
+                item(key = "muted_toggle") {
+                    Row(Modifier.fillMaxWidth().padding(top = 16.dp, bottom = if (mutedExpanded) 4.dp else 0.dp)
+                        .clip(NotiShapes.banner).background(NotiColors.DetailBackground)
+                        .clickable(role = Role.Button) { mutedExpanded = !mutedExpanded }
                         .heightIn(min = 48.dp).padding(horizontal = 14.dp),
                         verticalAlignment = Alignment.CenterVertically) {
                         Text(stringResource(R.string.conversations_muted_collapsed, mutedConversations.size),
-                            Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = NotiColors.Body)
-                        Text(stringResource(R.string.conversations_muted_show), style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold, color = NotiColors.NoticeForeground)
+                            Modifier.weight(1f).semantics { heading() },
+                            style = MaterialTheme.typography.bodyMedium, color = NotiColors.Body)
+                        Text(stringResource(if (mutedExpanded) R.string.conversations_muted_hide else R.string.conversations_muted_show),
+                            style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+                            color = NotiColors.NoticeForeground)
                     }
                 }
             }
             if (mutedConversations.isNotEmpty() && mutedExpanded) {
-                item(key = "muted_header") {
-                    Row(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(stringResource(R.string.conversations_muted_section, mutedConversations.size),
-                            modifier = Modifier.semantics { heading() },
-                            style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
-                            color = NotiColors.Secondary)
-                        HorizontalDivider(Modifier.weight(1f), thickness = Dp.Hairline, color = NotiColors.Divider)
-                        TextButton(onClick = { mutedExpanded = false }, modifier = Modifier.heightIn(min = 40.dp)) {
-                            Text(stringResource(R.string.conversations_muted_hide), style = MaterialTheme.typography.labelMedium)
-                        }
-                    }
-                }
                 items(mutedConversations, key = { "muted_${it.id}" }) { conversation ->
                     var menuOpen by remember { mutableStateOf(false) }
                     Box {
