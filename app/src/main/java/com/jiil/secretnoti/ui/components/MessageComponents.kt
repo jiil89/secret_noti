@@ -86,9 +86,12 @@ fun AppFilterChips(
                 Surface(shape = NotiShapes.pill,
                     color = if (selected) NotiColors.Text else NotiColors.Background,
                     border = if (selected) null else BorderStroke(1.dp, NotiColors.Outline)) {
-                    Text(label, Modifier.heightIn(min = 36.dp).padding(horizontal = 14.dp, vertical = 8.dp),
-                        color = if (selected) NotiColors.Background else NotiColors.Body,
-                        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                    // 칩 높이 36dp 안에서 글자를 위아래 정확히 가운데에 둔다.
+                    Box(Modifier.heightIn(min = 36.dp).padding(horizontal = 14.dp), contentAlignment = Alignment.Center) {
+                        Text(label, color = if (selected) NotiColors.Background else NotiColors.Body,
+                            style = MaterialTheme.typography.bodyMedium.copy(lineHeightStyle = SingleLineCentered),
+                            fontWeight = FontWeight.Medium, maxLines = 1)
+                    }
                 }
             }
         }
@@ -101,7 +104,8 @@ fun NoticeChip(modifier: Modifier = Modifier) {
         .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Icon(NotiIcons.eyeOff, null, Modifier.size(14.dp), tint = NotiColors.NoticeForeground)
-        Text(stringResource(R.string.messages_no_read_receipt), color = NotiColors.NoticeForeground, style = MaterialTheme.typography.labelMedium)
+        Text(stringResource(R.string.messages_no_read_receipt), color = NotiColors.NoticeForeground,
+            style = MaterialTheme.typography.labelMedium.copy(lineHeightStyle = SingleLineCentered))
     }
 }
 

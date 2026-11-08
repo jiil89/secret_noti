@@ -10,6 +10,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -133,8 +134,15 @@ object NotiSpacing {
 
 // Replace this family with bundled Pretendard Font resources in one place.
 private val NotiFontFamily = FontFamily.SansSerif
+// 한글 글꼴은 위쪽 여백이 커서 기본 배치(Proportional)로는 글자가 살짝 위로 떠 보인다 → 줄 높이 안에서 가운데로.
 private fun style(size: Int, height: Int, weight: FontWeight = FontWeight.Normal) =
-    TextStyle(fontFamily = NotiFontFamily, fontSize = size.sp, lineHeight = height.sp, fontWeight = weight)
+    TextStyle(
+        fontFamily = NotiFontFamily, fontSize = size.sp, lineHeight = height.sp, fontWeight = weight,
+        lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None),
+    )
+
+/** 한 줄짜리 칩·꼬리표용: 위아래 남는 줄 간격까지 잘라 글자를 정확히 가운데에 둔다. */
+val SingleLineCentered = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both)
 
 val NotiTypography = Typography(
     displayLarge = style(57, 64), displayMedium = style(45, 52), displaySmall = style(36, 44),
