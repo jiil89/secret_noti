@@ -1,5 +1,10 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import com.jiil.secretnoti.R
@@ -77,7 +82,19 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     HorizontalDivider(color = NotiColors.Divider)
                     SettingsSection(stringResource(R.string.settings_muted_conversations, state.mutedConversations.size)) {
                         SettingsHelper(stringResource(R.string.settings_muted_conversations_hint))
-                        state.mutedConversations.forEach { conversation ->
+                        // 많아지면 길어지므로 평소에는 접어 두고 "보기"로 펼친다 (설정을 새로 열면 다시 접힘).
+                        var mutedExpanded by rememberSaveable { mutableStateOf(false) }
+                        Row(Modifier.fillMaxWidth().clip(NotiShapes.banner).background(NotiColors.DetailBackground)
+                            .clickable(role = Role.Button) { mutedExpanded = !mutedExpanded }
+                            .heightIn(min = 48.dp).padding(horizontal = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Text(stringResource(R.string.conversations_muted_collapsed, state.mutedConversations.size),
+                                Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = NotiColors.Body)
+                            Text(stringResource(if (mutedExpanded) R.string.conversations_muted_hide else R.string.conversations_muted_show),
+                                style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+                                color = NotiColors.NoticeForeground)
+                        }
+                        if (mutedExpanded) state.mutedConversations.forEach { conversation ->
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 AppIcon(conversation.packageName, 24.dp)
