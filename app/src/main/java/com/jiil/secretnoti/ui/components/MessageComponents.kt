@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import com.jiil.secretnoti.R
+import com.jiil.secretnoti.capture.KakaoEmoticons
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.runtime.Composable
@@ -159,7 +160,13 @@ fun ConversationRow(
 }
 
 @Composable
-fun MessageBubble(message: MessageUi, isGroup: Boolean, modifier: Modifier = Modifier, keywords: List<String> = emptyList()) {
+fun MessageBubble(
+    message: MessageUi,
+    isGroup: Boolean,
+    modifier: Modifier = Modifier,
+    keywords: List<String> = emptyList(),
+    kakaoEmoticons: Boolean = false,
+) {
     val deletedOutline = NotiColors.DeletedOutline
     val shape = if (message.isMine) NotiShapes.mine else NotiShapes.bubble
     val background = when {
@@ -200,9 +207,11 @@ fun MessageBubble(message: MessageUi, isGroup: Boolean, modifier: Modifier = Mod
                         style = MaterialTheme.typography.labelMedium)
                 }
                 // The UI contract supplies preserved original content in text.
-                message.imagePath?.let { MessagePhoto(it) }
-                if (message.imagePath == null || message.text.trim().removeSuffix(".") != "사진을 보냈습니다") {
-                    Text(highlightedText(message.text, keywords),
+                val sticker = KakaoEmoticons.isSticker(message.text)
+                message.imagePath?.let { MessagePhoto(it, sticker = sticker) }
+                val placeholder = message.text.trim().removeSuffix(".") == "사진을 보냈습니다" || sticker
+                if (message.imagePath == null || !placeholder) {
+                    Text(messageText(message.text, kakaoEmoticons, keywords),
                         color = if (message.deletedBySender) NotiColors.Body else NotiColors.Text,
                         style = MaterialTheme.typography.bodyLarge)
                 }

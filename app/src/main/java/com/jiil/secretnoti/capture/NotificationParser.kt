@@ -106,7 +106,8 @@ object NotificationParser {
                     isMine = mine,
                     text = m.text,
                     postedAt = m.time,
-                    imageUri = m.dataUri?.takeIf { m.dataMimeType?.startsWith("image/") == true },
+                    // 카톡 큰 이모티콘은 MIME 없이 주소만 온다. 그림이 아니면 저장할 때 걸러진다.
+                    imageUri = m.dataUri?.takeIf { m.dataMimeType == null || m.dataMimeType.startsWith("image/") },
                 )
             }
         } else {

@@ -2,6 +2,7 @@ package com.jiil.secretnoti.ui.screens
 
 import androidx.compose.ui.res.stringResource
 import com.jiil.secretnoti.R
+import com.jiil.secretnoti.capture.TargetApps
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -62,7 +63,7 @@ fun RoomScreen(
                     if (index == 0 || date != messageDate(ordered[index - 1].at)) {
                         item(key = "date-$date") { DateDivider(date) }
                     }
-                    item(key = message.id) { MessageBubble(message, isGroup, keywords = keywords) }
+                    item(key = message.id) { MessageBubble(message, isGroup, keywords = keywords, kakaoEmoticons = packageName == TargetApps.KAKAO) }
                 }
             }
             Column(Modifier.background(NotiColors.Background)) {

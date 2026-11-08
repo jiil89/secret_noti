@@ -25,6 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.jiil.secretnoti.ui.design.*
+import com.jiil.secretnoti.capture.KakaoEmoticons
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.em
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -46,6 +49,32 @@ fun highlightedText(text: String, terms: List<String>): AnnotatedString {
         buildAnnotatedString {
             append(text)
             matchRanges(text, terms).forEach { range ->
+                addStyle(SpanStyle(color = foreground, background = background, fontWeight = FontWeight.Bold),
+                    range.first, range.last + 1)
+            }
+        }
+    }
+}
+
+/** 카톡 미니 이모티콘 "(축하해)"를 이모지나 작은 꼬리표로 바꾸고, 키워드를 강조한 글자. */
+@Composable
+fun messageText(text: String, kakaoEmoticons: Boolean, terms: List<String>): AnnotatedString {
+    if (!kakaoEmoticons) return highlightedText(text, terms)
+    val foreground = NotiColors.NoticeForeground
+    val background = NotiColors.NoticeBackground
+    return remember(text, terms, foreground, background) {
+        buildAnnotatedString {
+            KakaoEmoticons.split(text).forEach { part ->
+                when (part) {
+                    is KakaoEmoticons.Part.Plain -> append(part.text)
+                    is KakaoEmoticons.Part.Emoji -> append(part.emoji)
+                    is KakaoEmoticons.Part.Tag -> withStyle(
+                        SpanStyle(color = foreground, background = background, fontSize = 0.85.em, fontWeight = FontWeight.Medium),
+                    ) { append(" ${part.name} ") }
+                }
+            }
+            val plain = toString()
+            matchRanges(plain, terms).forEach { range ->
                 addStyle(SpanStyle(color = foreground, background = background, fontWeight = FontWeight.Bold),
                     range.first, range.last + 1)
             }
@@ -76,7 +105,7 @@ private fun filePhoto(path: String, maxPixels: Int): PhotoState {
 }
 
 @Composable
-fun MessagePhoto(path: String) {
+fun MessagePhoto(path: String, sticker: Boolean = false) {
     val pixels = with(LocalDensity.current) { 220.dp.roundToPx() }.coerceIn(1, 1024)
     val photo = filePhoto(path, pixels)
     var expanded by remember(path) { mutableStateOf(false) }
@@ -84,11 +113,13 @@ fun MessagePhoto(path: String) {
     if (bitmap != null) {
         // 사진 비율대로 틀 크기를 정한다 (최대 240x300dp). 아주 길쭉한 사진은 틀 안에서 가운데만 보이고, 누르면 전체가 보인다.
         val ratio = (bitmap.width.toFloat() / bitmap.height).coerceIn(0.4f, 2.5f)
-        val maxW = 240f
-        val maxH = 300f
+        // 카톡 큰 이모티콘(스티커)은 작게, 잘리지 않게 보여준다.
+        val maxW = if (sticker) 140f else 240f
+        val maxH = if (sticker) 140f else 300f
         val (w, h) = if (ratio >= maxW / maxH) maxW to maxW / ratio else maxH * ratio to maxH
         Image(bitmap, stringResource(R.string.messages_photo_expand), Modifier.size(w.dp, h.dp)
-            .clip(NotiShapes.banner).clickable { expanded = true }, contentScale = ContentScale.Crop)
+            .clip(NotiShapes.banner).clickable { expanded = true },
+            contentScale = if (sticker) ContentScale.Fit else ContentScale.Crop)
     } else {
         Text(if (photo.loading) stringResource(R.string.messages_photo_loading) else stringResource(R.string.messages_photo_unavailable),
             Modifier.padding(vertical = 16.dp), color = NotiColors.Secondary,

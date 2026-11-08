@@ -33,8 +33,12 @@ object PhotoSaver {
             }
             bitmap?.let { decoded ->
                 val bmp = rotateByExif(context, u, decoded)
-                val file = File(imageDir(context), "$conversationId-$messageId.jpg")
-                file.outputStream().use { bmp.compress(Bitmap.CompressFormat.JPEG, 85, it) }
+                // 투명 배경(이모티콘)은 PNG로, 사진은 JPEG로 저장한다.
+                val png = bmp.hasAlpha()
+                val file = File(imageDir(context), "$conversationId-$messageId.${if (png) "png" else "jpg"}")
+                file.outputStream().use {
+                    if (png) bmp.compress(Bitmap.CompressFormat.PNG, 100, it) else bmp.compress(Bitmap.CompressFormat.JPEG, 85, it)
+                }
                 bmp.recycle()
                 if (bmp !== decoded) decoded.recycle()
                 file.absolutePath

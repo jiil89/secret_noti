@@ -1,5 +1,6 @@
 package com.jiil.secretnoti
 
+import com.jiil.secretnoti.capture.KakaoEmoticons
 import com.jiil.secretnoti.capture.NotificationParser
 import com.jiil.secretnoti.capture.NotificationSnapshot
 import com.jiil.secretnoti.capture.RawMessage
@@ -148,5 +149,22 @@ class NotificationParserTest {
             base(listOf(RawMessage("엄마", "mom", "사진을 보냈습니다.", 10, "9", "image/", "content://x/1"))),
         )!!
         assertEquals("content://x/1", parsed.messages.single().imageUri)
+    }
+
+    @Test
+    fun kakaoMiniEmoticonsBecomeEmojiOrTags() {
+        val text = "형님 생일 축하합니더 🥳🥳(축하해)(축하해)(손하트)(토끼)(뿌잉)"
+        assertEquals("형님 생일 축하합니더 🥳🥳🎉🎉🫰🐰(뿌잉)", KakaoEmoticons.toDisplay(text))
+        assertEquals(KakaoEmoticons.Part.Tag("뿌잉"), KakaoEmoticons.split(text).last())
+        // 날짜·회사 표기는 건드리지 않는다
+        assertEquals("11/8(토) 10시, (주)카카오", KakaoEmoticons.toDisplay("11/8(토) 10시, (주)카카오"))
+    }
+
+    @Test
+    fun kakaoStickerUriWithoutMimeIsKept() {
+        val parsed = NotificationParser.parse(
+            base(listOf(RawMessage("미숙", "m", "이모티콘을 보냈습니다.", 10, "7", null, "content://kakao/emoticon_dir/83/x"))),
+        )!!
+        assertEquals("content://kakao/emoticon_dir/83/x", parsed.messages.single().imageUri)
     }
 }

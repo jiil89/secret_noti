@@ -3,6 +3,7 @@ package com.jiil.secretnoti.data
 import android.content.Context
 import androidx.room.withTransaction
 import com.jiil.secretnoti.capture.AppLabels
+import com.jiil.secretnoti.capture.KakaoEmoticons
 import com.jiil.secretnoti.capture.NotificationParser
 import com.jiil.secretnoti.capture.ParsedMessage
 import com.jiil.secretnoti.capture.ParsedNotification
@@ -155,7 +156,8 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
                     appLabel = AppLabels.label(context, r.packageName),
                     sender = r.message.sender,
                     isMine = r.message.isMine,
-                    text = r.message.originalText ?: r.message.text,
+                    text = (r.message.originalText ?: r.message.text)
+                        .let { if (r.packageName == TargetApps.KAKAO) KakaoEmoticons.toDisplay(it) else it },
                     at = r.message.postedAt,
                     deletedBySender = r.message.isDeletedBySender,
                 )
@@ -206,7 +208,7 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
         title = conversation.roomTitle,
         isGroup = conversation.isGroup,
         lastSender = conversation.lastSender,
-        preview = conversation.lastText,
+        preview = if (conversation.packageName == TargetApps.KAKAO) KakaoEmoticons.toDisplay(conversation.lastText) else conversation.lastText,
         lastAt = conversation.lastMessageAt,
         unread = conversation.unreadCount,
         isPinned = conversation.isPinned,
