@@ -25,28 +25,56 @@ fun MuteConversationDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.conversation_mute_title, title)) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
-                Text(stringResource(R.string.conversation_mute_body))
-                Spacer(Modifier.height(12.dp))
-                Column(Modifier.selectableGroup()) {
-                    listOf(true, false).forEach { delete ->
-                        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                            .selectable(deleteExisting == delete, role = Role.RadioButton,
-                                onClick = { deleteExisting = delete }),
-                            verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = deleteExisting == delete, onClick = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text(stringResource(if (delete) R.string.conversation_mute_delete_existing
-                                else R.string.conversation_mute_keep_existing))
-                        }
-                    }
-                }
-            }
-        },
+        text = { MuteChoices(deleteExisting) { deleteExisting = it } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.conversations_cancel)) } },
         confirmButton = { TextButton(onClick = { onConfirm(deleteExisting) }) {
             Text(stringResource(R.string.conversation_mute))
         } },
     )
+}
+
+@Composable
+private fun MuteChoices(deleteExisting: Boolean, onChange: (Boolean) -> Unit) {
+    Column(Modifier.verticalScroll(rememberScrollState())) {
+        Text(stringResource(R.string.conversation_mute_body))
+        Spacer(Modifier.height(12.dp))
+        Column(Modifier.selectableGroup()) {
+            listOf(true, false).forEach { delete ->
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    .selectable(deleteExisting == delete, role = Role.RadioButton,
+                        onClick = { onChange(delete) }),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(selected = deleteExisting == delete, onClick = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(if (delete) R.string.conversation_mute_delete_existing
+                        else R.string.conversation_mute_keep_existing))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 엣지패널(다른 앱 위 오버레이 창)용. 오버레이에는 Activity가 없어서 Dialog 창을 띄울 수 없으므로
+ * 같은 내용을 패널 안 카드로 보여준다.
+ */
+@Composable
+fun MuteConversationCard(
+    title: String,
+    onConfirm: (deleteExisting: Boolean) -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var deleteExisting by rememberSaveable(title) { mutableStateOf(false) }
+    Surface(modifier, shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 12.dp) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.conversation_mute_title, title), style = MaterialTheme.typography.titleMedium)
+            MuteChoices(deleteExisting) { deleteExisting = it }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.conversations_cancel)) }
+                TextButton(onClick = { onConfirm(deleteExisting) }) { Text(stringResource(R.string.conversation_mute)) }
+            }
+        }
+    }
 }

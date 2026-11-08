@@ -1,5 +1,6 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.res.stringResource
 import com.jiil.secretnoti.R
 
@@ -127,12 +128,22 @@ fun EdgePanel(
                 Box(Modifier.width(4.dp).height(40.dp)
                     .background(if (resizing) NotiColors.Accent else NotiColors.Outline, NotiShapes.pill))
             }
+            // 오버레이 창에서는 Dialog를 띄울 수 없으므로 패널 안에 확인 카드를 겹쳐 보여준다.
+            pendingMute?.let { conversation ->
+                Box(
+                    Modifier.matchParentSize().background(NotiColors.Scrim)
+                        .pointerInput(Unit) { detectTapGestures { pendingMute = null } },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    MuteConversationCard(
+                        conversation.title,
+                        onConfirm = { pendingMute = null; onMute(conversation.id, it) },
+                        onDismiss = { pendingMute = null },
+                        modifier = Modifier.padding(12.dp).pointerInput(Unit) { detectTapGestures { } },
+                    )
+                }
+            }
         }
-    }
-    pendingMute?.let { conversation ->
-        MuteConversationDialog(conversation.title,
-            onConfirm = { pendingMute = null; onMute(conversation.id, it) },
-            onDismiss = { pendingMute = null })
     }
 }
 
