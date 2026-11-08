@@ -73,6 +73,21 @@ data class SettingsUi(
     val themeMode: ThemeMode,
     /** 엣지패널 폭(dp). 프리셋 값이 아니면 사용자가 끌어서 맞춘 폭. */
     val panelWidthDp: Int,
+    /** 저장을 끈 대화방 (다시 켤 수 있게 보여준다). */
+    val mutedConversations: List<ConversationUi>,
+    val readElsewhereAction: ReadElsewhereAction,
+    /** 광고로 보이는 새 대화방은 처음부터 저장하지 않기. */
+    val autoMuteAds: Boolean,
+    /** 새 메시지 표시: 손잡이 숫자 배지. */
+    val indicatorBadge: Boolean,
+    /** 새 메시지 표시: 손잡이 반짝임. */
+    val indicatorGlow: Boolean,
+    /** 반짝임 색을 보낸 앱 색으로 (false면 [glowColor]). */
+    val glowUsesAppColor: Boolean,
+    /** 직접 고른 반짝임 색 (ARGB). */
+    val glowColor: Int,
+    /** 새 메시지 표시: 손잡이 옆 미리보기 말풍선. */
+    val peekBubble: Boolean,
 )
 
 /** 설정 화면에서 일어나는 모든 조작. */
@@ -97,6 +112,17 @@ interface SettingsActions {
     fun unhideConversation(id: Long)
     fun setThemeMode(mode: ThemeMode)
     fun setPanelWidth(dp: Int)
+    fun unmuteConversation(id: Long)
+    fun setReadElsewhereAction(action: ReadElsewhereAction)
+    fun setAutoMuteAds(enabled: Boolean)
+    fun setIndicatorBadge(enabled: Boolean)
+    fun setIndicatorGlow(enabled: Boolean)
+    fun setGlowUsesAppColor(enabled: Boolean)
+    /** ARGB. 알파는 무시하고 불투명으로 쓴다. */
+    fun setGlowColor(argb: Int)
+    fun setPeekBubble(enabled: Boolean)
+    /** 지금 설정으로 손잡이를 한 번 반짝여 본다. */
+    fun previewGlow()
     /** 비밀번호를 받아 암호화한 백업 파일을 만든다. */
     fun backup(password: String)
     /** 백업 파일을 고른 뒤 비밀번호로 풀어서 합친다. */

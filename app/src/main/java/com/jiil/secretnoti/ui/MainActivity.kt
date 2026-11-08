@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.jiil.secretnoti.capture.ListenerStatus
+import com.jiil.secretnoti.overlay.AppVisibility
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.screens.LockScreen
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,11 +58,13 @@ class MainActivity : FragmentActivity() {
 
     override fun onStart() {
         super.onStart()
+        AppVisibility.mainVisible = true
         AppLock.onAppStart(this)
     }
 
     override fun onStop() {
         super.onStop()
+        AppVisibility.mainVisible = false
         AppLock.onAppStop()
     }
 

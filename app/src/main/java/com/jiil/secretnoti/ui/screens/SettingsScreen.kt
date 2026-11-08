@@ -10,6 +10,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -26,6 +28,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.jiil.secretnoti.ui.components.AppIcon
+import com.jiil.secretnoti.ui.components.GlowColorPicker
 import com.jiil.secretnoti.ui.design.*
 import com.jiil.secretnoti.ui.model.*
 
@@ -67,6 +70,30 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         Text(if (expandedApps) stringResource(R.string.settings_screen_collapse_apps) else pluralStringResource(R.plurals.settings_screen_more_apps, others.size, others.size))
                     }
                     SettingsHelper(stringResource(R.string.settings_screen_apps_hint))
+                    SettingsSwitchRow(stringResource(R.string.settings_auto_mute_ads), state.autoMuteAds,
+                        actions::setAutoMuteAds, detail = stringResource(R.string.settings_auto_mute_ads_hint))
+                }
+                HorizontalDivider(color = NotiColors.Divider)
+                SettingsSection(stringResource(R.string.settings_read_elsewhere)) {
+                    SettingsHelper(stringResource(R.string.settings_read_elsewhere_hint))
+                    Column(Modifier.selectableGroup()) {
+                        ReadElsewhereAction.entries.forEach { action ->
+                            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                                .selectable(state.readElsewhereAction == action, role = Role.RadioButton,
+                                    onClick = { actions.setReadElsewhereAction(action) })
+                                .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                RadioButton(selected = state.readElsewhereAction == action, onClick = null)
+                                Column(Modifier.weight(1f)) {
+                                    Text(stringResource(action.labelRes), style = MaterialTheme.typography.bodyLarge)
+                                    if (action == ReadElsewhereAction.REMOVE_FROM_PANEL) {
+                                        SettingsHelper(stringResource(R.string.settings_read_elsewhere_remove_hint))
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_handle)) {
@@ -148,6 +175,34 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         onCheckedChange = actions::setGestureExclusion,
                         enabled = state.handleEnabled,
                     )
+                }
+                HorizontalDivider(color = NotiColors.Divider)
+                SettingsSection(stringResource(R.string.settings_new_messages)) {
+                    SettingsHelper(stringResource(R.string.settings_new_messages_hint))
+                    SettingsSwitchRow(stringResource(R.string.settings_indicator_badge), state.indicatorBadge,
+                        actions::setIndicatorBadge, detail = stringResource(R.string.settings_indicator_badge_hint))
+                    SettingsSwitchRow(stringResource(R.string.settings_indicator_glow), state.indicatorGlow,
+                        actions::setIndicatorGlow, detail = stringResource(R.string.settings_indicator_glow_hint))
+                    if (state.indicatorGlow) {
+                        Text(stringResource(R.string.settings_glow_color), style = MaterialTheme.typography.titleSmall)
+                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                            listOf(true, false).forEachIndexed { index, useAppColor ->
+                                SegmentedButton(
+                                    selected = state.glowUsesAppColor == useAppColor,
+                                    onClick = { actions.setGlowUsesAppColor(useAppColor) },
+                                    shape = SegmentedButtonDefaults.itemShape(index, 2),
+                                    modifier = Modifier.heightIn(min = NotiSpacing.button), icon = {},
+                                ) {
+                                    Text(stringResource(if (useAppColor) R.string.settings_glow_app_color else R.string.settings_glow_custom_color))
+                                }
+                            }
+                        }
+                        if (!state.glowUsesAppColor) GlowColorPicker(state.glowColor, actions::setGlowColor)
+                        TextButton(onClick = actions::previewGlow) { Text(stringResource(R.string.settings_glow_preview)) }
+                        SettingsHelper(stringResource(R.string.settings_glow_preview_hint))
+                    }
+                    SettingsSwitchRow(stringResource(R.string.settings_peek_bubble), state.peekBubble,
+                        actions::setPeekBubble, detail = stringResource(R.string.settings_peek_bubble_hint))
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_privacy)) {
@@ -238,6 +293,23 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         }
                     }
                     SettingsHelper(stringResource(R.string.settings_screen_retention_hint))
+                }
+                if (state.mutedConversations.isNotEmpty()) {
+                    SettingsSection(stringResource(R.string.settings_muted_conversations)) {
+                        state.mutedConversations.forEach { conversation ->
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                AppIcon(conversation.packageName, 24.dp)
+                                Column(Modifier.weight(1f)) {
+                                    Text(conversation.title, style = MaterialTheme.typography.bodyLarge)
+                                    SettingsHelper(conversation.appLabel)
+                                }
+                                TextButton(onClick = { actions.unmuteConversation(conversation.id) }) {
+                                    Text(stringResource(R.string.settings_unmute_conversation))
+                                }
+                            }
+                        }
+                    }
                 }
                 SettingsSection(stringResource(R.string.settings_screen_backup)) {
                     SettingsHelper(stringResource(R.string.settings_screen_backup_hint))

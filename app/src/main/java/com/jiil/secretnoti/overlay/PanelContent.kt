@@ -17,7 +17,11 @@ import com.jiil.secretnoti.ui.design.NotiColors
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import com.jiil.secretnoti.NotiApp
+import com.jiil.secretnoti.widget.WidgetUpdater
+import kotlinx.coroutines.launch
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.model.PanelWidth
 import kotlin.math.roundToInt
@@ -34,7 +38,9 @@ fun PanelContent(
     onOpenSettings: () -> Unit,
 ) {
     val chat = remember { NotiApp.instance.chat }
-    val conversations by remember { chat.observeConversations() }.collectAsState(initial = emptyList())
+    val conversations by remember { chat.observePanelConversations() }.collectAsState(initial = emptyList())
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var filter by remember { mutableStateOf<String?>(null) }
 
     // 폭: 끄는 동안은 화면에만 반영하고, 손을 떼면 저장한다.
@@ -69,6 +75,11 @@ fun PanelContent(
                 maxWidth = maxWidth.dp,
                 onWidthChange = { width = it },
                 onWidthChangeFinished = { Prefs.panelWidthDp.value = width.value.roundToInt() },
+                onDismiss = { id -> scope.launch { chat.dismissFromPanel(id) } },
+                onDismissAll = { scope.launch { chat.dismissAllFromPanel() } },
+                onMute = { id, deleteExisting ->
+                    scope.launch { chat.mute(id, deleteExisting); WidgetUpdater.request(context) }
+                },
             )
         }
     }

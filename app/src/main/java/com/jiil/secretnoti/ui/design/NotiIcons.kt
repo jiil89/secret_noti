@@ -23,6 +23,7 @@ object NotiIcons {
     val search = line("Search", "M19 11A8 8 0 1 1 3 11A8 8 0 1 1 19 11M21 21L16.65 16.65")
     val externalLink = line("ExternalLink", "M15 3H21V9M10 14L21 3M21 14V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V5A2 2 0 0 1 5 3H10")
     val info = line("Info", "M22 12A10 10 0 1 1 2 12A10 10 0 1 1 22 12M12 16V12M12 8H12.01")
+    val more = line("More", "M12 5H12.01M12 12H12.01M12 19H12.01")
     val close = line("Close", "M18 6L6 18M6 6L18 18")
     val message = line("Message", "M21 11.5A8.38 8.38 0 0 1 20.1 15.3A8.5 8.5 0 0 1 12.5 20A8.38 8.38 0 0 1 8.7 19.1L3 21L4.9 15.3A8.38 8.38 0 0 1 4 11.5A8.5 8.5 0 0 1 8.7 3.9A8.38 8.38 0 0 1 12.5 3H13A8.48 8.48 0 0 1 21 11V11.5")
 }

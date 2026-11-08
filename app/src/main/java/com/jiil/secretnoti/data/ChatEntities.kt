@@ -33,6 +33,12 @@ data class ConversationEntity(
     val unreadCount: Int,
     @ColumnInfo(defaultValue = "0") val isPinned: Boolean = false,
     @ColumnInfo(defaultValue = "0") val isHidden: Boolean = false,
+    /** 저장 끔: 이 방의 새 알림은 저장하지 않는다. 방 자체는 기억해 둔다. */
+    @ColumnInfo(defaultValue = "0") val isMuted: Boolean = false,
+    /** 엣지패널에서 뺀 시각. 그 뒤에 온 메시지가 있을 때만 패널에 다시 보인다. */
+    @ColumnInfo(defaultValue = "0") val panelDismissedAt: Long = 0,
+    /** "(광고)"로 시작하는 메시지를 받은 적 있음. */
+    @ColumnInfo(defaultValue = "0") val looksLikeAd: Boolean = false,
 )
 
 @Entity(
@@ -169,8 +175,28 @@ interface ChatDao {
     @Query("DELETE FROM message WHERE receivedAt < :before")
     suspend fun deleteMessagesBefore(before: Long)
 
-    @Query("DELETE FROM conversation WHERE id NOT IN (SELECT DISTINCT conversationId FROM message)")
+    // 저장을 끈 방은 메시지가 없어도 남겨 둔다 (다시 와도 저장하지 않으려고).
+    @Query("DELETE FROM conversation WHERE isMuted = 0 AND id NOT IN (SELECT DISTINCT conversationId FROM message)")
     suspend fun deleteEmptyConversations()
+
+    @Query("UPDATE conversation SET isMuted = :muted WHERE id = :id")
+    suspend fun setMuted(id: Long, muted: Boolean)
+
+    @Query("DELETE FROM message WHERE conversationId = :conversationId")
+    suspend fun deleteMessagesOf(conversationId: Long)
+
+    @Query("UPDATE conversation SET lastText = '', lastSender = NULL, unreadCount = 0 WHERE id = :id")
+    suspend fun clearSummary(id: Long)
+
+    @Query("UPDATE conversation SET panelDismissedAt = :at WHERE id = :id")
+    suspend fun setPanelDismissedAt(id: Long, at: Long)
+
+    @Query("UPDATE conversation SET panelDismissedAt = :at WHERE lastMessageAt <= :at")
+    suspend fun dismissAllFromPanel(at: Long)
+
+    /** 다른 앱에서 읽음: 안 읽은 수 0, [dismissAt]이 0보다 크면 패널에서도 뺀다. */
+    @Query("UPDATE conversation SET unreadCount = 0, panelDismissedAt = MAX(panelDismissedAt, :dismissAt) WHERE packageName = :packageName AND roomKey = :roomKey")
+    suspend fun markReadElsewhere(packageName: String, roomKey: String, dismissAt: Long)
 
     @Upsert
     suspend fun upsertSeenApp(app: SeenAppEntity)

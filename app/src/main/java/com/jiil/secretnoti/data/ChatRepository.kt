@@ -43,21 +43,29 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
         parsed: ParsedNotification,
         receivedAt: Long,
         removedKeys: List<String> = emptyList(),
-    ): IngestResult = db.withTransaction {
-        val conversationId = dao.findConversation(packageName, parsed.roomKey)?.id
-            ?: dao.insertConversation(
-                ConversationEntity(
-                    source = source.name,
-                    packageName = packageName,
-                    roomKey = parsed.roomKey,
-                    roomTitle = parsed.roomTitle,
-                    isGroup = parsed.isGroup,
-                    lastMessageAt = 0,
-                    lastSender = null,
-                    lastText = "",
-                    unreadCount = 0,
-                ),
-            )
+    ): IngestResult? = db.withTransaction {
+        val existing = dao.findConversation(packageName, parsed.roomKey)
+        // 저장을 끈 대화방은 아무것도 저장하지 않는다.
+        if (existing?.isMuted == true) return@withTransaction null
+        val adNow = parsed.messages.any { NotificationParser.looksLikeAd(it.text) }
+        val newConversation = ConversationEntity(
+            source = source.name,
+            packageName = packageName,
+            roomKey = parsed.roomKey,
+            roomTitle = parsed.roomTitle,
+            isGroup = parsed.isGroup,
+            lastMessageAt = 0,
+            lastSender = null,
+            lastText = "",
+            unreadCount = 0,
+            looksLikeAd = adNow,
+        )
+        if (existing == null && adNow && Prefs.autoMuteAds.value) {
+            // 광고로 보이는 새 대화방: 방만 기억하고(설정에서 다시 켤 수 있게) 메시지는 저장하지 않는다.
+            dao.insertConversation(newConversation.copy(isMuted = true))
+            return@withTransaction null
+        }
+        val conversationId = existing?.id ?: dao.insertConversation(newConversation)
 
         val inserted = mutableListOf<Pair<Long, ParsedMessage>>()
         val deleted = mutableListOf<MessageEntity>()
@@ -107,6 +115,7 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
                 lastMessageAt = newer?.postedAt ?: conv.lastMessageAt,
                 lastSender = if (newer != null) newer.sender else conv.lastSender,
                 lastText = newer?.text ?: conv.lastText,
+                looksLikeAd = conv.looksLikeAd || adNow,
             ),
         )
         IngestResult(conversationId, parsed.roomTitle, inserted, deleted)
@@ -118,8 +127,19 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
 
     fun observeSeenApps(): Flow<List<String>> = dao.observeSeenApps().map { list -> list.map { it.packageName } }
 
-    /** 켠 대상 앱의 대화방. [includeHidden]이 false면 숨긴 대화방은 뺀다. 고정한 방이 먼저 온다. */
+    /** 켠 대상 앱의 대화방 (저장 끈 방 제외). [includeHidden]이 false면 숨긴 대화방은 뺀다. 고정한 방이 먼저 온다. */
     fun observeConversations(includeHidden: Boolean = false): Flow<List<ConversationUi>> =
+        observeVisible(includeHidden, panelOnly = false)
+
+    /** 엣지패널용: 패널에서 뺀 뒤로 새 메시지가 온 대화방만. */
+    fun observePanelConversations(): Flow<List<ConversationUi>> = observeVisible(includeHidden = false, panelOnly = true)
+
+    fun observeMutedConversations(): Flow<List<ConversationUi>> =
+        dao.observeConversations().map { list ->
+            list.filter { it.conversation.isMuted }.map { it.toUi(previewHidden = false, hasKeyword = false) }
+        }
+
+    private fun observeVisible(includeHidden: Boolean, panelOnly: Boolean): Flow<List<ConversationUi>> =
         combine(
             dao.observeConversations(),
             Prefs.enabledApps.flow,
@@ -128,7 +148,9 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
         ) { list, enabled, hidePreviews, keywordIds ->
             val sms = TargetApps.defaultSmsPackage(context)
             list.filter { TargetApps.isEnabled(it.conversation.packageName, enabled, sms) }
+                .filter { !it.conversation.isMuted }
                 .filter { includeHidden || !it.conversation.isHidden }
+                .filter { !panelOnly || it.conversation.lastMessageAt > it.conversation.panelDismissedAt }
                 .map { it.toUi(hidePreviews, it.conversation.id in keywordIds) }
         }
 
@@ -170,6 +192,29 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
     suspend fun markSeen(conversationId: Long) = dao.markSeen(conversationId)
     suspend fun togglePin(conversationId: Long) = dao.togglePin(conversationId)
     suspend fun setHidden(conversationId: Long, hidden: Boolean) = dao.setHidden(conversationId, hidden)
+
+    /** 이 대화방 저장 끄기. [deleteExisting]이면 지금까지의 기록(사진 포함)도 지운다. */
+    suspend fun mute(conversationId: Long, deleteExisting: Boolean) {
+        if (deleteExisting) {
+            dao.imagePathsOf(conversationId).forEach { File(it).delete() }
+            db.withTransaction {
+                dao.deleteMessagesOf(conversationId)
+                dao.clearSummary(conversationId)
+            }
+        }
+        dao.setMuted(conversationId, true)
+    }
+
+    suspend fun unmute(conversationId: Long) = dao.setMuted(conversationId, false)
+
+    suspend fun dismissFromPanel(conversationId: Long, now: Long = System.currentTimeMillis()) =
+        dao.setPanelDismissedAt(conversationId, now)
+
+    suspend fun dismissAllFromPanel(now: Long = System.currentTimeMillis()) = dao.dismissAllFromPanel(now)
+
+    /** 원래 앱에서 먼저 읽었다: 안 읽은 수 0, 설정에 따라 패널에서도 뺀다. */
+    suspend fun markReadElsewhere(packageName: String, roomKey: String, removeFromPanel: Boolean) =
+        dao.markReadElsewhere(packageName, roomKey, if (removeFromPanel) System.currentTimeMillis() else 0)
 
     suspend fun deleteConversation(conversationId: Long) {
         dao.imagePathsOf(conversationId).forEach { File(it).delete() }
@@ -216,6 +261,7 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
         deletedCount = deletedCount,
         hasKeyword = hasKeyword,
         previewHidden = previewHidden,
+        looksLikeAd = conversation.looksLikeAd,
     )
 }
 

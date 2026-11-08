@@ -42,7 +42,11 @@ fun EdgePanel(
     maxWidth: Dp,
     onWidthChange: (Dp) -> Unit,
     onWidthChangeFinished: () -> Unit,
+    onDismiss: (Long) -> Unit,
+    onDismissAll: () -> Unit,
+    onMute: (id: Long, deleteExisting: Boolean) -> Unit,
 ) {
+    var pendingMute by remember { mutableStateOf<ConversationUi?>(null) }
     var resizing by remember { mutableStateOf(false) }
     val currentWidth by rememberUpdatedState(width)
     val changeWidth by rememberUpdatedState(onWidthChange)
@@ -59,12 +63,18 @@ fun EdgePanel(
                 end = if (onLeftSide) 20.dp else 16.dp, top = 20.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.conversations_recent), style = MaterialTheme.typography.titleLarge)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.conversations_recent), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                        if (conversations.isNotEmpty()) TextButton(onClick = onDismissAll) {
+                            Text(stringResource(R.string.panel_clear_all))
+                        }
+                    }
                     NoticeChip()
                 }
                 AppFilterChips(availableApps, filter, onFilterChange)
                 ConversationItems(visibleConversations(conversations, filter).take(10),
-                    onOpenConversation, Modifier.weight(1f), maxLines = if (width >= 340.dp) 3 else 2)
+                    onOpenConversation, Modifier.weight(1f), maxLines = if (width >= 340.dp) 3 else 2,
+                    onDismiss = onDismiss, onMute = { pendingMute = it })
                 Column {
                     HorizontalDivider(color = NotiColors.Divider)
                     Row(Modifier.fillMaxWidth().padding(top = 10.dp),
@@ -119,6 +129,11 @@ fun EdgePanel(
             }
         }
     }
+    pendingMute?.let { conversation ->
+        MuteConversationDialog(conversation.title,
+            onConfirm = { pendingMute = null; onMute(conversation.id, it) },
+            onDismiss = { pendingMute = null })
+    }
 }
 
 @Composable
@@ -133,7 +148,9 @@ fun ConversationListScreen(
     onTogglePin: (Long) -> Unit,
     onHide: (Long) -> Unit,
     onDelete: (Long) -> Unit,
+    onMute: (id: Long, deleteExisting: Boolean) -> Unit,
 ) {
+    var pendingMute by remember { mutableStateOf<ConversationUi?>(null) }
     var pendingDelete by remember { mutableStateOf<ConversationUi?>(null) }
     Surface(color = NotiColors.Background) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = NotiSpacing.content)) {
@@ -149,8 +166,13 @@ fun ConversationListScreen(
             AppFilterChips(availableApps, filter, onFilterChange)
             Spacer(Modifier.height(8.dp))
             ConversationItems(visibleConversations(conversations, filter), onOpenConversation, Modifier.weight(1f),
-                onTogglePin = onTogglePin, onHide = onHide, onDelete = { pendingDelete = it })
+                onTogglePin = onTogglePin, onHide = onHide, onDelete = { pendingDelete = it }, onMute = { pendingMute = it })
         }
+    }
+    pendingMute?.let { conversation ->
+        MuteConversationDialog(conversation.title,
+            onConfirm = { pendingMute = null; onMute(conversation.id, it) },
+            onDismiss = { pendingMute = null })
     }
     pendingDelete?.let { conversation ->
         AlertDialog(onDismissRequest = { pendingDelete = null },
@@ -165,6 +187,7 @@ fun ConversationListScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ConversationItems(
     conversations: List<ConversationUi>,
@@ -174,24 +197,66 @@ private fun ConversationItems(
     onHide: ((Long) -> Unit)? = null,
     onDelete: ((ConversationUi) -> Unit)? = null,
     maxLines: Int = 2,
+    onDismiss: ((Long) -> Unit)? = null,
+    onMute: (ConversationUi) -> Unit,
 ) {
+    val dismissLabel = stringResource(R.string.panel_dismiss)
     if (conversations.isEmpty()) {
-        Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { EmptyConversations() }
+        Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            if (onDismiss == null) EmptyConversations()
+            else Column(horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.panel_all_read), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.panel_all_read_hint), color = NotiColors.Secondary,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            }
+        }
     } else {
         LazyColumn(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             items(conversations, key = { it.id }) { conversation ->
                 var menuOpen by remember { mutableStateOf(false) }
-                Box {
-                    ConversationRow(conversation, onClick = { onOpenConversation(conversation.id) },
-                        maxLines = maxLines,
-                        onLongClick = if (onTogglePin != null) ({ menuOpen = true }) else null)
-                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                        DropdownMenuItem(text = { Text(if (conversation.isPinned) stringResource(R.string.conversations_unpin) else stringResource(R.string.conversations_pin)) },
-                            onClick = { menuOpen = false; onTogglePin?.invoke(conversation.id) })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.conversations_hide)) },
-                            onClick = { menuOpen = false; onHide?.invoke(conversation.id) })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.conversations_delete_history), color = MaterialTheme.colorScheme.error) },
-                            onClick = { menuOpen = false; onDelete?.invoke(conversation) })
+                val row: @Composable () -> Unit = {
+                    Box(Modifier.background(NotiColors.Background)) {
+                        ConversationRow(conversation, onClick = { onOpenConversation(conversation.id) },
+                            modifier = Modifier.semantics {
+                                if (onDismiss != null) customActions = listOf(
+                                    CustomAccessibilityAction(dismissLabel) { onDismiss(conversation.id); true })
+                            },
+                            maxLines = maxLines, onLongClick = { menuOpen = true },
+                            onMute = { onMute(conversation) })
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            if (onDismiss != null) DropdownMenuItem(text = { Text(dismissLabel) },
+                                onClick = { menuOpen = false; onDismiss(conversation.id) })
+                            if (onTogglePin != null) DropdownMenuItem(
+                                text = { Text(stringResource(if (conversation.isPinned) R.string.conversations_unpin else R.string.conversations_pin)) },
+                                onClick = { menuOpen = false; onTogglePin(conversation.id) })
+                            if (onHide != null) DropdownMenuItem(text = { Text(stringResource(R.string.conversations_hide)) },
+                                onClick = { menuOpen = false; onHide(conversation.id) })
+                            DropdownMenuItem(text = { Text(stringResource(R.string.conversation_mute)) },
+                                onClick = { menuOpen = false; onMute(conversation) })
+                            if (onDelete != null) DropdownMenuItem(
+                                text = { Text(stringResource(R.string.conversations_delete_history), color = MaterialTheme.colorScheme.error) },
+                                onClick = { menuOpen = false; onDelete(conversation) })
+                        }
+                    }
+                }
+                if (onDismiss == null) row()
+                else {
+                    // A new message can restore the same conversation while this item is composed.
+                    key(conversation.id, conversation.lastAt, conversation.preview, conversation.unread) {
+                        val dismissState = rememberSwipeToDismissBoxState()
+                        val dismiss by rememberUpdatedState(onDismiss)
+                        LaunchedEffect(dismissState.currentValue) {
+                            if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) dismiss?.invoke(conversation.id)
+                        }
+                        SwipeToDismissBox(state = dismissState, backgroundContent = {
+                            Box(Modifier.fillMaxSize().background(NotiColors.DetailBackground)
+                                .padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+                                Text(dismissLabel, color = NotiColors.Secondary,
+                                    style = MaterialTheme.typography.labelMedium)
+                            }
+                        }) { row() }
                     }
                 }
             }

@@ -121,6 +121,7 @@ fun ConversationRow(
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
     maxLines: Int = 2,
+    onMute: (() -> Unit)? = null,
 ) {
     Row(modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
         .combinedClickable(onClick = onClick, onLongClick = onLongClick,
@@ -154,6 +155,17 @@ fun ConversationRow(
                 SourceLabel(conversation.appLabel, Modifier.weight(1f, fill = false))
                 if (conversation.deletedCount > 0) MessageTag(pluralStringResource(R.plurals.messages_deleted_count, conversation.deletedCount, conversation.deletedCount))
                 if (conversation.hasKeyword) MessageTag(stringResource(R.string.messages_keyword), accent = true)
+            }
+            if (conversation.looksLikeAd && onMute != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.conversation_looks_like_ad), Modifier.weight(1f),
+                        color = NotiColors.Secondary, style = MaterialTheme.typography.labelSmall)
+                    TextButton(onClick = onMute, contentPadding = PaddingValues(horizontal = 4.dp),
+                        modifier = Modifier.heightIn(min = 48.dp)) {
+                        Text(stringResource(R.string.conversation_mute), color = NotiColors.Secondary,
+                            style = MaterialTheme.typography.labelSmall)
+                    }
+                }
             }
         }
     }

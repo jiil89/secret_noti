@@ -27,6 +27,8 @@ data class ConversationUi(
     val hasKeyword: Boolean = false,
     /** 앱 잠금 중이라 내용(미리보기)을 가려야 한다. 이름·시간은 보여도 된다. */
     val previewHidden: Boolean = false,
+    /** 메시지가 "(광고)"로 시작하는 등 광고로 보이는 대화방. "저장 끄기"를 권한다. */
+    val looksLikeAd: Boolean = false,
 )
 
 data class MessageUi(
@@ -58,6 +60,12 @@ data class SearchResultUi(
     val at: Long,
     val deletedBySender: Boolean,
 )
+
+/** 원래 앱(카톡 등)에서 먼저 읽은 대화방을 어떻게 할지. 안 읽은 수는 어느 쪽이든 0이 된다. */
+enum class ReadElsewhereAction(@StringRes val labelRes: Int) {
+    REMOVE_FROM_PANEL(R.string.settings_read_elsewhere_remove),
+    KEEP(R.string.settings_read_elsewhere_keep),
+}
 
 enum class ThemeMode(@StringRes val labelRes: Int) {
     SYSTEM(R.string.settings_theme_system),

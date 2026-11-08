@@ -167,4 +167,11 @@ class NotificationParserTest {
         )!!
         assertEquals("content://kakao/emoticon_dir/83/x", parsed.messages.single().imageUri)
     }
+
+    @Test
+    fun detectsKoreanAdMessages() {
+        assertTrue(NotificationParser.looksLikeAd("(광고) 오늘만 50% 할인"))
+        assertTrue(NotificationParser.looksLikeAd("  [광고] 신상품 안내"))
+        assertFalse(NotificationParser.looksLikeAd("광고 봤어? 웃기더라"))
+    }
 }

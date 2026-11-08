@@ -54,6 +54,7 @@ fun ConversationListRoute(onOpenConversation: (Long) -> Unit, onOpenSettings: ()
         onTogglePin = { id -> scope.launch { chat.togglePin(id); WidgetUpdater.request(context) } },
         onHide = { id -> scope.launch { chat.setHidden(id, true); WidgetUpdater.request(context) } },
         onDelete = { id -> scope.launch { chat.deleteConversation(id); WidgetUpdater.request(context) } },
+        onMute = { id, deleteExisting -> scope.launch { chat.mute(id, deleteExisting); WidgetUpdater.request(context) } },
     )
 }
 
@@ -66,6 +67,7 @@ fun RoomRoute(conversationId: Long, onBack: () -> Unit) {
     val messages by remember(conversationId) { chat.observeMessages(conversationId) }
         .collectAsStateWithLifecycle(emptyList())
     val keywords by Prefs.keywords.flow.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
 
     // 이 앱 안에서 본 것으로 표시 (카톡·Teams의 읽음과는 무관).
     LaunchedEffect(conversationId, messages.size) {
@@ -82,6 +84,13 @@ fun RoomRoute(conversationId: Long, onBack: () -> Unit) {
         messages = messages,
         keywords = keywords.sorted(),
         onBack = onBack,
+        onMute = { deleteExisting ->
+            scope.launch {
+                chat.mute(conv.id, deleteExisting)
+                WidgetUpdater.request(context)
+                onBack()
+            }
+        },
         onOpenInApp = {
             if (!AppLauncher.openConversation(context, conv.id, conv.packageName)) {
                 Toast.makeText(context, context.getString(R.string.app_not_found, conv.appLabel), Toast.LENGTH_SHORT).show()

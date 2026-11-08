@@ -67,6 +67,12 @@ object NotificationParser {
 
     fun isDeletionMarker(text: String): Boolean = deletionMarkers.any { text.contains(it) }
 
+    /** 정보통신망법상 광고 메시지는 "(광고)"로 시작해야 한다. */
+    fun looksLikeAd(text: String): Boolean {
+        val t = text.trimStart()
+        return t.startsWith("(광고)") || t.startsWith("[광고]") || t.startsWith("(AD)", ignoreCase = true)
+    }
+
     /**
      * 같은 알림이 갱신될 때 목록 "중간"에서 빠진 메시지를 찾는다.
      * 카톡 같은 앱은 알림에 최근 몇 개만 담고 오래된 것부터 빼므로, 앞쪽에서 빠진 것은 삭제가 아니다.

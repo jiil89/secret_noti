@@ -22,10 +22,12 @@ import com.jiil.secretnoti.capture.AppLabels
 import com.jiil.secretnoti.capture.DeletionNotifier
 import com.jiil.secretnoti.capture.TargetApps
 import com.jiil.secretnoti.data.BackupManager
+import com.jiil.secretnoti.overlay.OverlayEvents
 import com.jiil.secretnoti.data.WrongPasswordException
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.model.AppSettingUi
 import com.jiil.secretnoti.ui.model.HandleSize
+import com.jiil.secretnoti.ui.model.ReadElsewhereAction
 import com.jiil.secretnoti.ui.model.SettingsActions
 import com.jiil.secretnoti.ui.model.SettingsUi
 import com.jiil.secretnoti.ui.model.ThemeMode
@@ -72,6 +74,14 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
     val keywords by Prefs.keywords.flow.collectAsStateWithLifecycle()
     val themeMode by Prefs.themeMode.flow.collectAsStateWithLifecycle()
     val panelWidth by Prefs.panelWidthDp.flow.collectAsStateWithLifecycle()
+    val muted by remember { chat.observeMutedConversations() }.collectAsStateWithLifecycle(emptyList())
+    val readElsewhere by Prefs.readElsewhere.flow.collectAsStateWithLifecycle()
+    val autoMuteAds by Prefs.autoMuteAds.flow.collectAsStateWithLifecycle()
+    val indicatorBadge by Prefs.indicatorBadge.flow.collectAsStateWithLifecycle()
+    val indicatorGlow by Prefs.indicatorGlow.flow.collectAsStateWithLifecycle()
+    val glowUsesAppColor by Prefs.glowUsesAppColor.flow.collectAsStateWithLifecycle()
+    val glowColor by Prefs.glowColor.flow.collectAsStateWithLifecycle()
+    val peekBubble by Prefs.peekBubble.flow.collectAsStateWithLifecycle()
 
     val launcherApps = remember { installedLauncherApps(context) }
     val apps = remember(enabledApps, seenApps, launcherApps) {
@@ -129,6 +139,14 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
         hiddenConversations = hidden,
         themeMode = themeMode,
         panelWidthDp = panelWidth,
+        mutedConversations = muted,
+        readElsewhereAction = readElsewhere,
+        autoMuteAds = autoMuteAds,
+        indicatorBadge = indicatorBadge,
+        indicatorGlow = indicatorGlow,
+        glowUsesAppColor = glowUsesAppColor,
+        glowColor = glowColor,
+        peekBubble = peekBubble,
     )
 
     val actions = remember {
@@ -172,6 +190,17 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
             }
             override fun setThemeMode(mode: ThemeMode) { Prefs.themeMode.value = mode }
             override fun setPanelWidth(dp: Int) { Prefs.panelWidthDp.value = dp }
+            override fun unmuteConversation(id: Long) {
+                scope.launch { chat.unmute(id); WidgetUpdater.request(context) }
+            }
+            override fun setReadElsewhereAction(action: ReadElsewhereAction) { Prefs.readElsewhere.value = action }
+            override fun setAutoMuteAds(enabled: Boolean) { Prefs.autoMuteAds.value = enabled }
+            override fun setIndicatorBadge(enabled: Boolean) { Prefs.indicatorBadge.value = enabled }
+            override fun setIndicatorGlow(enabled: Boolean) { Prefs.indicatorGlow.value = enabled }
+            override fun setGlowUsesAppColor(enabled: Boolean) { Prefs.glowUsesAppColor.value = enabled }
+            override fun setGlowColor(argb: Int) { Prefs.glowColor.value = argb or 0xFF000000.toInt() }
+            override fun setPeekBubble(enabled: Boolean) { Prefs.peekBubble.value = enabled }
+            override fun previewGlow() { OverlayEvents.previewGlow() }
             override fun backup(password: String) {
                 pendingPassword = password
                 val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())

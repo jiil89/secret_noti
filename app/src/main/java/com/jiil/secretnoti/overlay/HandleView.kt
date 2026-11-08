@@ -2,6 +2,8 @@ package com.jiil.secretnoti.overlay
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.animation.ValueAnimator
+import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -11,9 +13,13 @@ import android.graphics.Typeface
 import android.os.Build
 import android.view.MotionEvent
 import android.view.View
+import android.view.animation.LinearInterpolator
+import androidx.core.animation.doOnEnd
 import com.jiil.secretnoti.R
 import kotlin.math.abs
+import kotlin.math.PI
 import kotlin.math.max
+import kotlin.math.sin
 
 /**
  * 화면 가장자리의 얇은 손잡이. 터치 영역은 뷰 전체(44dp), 보이는 막대는 8dp.
@@ -34,6 +40,43 @@ class HandleView(context: Context, private val onOpen: () -> Unit) : View(contex
 
     var badge = 0
         set(v) { field = v; invalidate() }
+
+    /** 숫자 배지를 보여줄지 (설정 → 새 메시지 표시). */
+    var showBadge = true
+        set(v) { field = v; invalidate() }
+
+    private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val glowRect = RectF()
+    private var glowColor = 0
+    private var glowLevel = 0f
+    private var glowAnimator: ValueAnimator? = null
+
+    init {
+        // 번지는 빛(BlurMaskFilter)은 소프트웨어 레이어에서만 그려진다. 손잡이는 작아서 부담이 없다.
+        setLayerType(LAYER_TYPE_SOFTWARE, null)
+    }
+
+    /** 메시지가 오면 [color]로 세 번 은은하게 빛나고 멈춘다 (약 4초). */
+    fun glow(color: Int) {
+        glowColor = color or 0xFF000000.toInt()
+        glowAnimator?.cancel()
+        glowAnimator = ValueAnimator.ofFloat(0f, 3f).apply {
+            duration = 4200
+            interpolator = LinearInterpolator()
+            addUpdateListener {
+                val t = (it.animatedValue as Float) % 1f
+                glowLevel = sin(t * PI).toFloat()
+                invalidate()
+            }
+            doOnEnd { glowLevel = 0f; invalidate() }
+            start()
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        glowAnimator?.cancel()
+        super.onDetachedFromWindow()
+    }
 
     private val d = resources.displayMetrics.density
     private val openDistance = 40 * d
@@ -63,9 +106,21 @@ class HandleView(context: Context, private val onOpen: () -> Unit) : View(contex
         val barW = 8 * d
         val left = if (onLeft) 4 * d else width - 4 * d - barW
         bar.set(left, 12 * d, left + barW, height - 12 * d)
-        canvas.drawRoundRect(bar, 4 * d, 4 * d, barPaint)
+        if (glowLevel > 0f) {
+            val spread = 4 * d + 6 * d * glowLevel
+            glowRect.set(bar.left - spread / 2, bar.top - spread / 2, bar.right + spread / 2, bar.bottom + spread / 2)
+            glowPaint.color = glowColor
+            glowPaint.alpha = (90 + 140 * glowLevel).toInt()
+            glowPaint.maskFilter = BlurMaskFilter(6 * d + 8 * d * glowLevel, BlurMaskFilter.Blur.NORMAL)
+            canvas.drawRoundRect(glowRect, 8 * d, 8 * d, glowPaint)
+            glowPaint.maskFilter = null
+            glowPaint.alpha = 255
+            canvas.drawRoundRect(bar, 4 * d, 4 * d, glowPaint)
+        } else {
+            canvas.drawRoundRect(bar, 4 * d, 4 * d, barPaint)
+        }
 
-        if (badge > 0) {
+        if (showBadge && badge > 0) {
             val r = 9 * d
             val cx = bar.centerX()
             val cy = bar.top + r / 2

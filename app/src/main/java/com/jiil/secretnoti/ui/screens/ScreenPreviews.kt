@@ -21,6 +21,7 @@ private fun sampleApps() = listOf(AppRef("com.kakao.talk", stringResource(R.stri
 
 @Composable
 private fun sampleConversations() = listOf(
+    ConversationUi(6, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_ad_title), false, null, stringResource(R.string.screen_preview_ad_message), sampleAt(20, 55), 1, looksLikeAd = true),
     ConversationUi(1, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_mom), false, stringResource(R.string.screen_preview_mom), stringResource(R.string.screen_preview_mom_message), sampleAt(20, 52), 1, isPinned = true, hasKeyword = true),
     ConversationUi(2, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_coworkers), true, stringResource(R.string.screen_preview_minsu), stringResource(R.string.screen_preview_poll), sampleAt(20, 47), 12, deletedCount = 2),
     ConversationUi(3, Source.TEAMS, "com.microsoft.teams", stringResource(R.string.screen_preview_teams), stringResource(R.string.screen_preview_manager), false, stringResource(R.string.screen_preview_manager), stringResource(R.string.screen_preview_report), sampleAt(20, 30), 1),
@@ -41,38 +42,38 @@ private fun sampleMessages() = listOf(
 @Preview(name = "오른쪽 엣지패널", widthDp = 316, heightDp = 652, showBackground = true)
 @Composable
 private fun EdgePanelPreview() {
-    NotiTheme { EdgePanel(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, false, 316.dp, 260.dp, 360.dp, {}, {}) }
+    NotiTheme { EdgePanel(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, false, 316.dp, 260.dp, 360.dp, {}, {}, {}, {}, { _, _ -> }) }
 }
 
 @Preview(name = "왼쪽 엣지패널", widthDp = 360, heightDp = 652, showBackground = true)
 @Composable
 private fun LeftPanelPreview() {
-    NotiTheme { EdgePanel(sampleConversations(), sampleApps().take(2), null, {}, {}, {}, {}, true, 360.dp, 260.dp, 360.dp, {}, {}) }
+    NotiTheme { EdgePanel(sampleConversations(), sampleApps().take(2), null, {}, {}, {}, {}, true, 360.dp, 260.dp, 360.dp, {}, {}, {}, {}, { _, _ -> }) }
 }
 
 @Preview(name = "빈 엣지패널", widthDp = 316, heightDp = 652, showBackground = true)
 @Composable
 private fun EmptyPanelPreview() {
-    NotiTheme { EdgePanel(emptyList(), emptyList(), null, {}, {}, {}, {}, false, 316.dp, 260.dp, 360.dp, {}, {}) }
+    NotiTheme { EdgePanel(emptyList(), emptyList(), null, {}, {}, {}, {}, false, 316.dp, 260.dp, 360.dp, {}, {}, {}, {}, { _, _ -> }) }
 }
 
 @Preview(name = "전체 대화 목록", widthDp = 390, heightDp = 844, showBackground = true)
 @Composable
 private fun ConversationListPreview() {
-    NotiTheme { ConversationListScreen(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, {}, {}, {}) }
+    NotiTheme { ConversationListScreen(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }) }
 }
 
 @Preview(name = "그룹 대화 기록", widthDp = 390, heightDp = 844, showBackground = true)
 @Composable
 private fun RoomPreview() {
-    NotiTheme { RoomScreen(stringResource(R.string.screen_preview_coworkers), stringResource(R.string.screen_preview_kakao), "com.kakao.talk", true, sampleMessages(), listOf(stringResource(R.string.screen_preview_friday), stringResource(R.string.screen_preview_place)), {}, {}) }
+    NotiTheme { RoomScreen(stringResource(R.string.screen_preview_coworkers), stringResource(R.string.screen_preview_kakao), "com.kakao.talk", true, sampleMessages(), listOf(stringResource(R.string.screen_preview_friday), stringResource(R.string.screen_preview_place)), {}, {}, {}) }
 }
 
 @Preview(name = "큰 글자 · 문자", widthDp = 390, heightDp = 844, fontScale = 1.5f, showBackground = true)
 @Composable
 private fun LargeTextRoomPreview() {
     NotiTheme { RoomScreen(stringResource(R.string.screen_preview_delivery), stringResource(R.string.screen_preview_sms), "com.samsung.android.messaging", false,
-        listOf(MessageUi(1, stringResource(R.string.screen_preview_delivery), false, stringResource(R.string.screen_preview_delivered), sampleAt(19, 15), false)), emptyList(), {}, {}) }
+        listOf(MessageUi(1, stringResource(R.string.screen_preview_delivery), false, stringResource(R.string.screen_preview_delivered), sampleAt(19, 15), false)), emptyList(), {}, {}, {}) }
 }
 
 @Preview(name = "손잡이 안내", showBackground = true)
@@ -84,14 +85,14 @@ private fun HandleTooltipPreview() {
 @Preview(name = "어두운 엣지패널", widthDp = 316, heightDp = 652)
 @Composable
 private fun DarkPanelPreview() {
-    NotiTheme(ThemeMode.DARK) { EdgePanel(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, false, 316.dp, 260.dp, 360.dp, {}, {}) }
+    NotiTheme(ThemeMode.DARK) { EdgePanel(sampleConversations(), sampleApps(), null, {}, {}, {}, {}, false, 316.dp, 260.dp, 360.dp, {}, {}, {}, {}, { _, _ -> }) }
 }
 
 @Preview(name = "어두운 대화방", widthDp = 390, heightDp = 844)
 @Composable
 private fun DarkRoomPreview() {
     NotiTheme(ThemeMode.DARK) {
-        RoomScreen(stringResource(R.string.screen_preview_coworkers), stringResource(R.string.screen_preview_kakao), "com.kakao.talk", true, sampleMessages(), listOf(stringResource(R.string.screen_preview_friday)), {}, {})
+        RoomScreen(stringResource(R.string.screen_preview_coworkers), stringResource(R.string.screen_preview_kakao), "com.kakao.talk", true, sampleMessages(), listOf(stringResource(R.string.screen_preview_friday)), {}, {}, {})
     }
 }
 
@@ -118,7 +119,7 @@ private fun SettingsPreview() {
 @Composable
 private fun DarkSettingsPreview() {
     NotiTheme(ThemeMode.DARK) {
-        SettingsScreen(sampleSettings().copy(handleEnabled = false, themeMode = ThemeMode.DARK, panelWidthDp = 300), PreviewSettingsActions)
+        SettingsScreen(sampleSettings().copy(handleEnabled = false, themeMode = ThemeMode.DARK, panelWidthDp = 300, glowUsesAppColor = false), PreviewSettingsActions)
     }
 }
 
@@ -133,6 +134,11 @@ private fun sampleSettings() = SettingsUi(
     notificationPermission = false, savePhotos = true, keywords = listOf(stringResource(R.string.screen_preview_friday), stringResource(R.string.screen_preview_place)),
     hiddenConversations = sampleConversations().take(1), themeMode = ThemeMode.SYSTEM,
     panelWidthDp = PanelWidth.NORMAL.dp,
+    mutedConversations = sampleConversations().filter { it.looksLikeAd },
+    readElsewhereAction = ReadElsewhereAction.REMOVE_FROM_PANEL,
+    autoMuteAds = false,
+    indicatorBadge = true, indicatorGlow = true, glowUsesAppColor = true,
+    glowColor = 0xFF2558E8.toInt(), peekBubble = false,
 )
 
 private object PreviewSettingsActions : SettingsActions {
@@ -155,7 +161,54 @@ private object PreviewSettingsActions : SettingsActions {
     override fun addKeyword(keyword: String) {}
     override fun removeKeyword(keyword: String) {}
     override fun unhideConversation(id: Long) {}
+    override fun unmuteConversation(id: Long) {}
+    override fun setReadElsewhereAction(action: ReadElsewhereAction) {}
+    override fun setAutoMuteAds(enabled: Boolean) {}
+    override fun setIndicatorBadge(enabled: Boolean) {}
+    override fun setIndicatorGlow(enabled: Boolean) {}
+    override fun setGlowUsesAppColor(enabled: Boolean) {}
+    override fun setGlowColor(argb: Int) {}
+    override fun setPeekBubble(enabled: Boolean) {}
+    override fun previewGlow() {}
     override fun setThemeMode(mode: ThemeMode) {}
     override fun backup(password: String) {}
     override fun restore(password: String) {}
+}
+
+@Preview(name = "Stop saving dialog", widthDp = 390, heightDp = 600)
+@Composable
+private fun MuteDialogPreview() {
+    NotiTheme {
+        com.jiil.secretnoti.ui.components.MuteConversationDialog(
+            stringResource(R.string.screen_preview_ad_title), {}, {})
+    }
+}
+
+@Preview(name = "RGB glow picker", widthDp = 360, showBackground = true)
+@Preview(name = "RGB glow picker - narrow", widthDp = 280, showBackground = true)
+@Composable
+private fun GlowPickerPreview() {
+    NotiTheme {
+        com.jiil.secretnoti.ui.components.GlowColorPicker(0xFF2558E8.toInt(), {})
+    }
+}
+
+@Preview(name = "Peek bubble - right", showBackground = true)
+@Composable
+private fun PeekBubbleRightPreview() {
+    NotiTheme {
+        com.jiil.secretnoti.ui.components.PeekBubble(
+            stringResource(R.string.screen_preview_mom), stringResource(R.string.screen_preview_mom_message),
+            "com.kakao.talk", false, {})
+    }
+}
+
+@Preview(name = "Peek bubble - left dark", showBackground = true)
+@Composable
+private fun PeekBubbleLeftPreview() {
+    NotiTheme(ThemeMode.DARK) {
+        com.jiil.secretnoti.ui.components.PeekBubble(
+            stringResource(R.string.screen_preview_manager), stringResource(R.string.screen_preview_report),
+            "com.microsoft.teams", true, {})
+    }
 }

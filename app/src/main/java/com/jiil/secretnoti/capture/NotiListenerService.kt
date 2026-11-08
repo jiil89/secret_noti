@@ -7,8 +7,13 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.jiil.secretnoti.NotiApp
 import com.jiil.secretnoti.data.NotificationDump
+import com.jiil.secretnoti.R
+import com.jiil.secretnoti.data.IngestResult
 import com.jiil.secretnoti.overlay.EdgeOverlayController
+import com.jiil.secretnoti.overlay.NewMessageEvent
+import com.jiil.secretnoti.overlay.OverlayEvents
 import com.jiil.secretnoti.settings.Prefs
+import com.jiil.secretnoti.ui.model.ReadElsewhereAction
 import com.jiil.secretnoti.widget.WidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +75,21 @@ class NotiListenerService : NotificationListenerService() {
     override fun onNotificationRemoved(sbn: StatusBarNotification, rankingMap: RankingMap, reason: Int) {
         record(sbn, "removed", reason)
         lastKeys.remove(sbn.key)
+        // 원래 앱이 스스로 알림을 지웠거나(그 앱에서 읽음) 알림을 눌러 열었다 → 그 대화방은 읽은 것으로 본다.
+        // 사용자가 밀어서 지운 것(REASON_CANCEL)은 읽은 게 아니므로 그대로 둔다.
+        if (reason == REASON_APP_CANCEL || reason == REASON_CLICK) markReadElsewhere(sbn)
+    }
+
+    private fun markReadElsewhere(sbn: StatusBarNotification) {
+        val pkg = sbn.packageName
+        if (pkg == packageName || !isTarget(pkg)) return
+        val parsed = NotificationParser.parse(SnapshotExtractor.from(sbn)) ?: return
+        val removeFromPanel = Prefs.readElsewhere.value == ReadElsewhereAction.REMOVE_FROM_PANEL
+        val context = applicationContext
+        scope.launch(Dispatchers.IO) {
+            runCatching { chat.markReadElsewhere(pkg, parsed.roomKey, removeFromPanel) }
+            WidgetUpdater.request(context)
+        }
     }
 
     private fun stopOverlay() {
@@ -120,6 +140,7 @@ class NotiListenerService : NotificationListenerService() {
                         ?.let { chat.setImagePath(messageId, it) }
                 }
             }
+            announce(result, pkg, parsed.isGroup)
             if (result.deleted.isNotEmpty() && Prefs.deletionAlerts.value) {
                 DeletionNotifier.notify(
                     context, result.conversationId, result.roomTitle, AppLabels.label(context, pkg), result.deleted,
@@ -127,6 +148,18 @@ class NotiListenerService : NotificationListenerService() {
             }
             WidgetUpdater.request(context)
         }
+    }
+
+    /** 손잡이 반짝임·미리보기 말풍선용 신호. 내가 보낸 메시지만 있으면 알리지 않는다. */
+    private fun announce(result: IngestResult, pkg: String, isGroup: Boolean) {
+        val latest = result.inserted.map { it.second }.filter { !it.isMine }.maxByOrNull { it.postedAt } ?: return
+        val raw = if (pkg == TargetApps.KAKAO) KakaoEmoticons.toDisplay(latest.text) else latest.text
+        val text = when {
+            Prefs.hidePreviews.value -> getString(R.string.peek_hidden)
+            isGroup && latest.sender != null -> latest.sender + ": " + raw
+            else -> raw
+        }
+        OverlayEvents.newMessage(NewMessageEvent(result.conversationId, pkg, result.roomTitle, text))
     }
 
     private fun cleanupIfDue() {

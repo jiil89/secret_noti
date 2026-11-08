@@ -6,6 +6,7 @@ import androidx.core.content.edit
 import com.jiil.secretnoti.capture.TargetApps
 import com.jiil.secretnoti.ui.model.HandleSize
 import com.jiil.secretnoti.ui.model.PanelWidth
+import com.jiil.secretnoti.ui.model.ReadElsewhereAction
 import com.jiil.secretnoti.ui.model.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,11 +58,19 @@ object Prefs {
     val savePhotos = bool("save_photos", true)
     val keywords = stringSet("keywords", emptySet())
     val themeMode = enum("theme_mode", ThemeMode.SYSTEM)
+    val readElsewhere = enum("read_elsewhere", ReadElsewhereAction.REMOVE_FROM_PANEL)
+    val autoMuteAds = bool("auto_mute_ads", false)
+    val indicatorBadge = bool("indicator_badge", true)
+    val indicatorGlow = bool("indicator_glow", true)
+    val glowUsesAppColor = bool("glow_uses_app_color", false)
+    val glowColor = int("glow_color", 0xFF2558E8.toInt())
+    val peekBubble = bool("peek_bubble", false)
 
     private val all = listOf(
         overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, dumpAllApps, lastPanelOpenedAt,
         retentionDays, lastCleanupAt, enabledApps, lockEnabled, hidePreviews, deletionAlerts, savePhotos,
-        keywords, themeMode,
+        keywords, themeMode, readElsewhere, autoMuteAds, indicatorBadge, indicatorGlow, glowUsesAppColor, glowColor,
+        peekBubble,
     )
 
     fun init(context: Context) {

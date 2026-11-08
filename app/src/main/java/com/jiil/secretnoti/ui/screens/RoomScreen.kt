@@ -9,8 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -30,7 +29,10 @@ fun RoomScreen(
     keywords: List<String>,
     onBack: () -> Unit,
     onOpenInApp: () -> Unit,
+    onMute: (deleteExisting: Boolean) -> Unit,
 ) {
+    var menuOpen by remember { mutableStateOf(false) }
+    var muteDialog by remember { mutableStateOf(false) }
     val ordered = remember(messages) { messages.sortedBy { it.at } }
     Surface(color = NotiColors.DetailBackground) {
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
@@ -48,6 +50,15 @@ fun RoomScreen(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         AppIcon(packageName, 16.dp)
                         Text(appLabel, color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Box {
+                    IconButton(onClick = { menuOpen = true }) {
+                        Icon(NotiIcons.more, stringResource(R.string.conversation_more))
+                    }
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(text = { Text(stringResource(R.string.conversation_mute)) },
+                            onClick = { menuOpen = false; muteDialog = true })
                     }
                 }
             }
@@ -82,4 +93,7 @@ fun RoomScreen(
             }
         }
     }
+    if (muteDialog) MuteConversationDialog(title,
+        onConfirm = { muteDialog = false; onMute(it) }, onDismiss = { muteDialog = false })
+
 }

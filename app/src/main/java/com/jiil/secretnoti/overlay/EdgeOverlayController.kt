@@ -16,6 +16,8 @@ import com.jiil.secretnoti.NotiApp
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.MainActivity
 import com.jiil.secretnoti.ui.NotiTheme
+import com.jiil.secretnoti.ui.components.PeekBubble
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -35,6 +37,9 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
     private var panel: View? = null
     private var panelOwner: OverlayOwner? = null
     private val jobs = mutableListOf<Job>()
+    private var peek: View? = null
+    private var peekOwner: OverlayOwner? = null
+    private var peekJob: Job? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun show() {
@@ -67,9 +72,82 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
                 .flatMapLatest { since -> chat.observeIncomingSince(since) }
                 .collect { view.badge = it }
         }
+        jobs += scope.launch { Prefs.indicatorBadge.flow.collect { view.showBadge = it } }
+        jobs += scope.launch { OverlayEvents.newMessages.collect(::onNewMessage) }
+        jobs += scope.launch { OverlayEvents.glowPreviews.collect { view.glow(Prefs.glowColor.value) } }
+    }
+
+    private fun onNewMessage(event: NewMessageEvent) {
+        val view = handle ?: return
+        if (panel != null) return
+        if (Prefs.indicatorGlow.value) {
+            val color = if (Prefs.glowUsesAppColor.value) {
+                AppColors.of(context, event.packageName, Prefs.glowColor.value)
+            } else {
+                Prefs.glowColor.value
+            }
+            view.glow(color)
+        }
+        if (Prefs.peekBubble.value && !AppVisibility.mainVisible) showPeek(event)
+    }
+
+    /** 손잡이 옆에 보낸 사람과 첫 줄을 3초 동안 띄운다. 누르면 패널이 열린다. */
+    private fun showPeek(event: NewMessageEvent) {
+        hidePeek()
+        val hp = handleParams ?: return
+        val owner = OverlayOwner().also { it.start() }
+        val onLeft = Prefs.handleOnLeft.value
+        val root = FrameLayout(context)
+        root.setViewTreeLifecycleOwner(owner)
+        root.setViewTreeSavedStateRegistryOwner(owner)
+        root.setViewTreeViewModelStoreOwner(owner)
+        root.addView(
+            ComposeView(context).apply {
+                setContent {
+                    NotiTheme(Prefs.themeMode.value) {
+                        PeekBubble(event.title, event.text, event.packageName, onLeft) {
+                            hidePeek()
+                            openPanel()
+                        }
+                    }
+                }
+            },
+        )
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT,
+        ).apply {
+            gravity = hp.gravity
+            x = hp.width
+            y = hp.y + hp.height / 2 - dp(28)
+        }
+        if (runCatching { wm.addView(root, params) }.isFailure) {
+            owner.destroy()
+            return
+        }
+        peek = root
+        peekOwner = owner
+        peekJob = scope.launch {
+            delay(3000)
+            hidePeek()
+        }
+    }
+
+    private fun hidePeek() {
+        peekJob?.cancel()
+        peekJob = null
+        peek?.let { runCatching { wm.removeView(it) } }
+        peek = null
+        peekOwner?.destroy()
+        peekOwner = null
     }
 
     fun hide() {
+        hidePeek()
         closePanel()
         jobs.forEach { it.cancel() }
         jobs.clear()
@@ -87,6 +165,7 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
 
     private fun openPanel() {
         if (panel != null) return
+        hidePeek()
         Prefs.lastPanelOpenedAt.value = System.currentTimeMillis()
 
         val owner = OverlayOwner().also { it.start() }
