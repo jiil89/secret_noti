@@ -1,5 +1,9 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.res.stringResource
 import com.jiil.secretnoti.R
@@ -219,6 +223,8 @@ private fun ConversationItems(
     onUnmute: ((Long) -> Unit)? = null,
 ) {
     val dismissLabel = stringResource(R.string.panel_dismiss)
+    // 앱을 새로 열면 다시 접힌 상태 (같은 화면 안에서는 회전 등에도 유지).
+    var mutedExpanded by rememberSaveable { mutableStateOf(false) }
     if (conversations.isEmpty() && mutedConversations.isEmpty()) {
         Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             if (onDismiss == null) EmptyConversations()
@@ -288,7 +294,24 @@ private fun ConversationItems(
                     }
                 }
             }
-            if (mutedConversations.isNotEmpty()) {
+            if (mutedConversations.isNotEmpty() && !mutedExpanded) {
+                // 평소에는 접어 두고 한 줄만 보여준다. 누르면 같은 자리에서 펼쳐진다.
+                item(key = "muted_collapsed") {
+                    Row(Modifier.fillMaxWidth().padding(top = 16.dp).clip(NotiShapes.banner)
+                        .background(NotiColors.DetailBackground)
+                        .clickable(role = Role.Button, onClickLabel = stringResource(R.string.conversations_muted_show)) {
+                            mutedExpanded = true
+                        }
+                        .heightIn(min = 48.dp).padding(horizontal = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.conversations_muted_collapsed, mutedConversations.size),
+                            Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = NotiColors.Body)
+                        Text(stringResource(R.string.conversations_muted_show), style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold, color = NotiColors.NoticeForeground)
+                    }
+                }
+            }
+            if (mutedConversations.isNotEmpty() && mutedExpanded) {
                 item(key = "muted_header") {
                     Row(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -298,6 +321,9 @@ private fun ConversationItems(
                             style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
                             color = NotiColors.Secondary)
                         HorizontalDivider(Modifier.weight(1f), thickness = Dp.Hairline, color = NotiColors.Divider)
+                        TextButton(onClick = { mutedExpanded = false }, modifier = Modifier.heightIn(min = 40.dp)) {
+                            Text(stringResource(R.string.conversations_muted_hide), style = MaterialTheme.typography.labelMedium)
+                        }
                     }
                 }
                 items(mutedConversations, key = { "muted_${it.id}" }) { conversation ->

@@ -328,4 +328,7 @@
     </plurals>
     <string name="room_screen_group_subtitle">%1$s · 단톡방</string>
     <string name="room_screen_group_participants">%1$s · %2$s</string>
+    <string name="conversations_muted_collapsed">저장 끈 대화방 %1$d개</string>
+    <string name="conversations_muted_show">보기 ›</string>
+    <string name="conversations_muted_hide">접기</string>
 </resources>

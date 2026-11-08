@@ -334,4 +334,7 @@
     </plurals>
     <string name="room_screen_group_subtitle">%1$s · Group chat</string>
     <string name="room_screen_group_participants">%1$s · %2$s</string>
+    <string name="conversations_muted_collapsed">%1$d muted chats</string>
+    <string name="conversations_muted_show">Show ›</string>
+    <string name="conversations_muted_hide">Hide</string>
 </resources>
