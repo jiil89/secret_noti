@@ -24,6 +24,12 @@ enum class PanelWidth(@StringRes val labelRes: Int, val dp: Int) {
     }
 }
 
+/** 손잡이 새 메시지 배지 모양. */
+enum class BadgeStyle(@StringRes val labelRes: Int) {
+    NUMBER(R.string.settings_badge_style_number),
+    DOT(R.string.settings_badge_style_dot),
+}
+
 /** 보관 기간 선택지(일). 0은 기간 없이 계속 보관. */
 val RETENTION_OPTIONS = listOf(7, 30, 90, 180, 365, 0)
 
@@ -80,6 +86,8 @@ data class SettingsUi(
     val autoMuteAds: Boolean,
     /** 새 메시지 표시: 손잡이 숫자 배지. */
     val indicatorBadge: Boolean,
+    /** 배지 모양: 숫자 또는 점. */
+    val badgeStyle: BadgeStyle,
     /** 새 메시지 표시: 손잡이 반짝임. */
     val indicatorGlow: Boolean,
     /** 반짝임 색을 보낸 앱 색으로 (false면 [glowColor]). */
@@ -116,6 +124,7 @@ interface SettingsActions {
     fun setReadElsewhereAction(action: ReadElsewhereAction)
     fun setAutoMuteAds(enabled: Boolean)
     fun setIndicatorBadge(enabled: Boolean)
+    fun setBadgeStyle(style: BadgeStyle)
     fun setIndicatorGlow(enabled: Boolean)
     fun setGlowUsesAppColor(enabled: Boolean)
     /** ARGB. 알파는 무시하고 불투명으로 쓴다. */

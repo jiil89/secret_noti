@@ -26,6 +26,7 @@ import com.jiil.secretnoti.overlay.OverlayEvents
 import com.jiil.secretnoti.data.WrongPasswordException
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.model.AppSettingUi
+import com.jiil.secretnoti.ui.model.BadgeStyle
 import com.jiil.secretnoti.ui.model.HandleSize
 import com.jiil.secretnoti.ui.model.ReadElsewhereAction
 import com.jiil.secretnoti.ui.model.SettingsActions
@@ -78,6 +79,7 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
     val readElsewhere by Prefs.readElsewhere.flow.collectAsStateWithLifecycle()
     val autoMuteAds by Prefs.autoMuteAds.flow.collectAsStateWithLifecycle()
     val indicatorBadge by Prefs.indicatorBadge.flow.collectAsStateWithLifecycle()
+    val badgeStyle by Prefs.badgeStyle.flow.collectAsStateWithLifecycle()
     val indicatorGlow by Prefs.indicatorGlow.flow.collectAsStateWithLifecycle()
     val glowUsesAppColor by Prefs.glowUsesAppColor.flow.collectAsStateWithLifecycle()
     val glowColor by Prefs.glowColor.flow.collectAsStateWithLifecycle()
@@ -143,6 +145,7 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
         readElsewhereAction = readElsewhere,
         autoMuteAds = autoMuteAds,
         indicatorBadge = indicatorBadge,
+        badgeStyle = badgeStyle,
         indicatorGlow = indicatorGlow,
         glowUsesAppColor = glowUsesAppColor,
         glowColor = glowColor,
@@ -196,6 +199,7 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
             override fun setReadElsewhereAction(action: ReadElsewhereAction) { Prefs.readElsewhere.value = action }
             override fun setAutoMuteAds(enabled: Boolean) { Prefs.autoMuteAds.value = enabled }
             override fun setIndicatorBadge(enabled: Boolean) { Prefs.indicatorBadge.value = enabled }
+            override fun setBadgeStyle(style: BadgeStyle) { Prefs.badgeStyle.value = style }
             override fun setIndicatorGlow(enabled: Boolean) { Prefs.indicatorGlow.value = enabled }
             override fun setGlowUsesAppColor(enabled: Boolean) { Prefs.glowUsesAppColor.value = enabled }
             override fun setGlowColor(argb: Int) { Prefs.glowColor.value = argb or 0xFF000000.toInt() }

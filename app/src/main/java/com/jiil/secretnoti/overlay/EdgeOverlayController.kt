@@ -14,6 +14,7 @@ import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.jiil.secretnoti.NotiApp
 import com.jiil.secretnoti.settings.Prefs
+import com.jiil.secretnoti.ui.model.BadgeStyle
 import com.jiil.secretnoti.ui.MainActivity
 import com.jiil.secretnoti.ui.NotiTheme
 import com.jiil.secretnoti.ui.components.PeekBubble
@@ -73,6 +74,7 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
                 .collect { view.badge = it }
         }
         jobs += scope.launch { Prefs.indicatorBadge.flow.collect { view.showBadge = it } }
+        jobs += scope.launch { Prefs.badgeStyle.flow.collect { view.dotBadge = it == BadgeStyle.DOT } }
         jobs += scope.launch { OverlayEvents.newMessages.collect(::onNewMessage) }
         jobs += scope.launch { OverlayEvents.glowPreviews.collect { view.glow(Prefs.glowColor.value) } }
     }

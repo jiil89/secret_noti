@@ -148,7 +148,7 @@ private fun sampleSettings() = SettingsUi(
     mutedConversations = sampleMutedConversations(),
     readElsewhereAction = ReadElsewhereAction.REMOVE_FROM_PANEL,
     autoMuteAds = false,
-    indicatorBadge = true, indicatorGlow = true, glowUsesAppColor = true,
+    indicatorBadge = true, badgeStyle = BadgeStyle.NUMBER, indicatorGlow = true, glowUsesAppColor = true,
     glowColor = 0xFF2558E8.toInt(), peekBubble = false,
 )
 
@@ -176,6 +176,7 @@ private object PreviewSettingsActions : SettingsActions {
     override fun setReadElsewhereAction(action: ReadElsewhereAction) {}
     override fun setAutoMuteAds(enabled: Boolean) {}
     override fun setIndicatorBadge(enabled: Boolean) {}
+    override fun setBadgeStyle(style: BadgeStyle) {}
     override fun setIndicatorGlow(enabled: Boolean) {}
     override fun setGlowUsesAppColor(enabled: Boolean) {}
     override fun setGlowColor(argb: Int) {}

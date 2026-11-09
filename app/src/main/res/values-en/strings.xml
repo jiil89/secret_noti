@@ -337,4 +337,8 @@
     <string name="conversations_muted_collapsed">%1$d muted chats</string>
     <string name="conversations_muted_show">Show ›</string>
     <string name="conversations_muted_hide">Hide</string>
+    <string name="settings_badge_style">Badge style</string>
+    <string name="settings_badge_style_number">Number</string>
+    <string name="settings_badge_style_dot">Dot only</string>
+    <string name="settings_badge_style_dot_hint">Shows a small dot instead of the count.</string>
 </resources>

@@ -219,6 +219,20 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     SettingsHelper(stringResource(R.string.settings_new_messages_hint))
                     SettingsSwitchRow(stringResource(R.string.settings_indicator_badge), state.indicatorBadge,
                         actions::setIndicatorBadge, detail = stringResource(R.string.settings_indicator_badge_hint))
+                    if (state.indicatorBadge) {
+                        Text(stringResource(R.string.settings_badge_style), style = MaterialTheme.typography.titleSmall)
+                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                            BadgeStyle.entries.forEachIndexed { index, style ->
+                                SegmentedButton(
+                                    selected = state.badgeStyle == style,
+                                    onClick = { actions.setBadgeStyle(style) },
+                                    shape = SegmentedButtonDefaults.itemShape(index, BadgeStyle.entries.size),
+                                    modifier = Modifier.heightIn(min = NotiSpacing.button), icon = {},
+                                ) { Text(stringResource(style.labelRes)) }
+                            }
+                        }
+                        if (state.badgeStyle == BadgeStyle.DOT) SettingsHelper(stringResource(R.string.settings_badge_style_dot_hint))
+                    }
                     SettingsSwitchRow(stringResource(R.string.settings_indicator_glow), state.indicatorGlow,
                         actions::setIndicatorGlow, detail = stringResource(R.string.settings_indicator_glow_hint))
                     if (state.indicatorGlow) {

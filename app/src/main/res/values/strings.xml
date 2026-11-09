@@ -331,4 +331,8 @@
     <string name="conversations_muted_collapsed">저장 끈 대화방 %1$d개</string>
     <string name="conversations_muted_show">보기 ›</string>
     <string name="conversations_muted_hide">접기</string>
+    <string name="settings_badge_style">배지 모양</string>
+    <string name="settings_badge_style_number">숫자</string>
+    <string name="settings_badge_style_dot">점만</string>
+    <string name="settings_badge_style_dot_hint">몇 개인지 대신 새 메시지가 있다는 것만 작은 점으로 알려요.</string>
 </resources>

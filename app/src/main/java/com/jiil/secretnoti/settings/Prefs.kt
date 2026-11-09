@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.jiil.secretnoti.capture.TargetApps
+import com.jiil.secretnoti.ui.model.BadgeStyle
 import com.jiil.secretnoti.ui.model.HandleSize
 import com.jiil.secretnoti.ui.model.PanelWidth
 import com.jiil.secretnoti.ui.model.ReadElsewhereAction
@@ -61,6 +62,7 @@ object Prefs {
     val readElsewhere = enum("read_elsewhere", ReadElsewhereAction.REMOVE_FROM_PANEL)
     val autoMuteAds = bool("auto_mute_ads", false)
     val indicatorBadge = bool("indicator_badge", true)
+    val badgeStyle = enum("badge_style", BadgeStyle.NUMBER)
     val indicatorGlow = bool("indicator_glow", true)
     val glowUsesAppColor = bool("glow_uses_app_color", false)
     val glowColor = int("glow_color", 0xFF2558E8.toInt())
@@ -69,7 +71,7 @@ object Prefs {
     private val all = listOf(
         overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, dumpAllApps, lastPanelOpenedAt,
         retentionDays, lastCleanupAt, enabledApps, lockEnabled, hidePreviews, deletionAlerts, savePhotos,
-        keywords, themeMode, readElsewhere, autoMuteAds, indicatorBadge, indicatorGlow, glowUsesAppColor, glowColor,
+        keywords, themeMode, readElsewhere, autoMuteAds, indicatorBadge, badgeStyle, indicatorGlow, glowUsesAppColor, glowColor,
         peekBubble,
     )
 

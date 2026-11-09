@@ -45,6 +45,13 @@ class HandleView(context: Context, private val onOpen: () -> Unit) : View(contex
     var showBadge = true
         set(v) { field = v; invalidate() }
 
+    /** 배지를 숫자 대신 작은 점으로. */
+    var dotBadge = false
+        set(v) { field = v; invalidate() }
+
+    private val badgeRect = RectF()
+    private val textBounds = Rect()
+
     private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val glowRect = RectF()
     private var glowColor = 0
@@ -93,7 +100,7 @@ class HandleView(context: Context, private val onOpen: () -> Unit) : View(contex
         color = Color.WHITE
         textSize = 11 * d
         typeface = Typeface.DEFAULT_BOLD
-        textAlign = Paint.Align.CENTER
+        textAlign = Paint.Align.LEFT
     }
     private val bar = RectF()
 
@@ -120,15 +127,39 @@ class HandleView(context: Context, private val onOpen: () -> Unit) : View(contex
             canvas.drawRoundRect(bar, 4 * d, 4 * d, barPaint)
         }
 
-        if (showBadge && badge > 0) {
-            val r = 9 * d
-            val cx = bar.centerX()
-            val cy = bar.top + r / 2
+        if (showBadge && badge > 0) drawBadge(canvas)
+    }
+
+    /**
+     * 배지는 막대 위쪽, 화면 안쪽 가장자리에 반쯤 걸친다 (왼쪽 손잡이면 오른쪽으로, 오른쪽이면 왼쪽으로).
+     * 숫자는 글자 실제 크기로 가운데를 잡고, 자릿수가 늘면 알약이 화면 안쪽으로만 늘어난다.
+     */
+    private fun drawBadge(canvas: Canvas) {
+        val inner = if (onLeft) bar.right else bar.left
+        val stroke = badgeStroke.strokeWidth
+        if (dotBadge) {
+            val r = 5 * d
+            val cx = if (onLeft) inner + r - 2 * d else inner - r + 2 * d
+            val cy = bar.top + r
             canvas.drawCircle(cx, cy, r, badgePaint)
             canvas.drawCircle(cx, cy, r, badgeStroke)
-            val label = if (badge > 99) context.getString(R.string.overlay_badge_overflow) else badge.toString()
-            canvas.drawText(label, cx, cy - (textPaint.descent() + textPaint.ascent()) / 2, textPaint)
+            return
         }
+        val label = if (badge > 99) context.getString(R.string.overlay_badge_overflow) else badge.toString()
+        textPaint.getTextBounds(label, 0, label.length, textBounds)
+        val h = 18 * d
+        val w = maxOf(h, textBounds.width() + 10 * d)
+        // 막대 안쪽 가장자리에서 6dp만 걸치고 나머지는 화면 안쪽으로. 뷰(44dp) 밖으로 나가지 않게 막는다.
+        val overlap = 6 * d
+        var start = if (onLeft) inner - overlap else inner + overlap - w
+        start = start.coerceIn(stroke, width - w - stroke)
+        val top = bar.top - 2 * d
+        badgeRect.set(start, top, start + w, top + h)
+        val radius = h / 2
+        canvas.drawRoundRect(badgeRect, radius, radius, badgePaint)
+        canvas.drawRoundRect(badgeRect, radius, radius, badgeStroke)
+        // 글자 상자의 실제 가운데를 알약 가운데에 맞춘다 (글꼴 위아래 여백 때문에 생기는 쏠림 방지).
+        canvas.drawText(label, badgeRect.centerX() - textBounds.exactCenterX(), badgeRect.centerY() - textBounds.exactCenterY(), textPaint)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
