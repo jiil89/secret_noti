@@ -1,5 +1,7 @@
 package com.jiil.secretnoti.ui.screens
 
+import com.jiil.secretnoti.ui.components.MuteChannelsDialog
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
@@ -45,7 +47,6 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
     var passwordDialog by remember { mutableStateOf<Boolean?>(null) }
     var pendingRetention by remember(state.retentionDays) { mutableStateOf<Int?>(null) }
     var showChannelMuteDialog by rememberSaveable { mutableStateOf(false) }
-    var deleteChannelHistory by rememberSaveable { mutableStateOf(false) }
     val positionDescription = stringResource(R.string.settings_screen_position_description)
     val position = state.handlePosition.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: 0.5f
 
@@ -120,56 +121,23 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     if (state.channelConversations.isEmpty()) {
                         SettingsHelper(stringResource(R.string.settings_channels_empty))
                     } else {
-                        OutlinedButton(onClick = { deleteChannelHistory = false; showChannelMuteDialog = true },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)) {
+                        OutlinedButton(onClick = { showChannelMuteDialog = true },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button),
+                            shape = NotiShapes.banner,
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)) {
                             Text(stringResource(R.string.settings_channels_mute_all, state.channelConversations.size),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                                textAlign = TextAlign.Center, style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
                 if (showChannelMuteDialog) {
-                    val rooms = state.channelConversations
-                    AlertDialog(
-                        onDismissRequest = { showChannelMuteDialog = false },
-                        title = { Text(stringResource(R.string.settings_channels_confirm_title, rooms.size)) },
-                        text = {
-                            Column(Modifier.verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(NotiSpacing.medium)) {
-                                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    rooms.take(6).forEach { room ->
-                                        Text(room.title, Modifier.widthIn(max = 120.dp)
-                                            .background(NotiColors.DetailBackground, NotiShapes.pill)
-                                            .padding(horizontal = 10.dp, vertical = 6.dp),
-                                            maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                            style = MaterialTheme.typography.labelMedium)
-                                    }
-                                    if (rooms.size > 6) Text(stringResource(R.string.settings_channels_more, rooms.size - 6),
-                                        Modifier.background(NotiColors.DetailBackground, NotiShapes.pill)
-                                            .padding(horizontal = 10.dp, vertical = 6.dp),
-                                        style = MaterialTheme.typography.labelMedium)
-                                }
-                                Column(Modifier.selectableGroup()) {
-                                    listOf(true, false).forEach { delete ->
-                                        Row(Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)
-                                            .selectable(deleteChannelHistory == delete, role = Role.RadioButton,
-                                                onClick = { deleteChannelHistory = delete }),
-                                            verticalAlignment = Alignment.CenterVertically) {
-                                            RadioButton(selected = deleteChannelHistory == delete, onClick = null)
-                                            Text(stringResource(if (delete) R.string.conversation_mute_delete_existing
-                                                else R.string.conversation_mute_keep_existing), Modifier.weight(1f))
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        dismissButton = { TextButton(onClick = { showChannelMuteDialog = false }) {
-                            Text(stringResource(R.string.conversations_cancel))
-                        } },
-                        confirmButton = { TextButton(onClick = {
+                    MuteChannelsDialog(
+                        rooms = state.channelConversations.map { it.title },
+                        onConfirm = { delete ->
                             showChannelMuteDialog = false
-                            actions.muteAllChannels(deleteChannelHistory)
-                        }) { Text(stringResource(R.string.settings_channels_confirm_action)) } },
+                            actions.muteAllChannels(delete)
+                        },
+                        onDismiss = { showChannelMuteDialog = false },
                     )
                 }
                 HorizontalDivider(color = NotiColors.Divider)

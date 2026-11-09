@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import com.jiil.secretnoti.R
+import androidx.compose.ui.graphics.Color
 import com.jiil.secretnoti.capture.KakaoEmoticons
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
@@ -42,11 +43,17 @@ import com.jiil.secretnoti.ui.model.*
 import java.time.LocalDate
 
 @Composable
-fun InitialAvatar(name: String, modifier: Modifier = Modifier) {
+fun InitialAvatar(
+    name: String,
+    modifier: Modifier = Modifier,
+    background: Color = NotiColors.Avatar,
+    foreground: Color = NotiColors.Body,
+) {
     val initial = name.trim().let { if (it.isEmpty()) "?" else String(Character.toChars(it.codePointAt(0))) }
-    Box(modifier.size(44.dp).background(NotiColors.Avatar, CircleShape)
+    Box(modifier.size(44.dp).background(background, CircleShape)
         .clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
-        Text(initial, color = NotiColors.Body, style = MaterialTheme.typography.titleSmall)
+        Text(initial, color = foreground,
+            style = MaterialTheme.typography.titleSmall.copy(lineHeightStyle = SingleLineCentered))
     }
 }
 
@@ -137,11 +144,10 @@ fun ConversationRow(
         .padding(horizontal = 4.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box {
+            // 채널은 단톡으로 표시돼 와도 채널로 보인다 (사람 대화와 색으로 구분).
             if (conversation.isChannel) {
-                val initial = conversation.title.trim().let { if (it.isEmpty()) "?" else String(Character.toChars(it.codePointAt(0))) }
-                Box(Modifier.size(44.dp).background(NotiColors.ChannelBackground, CircleShape), contentAlignment = Alignment.Center) {
-                    Text(initial, color = NotiColors.ChannelForeground, style = MaterialTheme.typography.titleSmall)
-                }
+                InitialAvatar(conversation.title, background = NotiColors.ChannelBackground,
+                    foreground = NotiColors.ChannelForeground)
             } else if (conversation.isGroup) {
                 Box(Modifier.size(44.dp).background(NotiColors.NoticeBackground, CircleShape),
                     contentAlignment = Alignment.Center) {
@@ -164,12 +170,12 @@ fun ConversationRow(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val preview = if (conversation.isMuted && !conversation.hasRecords) stringResource(R.string.conversation_records_deleted)
                 else if (conversation.previewHidden) stringResource(R.string.preview_locked)
-                else if (conversation.isGroup)
+                else if (conversation.isGroup && !conversation.isChannel)
                     stringResource(R.string.messages_sender_preview, conversation.lastSender?.takeIf { it.isNotBlank() } ?: stringResource(R.string.me), conversation.preview)
                 else conversation.preview
                 val sender = conversation.lastSender?.takeIf { it.isNotBlank() } ?: stringResource(R.string.me)
                 val senderStart = preview.indexOf(sender)
-                val styledPreview = if (conversation.isGroup && !conversation.previewHidden &&
+                val styledPreview = if (conversation.isGroup && !conversation.isChannel && !conversation.previewHidden &&
                     !(conversation.isMuted && !conversation.hasRecords) && senderStart >= 0) {
                     AnnotatedString(preview, listOf(AnnotatedString.Range(
                         SpanStyle(fontWeight = FontWeight.Bold), senderStart, senderStart + sender.length)))
@@ -181,9 +187,7 @@ fun ConversationRow(
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 SourceLabel(conversation.appLabel, Modifier.weight(1f, fill = false))
                 if (conversation.isChannel) {
-                    Text(stringResource(R.string.conversation_channel_tag), Modifier.background(NotiColors.ChannelBackground, NotiShapes.pill)
-                        .padding(horizontal = 6.dp, vertical = 2.dp), color = NotiColors.ChannelForeground,
-                        style = MaterialTheme.typography.labelSmall)
+                    MessageTag(stringResource(R.string.conversation_channel_tag), TagTone.Channel)
                 } else if (conversation.isGroup && conversation.senderCount >= 2) {
                     MessageTag(pluralStringResource(R.plurals.messages_group_senders,
                         conversation.senderCount, conversation.senderCount))
@@ -196,12 +200,12 @@ fun ConversationRow(
                     }
                 }
                 if (conversation.deletedCount > 0) MessageTag(pluralStringResource(R.plurals.messages_deleted_count, conversation.deletedCount, conversation.deletedCount))
-                if (conversation.hasKeyword) MessageTag(stringResource(R.string.messages_keyword), accent = true)
+                if (conversation.hasKeyword) MessageTag(stringResource(R.string.messages_keyword), TagTone.Accent)
             }
-            if (!conversation.isMuted && (conversation.looksLikeAd || conversation.isChannel) && onMute != null) {
+            if (!conversation.isMuted && conversation.looksLikeAd && !conversation.isChannel && onMute != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (!conversation.isChannel) Text(stringResource(R.string.conversation_looks_like_ad), Modifier.weight(1f),
-                        color = NotiColors.Secondary, style = MaterialTheme.typography.labelSmall) else Spacer(Modifier.weight(1f))
+                    Text(stringResource(R.string.conversation_looks_like_ad), Modifier.weight(1f),
+                        color = NotiColors.Secondary, style = MaterialTheme.typography.labelSmall)
                     TextButton(onClick = onMute, contentPadding = PaddingValues(horizontal = 4.dp),
                         modifier = Modifier.heightIn(min = 48.dp)) {
                         Text(stringResource(R.string.conversation_mute), color = NotiColors.Secondary,
@@ -312,10 +316,18 @@ fun EmptyConversations(modifier: Modifier = Modifier) {
     }
 }
 
+enum class TagTone { Neutral, Accent, Channel }
+
+/** 대화방 행·검색 결과의 작은 꼬리표. 한 줄, 글자는 위아래 정가운데. */
 @Composable
-fun MessageTag(text: String, accent: Boolean = false) {
-    Text(text, Modifier.background(if (accent) NotiColors.NoticeBackground else NotiColors.DetailBackground,
-        NotiShapes.pill).padding(horizontal = 6.dp, vertical = 2.dp),
-        color = if (accent) NotiColors.NoticeForeground else NotiColors.Secondary,
-        style = MaterialTheme.typography.labelSmall)
+fun MessageTag(text: String, tone: TagTone = TagTone.Neutral) {
+    val (bg, fg) = when (tone) {
+        TagTone.Neutral -> NotiColors.DetailBackground to NotiColors.Secondary
+        TagTone.Accent -> NotiColors.NoticeBackground to NotiColors.NoticeForeground
+        TagTone.Channel -> NotiColors.ChannelBackground to NotiColors.ChannelForeground
+    }
+    Text(text, Modifier.background(bg, NotiShapes.pill).padding(horizontal = 6.dp, vertical = 2.dp),
+        color = fg, maxLines = 1,
+        fontWeight = if (tone == TagTone.Channel) FontWeight.Bold else null,
+        style = MaterialTheme.typography.labelSmall.copy(lineHeightStyle = SingleLineCentered))
 }
