@@ -22,6 +22,7 @@ private fun sampleApps() = listOf(AppRef("com.kakao.talk", stringResource(R.stri
 @Composable
 private fun sampleConversations() = listOf(
     ConversationUi(6, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_ad_title), false, null, stringResource(R.string.screen_preview_ad_message), sampleAt(20, 55), 1, looksLikeAd = true),
+    ConversationUi(7, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_delivery), true, null, stringResource(R.string.screen_preview_delivered), sampleAt(20, 50), 1, looksLikeAd = true, isChannel = true, senderCount = 5),
     ConversationUi(1, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_mom), false, stringResource(R.string.screen_preview_mom), stringResource(R.string.screen_preview_mom_message), sampleAt(20, 52), 1, isPinned = true, hasKeyword = true),
     ConversationUi(2, Source.KAKAO, "com.kakao.talk", stringResource(R.string.screen_preview_kakao), stringResource(R.string.screen_preview_coworkers), true, stringResource(R.string.screen_preview_minsu), stringResource(R.string.screen_preview_poll), sampleAt(20, 47), 12, deletedCount = 2, senderCount = 3),
     ConversationUi(3, Source.TEAMS, "com.microsoft.teams", stringResource(R.string.screen_preview_teams), stringResource(R.string.screen_preview_manager), false, stringResource(R.string.screen_preview_manager), stringResource(R.string.screen_preview_report), sampleAt(20, 30), 1),
@@ -147,7 +148,8 @@ private fun sampleSettings() = SettingsUi(
     panelWidthDp = PanelWidth.NORMAL.dp,
     mutedConversations = sampleMutedConversations(),
     readElsewhereAction = ReadElsewhereAction.REMOVE_FROM_PANEL,
-    autoMuteAds = false,
+    autoMuteAds = false, autoMuteChannels = false,
+    channelConversations = sampleConversations().filter { it.isChannel },
     indicatorBadge = true, badgeStyle = BadgeStyle.NUMBER, indicatorGlow = true, glowUsesAppColor = true,
     glowColor = 0xFF2558E8.toInt(), peekBubble = false,
 )
@@ -175,6 +177,8 @@ private object PreviewSettingsActions : SettingsActions {
     override fun unmuteConversation(id: Long) {}
     override fun setReadElsewhereAction(action: ReadElsewhereAction) {}
     override fun setAutoMuteAds(enabled: Boolean) {}
+    override fun setAutoMuteChannels(enabled: Boolean) {}
+    override fun muteAllChannels(deleteExisting: Boolean) {}
     override fun setIndicatorBadge(enabled: Boolean) {}
     override fun setBadgeStyle(style: BadgeStyle) {}
     override fun setIndicatorGlow(enabled: Boolean) {}

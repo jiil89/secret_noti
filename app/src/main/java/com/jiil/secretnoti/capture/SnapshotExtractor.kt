@@ -41,6 +41,7 @@ object SnapshotExtractor {
             },
             messages = messages(e),
             shortcutLabel = shortcutLabel,
+            canReply = n.actions?.any { !it.remoteInputs.isNullOrEmpty() } == true,
         )
     }
 

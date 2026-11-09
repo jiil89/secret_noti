@@ -84,6 +84,10 @@ data class SettingsUi(
     val readElsewhereAction: ReadElsewhereAction,
     /** 광고로 보이는 새 대화방은 처음부터 저장하지 않기. */
     val autoMuteAds: Boolean,
+    /** 카톡 채널·알림톡은 처음부터 저장하지 않기. */
+    val autoMuteChannels: Boolean,
+    /** 아직 저장 중인 카톡 채널·알림톡 대화방 ("N개 모두 저장 끄기"). */
+    val channelConversations: List<ConversationUi>,
     /** 새 메시지 표시: 손잡이 숫자 배지. */
     val indicatorBadge: Boolean,
     /** 배지 모양: 숫자 또는 점. */
@@ -123,6 +127,9 @@ interface SettingsActions {
     fun unmuteConversation(id: Long)
     fun setReadElsewhereAction(action: ReadElsewhereAction)
     fun setAutoMuteAds(enabled: Boolean)
+    fun setAutoMuteChannels(enabled: Boolean)
+    /** 아직 저장 중인 채널 대화방을 한 번에 저장 끄기. */
+    fun muteAllChannels(deleteExisting: Boolean)
     fun setIndicatorBadge(enabled: Boolean)
     fun setBadgeStyle(style: BadgeStyle)
     fun setIndicatorGlow(enabled: Boolean)

@@ -59,8 +59,10 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
             lastText = "",
             unreadCount = 0,
             looksLikeAd = adNow,
+            isChannel = parsed.isChannel,
         )
-        if (existing == null && adNow && Prefs.autoMuteAds.value) {
+        val autoMute = (adNow && Prefs.autoMuteAds.value) || (parsed.isChannel && Prefs.autoMuteChannels.value)
+        if (existing == null && autoMute) {
             // 광고로 보이는 새 대화방: 방만 기억하고(설정에서 다시 켤 수 있게) 메시지는 저장하지 않는다.
             dao.insertConversation(newConversation.copy(isMuted = true))
             return@withTransaction null
@@ -118,6 +120,7 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
                 lastSender = if (newer != null) newer.sender else conv.lastSender,
                 lastText = newer?.text ?: conv.lastText,
                 looksLikeAd = conv.looksLikeAd || adNow,
+                isChannel = parsed.isChannel,
             ),
         )
         IngestResult(conversationId, parsed.roomTitle, inserted, deleted)
@@ -214,6 +217,40 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
 
     suspend fun unmute(conversationId: Long) = dao.setMuted(conversationId, false)
 
+    /** 아직 저장 중인 카톡 채널·알림톡 대화방들의 저장을 한 번에 끈다. 끈 개수를 돌려준다. */
+    suspend fun muteAllChannels(deleteExisting: Boolean): Int {
+        val ids = dao.unmutedChannelIds()
+        ids.forEach { mute(it, deleteExisting) }
+        return ids.size
+    }
+
+    /**
+     * 채널 구분이 생기기 전에 저장된 카톡 대화방에 채널 표시를 붙인다 (한 번만).
+     * 진단용으로 남겨 둔 최근 알림 원본에서 "답장" 버튼이 한 번도 없던 방을 채널로 본다.
+     */
+    suspend fun backfillChannelsFromDumps() {
+        val canReply = HashMap<String, Boolean>()
+        for (dump in db.dumpDao().all()) {
+            if (dump.packageName != TargetApps.KAKAO || dump.event != "posted") continue
+            val json = runCatching { org.json.JSONObject(dump.json) }.getOrNull() ?: continue
+            if (json.optBoolean("isGroupSummary")) continue
+            val key = json.optString("shortcutId").takeIf { it.isNotEmpty() && it != "null" }
+                ?: json.optString("tag").takeIf { it.isNotEmpty() && it != "null" } ?: continue
+            val actions = json.optJSONArray("actions")
+            val reply = actions != null && (0 until actions.length()).any { actions.getJSONObject(it).optBoolean("hasRemoteInputs") }
+            canReply[key] = (canReply[key] ?: false) || reply
+        }
+        val channels = canReply.filterValues { !it }.keys.toList()
+        if (channels.isNotEmpty()) dao.markChannels(TargetApps.KAKAO, channels)
+    }
+
+    /** 아직 저장 중인 카톡 채널·알림톡 대화방 (설정의 "한 번에 끄기"용). */
+    fun observeChannelConversations(): Flow<List<ConversationUi>> =
+        dao.observeConversations().map { list ->
+            list.filter { it.conversation.isChannel && !it.conversation.isMuted }
+                .map { it.toUi(previewHidden = false, hasKeyword = false) }
+        }
+
     suspend fun dismissFromPanel(conversationId: Long, now: Long = System.currentTimeMillis()) =
         dao.setPanelDismissedAt(conversationId, now)
 
@@ -272,6 +309,7 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
         previewHidden = previewHidden,
         looksLikeAd = conversation.looksLikeAd,
         senderCount = senderCount,
+        isChannel = conversation.isChannel,
     )
 }
 

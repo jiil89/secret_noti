@@ -206,4 +206,17 @@ class NotificationParserTest {
         assertEquals("친구", parsed.roomTitle)
         assertEquals("direct|1;thread_id:9", parsed.roomKey)
     }
+
+    @Test
+    fun kakaoChannelIsDetectedByMissingReplyAction() {
+        // 실기기: 사람 대화는 "읽음·답장", 채널·알림톡은 "읽음"만 있다
+        val person = base(listOf(RawMessage("엄마", "mom", "밥 먹자", 10, "1"))).copy(canReply = true)
+        val alimtalk = base(listOf(RawMessage("카드사", "biz", "[카드사] 이용 안내", 10, "2"))).copy(
+            canReply = false, isGroupConversation = false, conversationTitle = null, title = "카드사",
+        )
+        assertFalse(NotificationParser.parse(person)!!.isChannel)
+        assertTrue(NotificationParser.parse(alimtalk)!!.isChannel)
+        // 카톡이 아닌 앱은 답장 버튼이 없어도 채널로 보지 않는다
+        assertFalse(NotificationParser.parse(alimtalk.copy(packageName = "com.example.app"))!!.isChannel)
+    }
 }

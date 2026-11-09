@@ -78,6 +78,8 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
     val muted by remember { chat.observeMutedConversations() }.collectAsStateWithLifecycle(emptyList())
     val readElsewhere by Prefs.readElsewhere.flow.collectAsStateWithLifecycle()
     val autoMuteAds by Prefs.autoMuteAds.flow.collectAsStateWithLifecycle()
+    val autoMuteChannels by Prefs.autoMuteChannels.flow.collectAsStateWithLifecycle()
+    val channels by remember { chat.observeChannelConversations() }.collectAsStateWithLifecycle(emptyList())
     val indicatorBadge by Prefs.indicatorBadge.flow.collectAsStateWithLifecycle()
     val badgeStyle by Prefs.badgeStyle.flow.collectAsStateWithLifecycle()
     val indicatorGlow by Prefs.indicatorGlow.flow.collectAsStateWithLifecycle()
@@ -144,6 +146,8 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
         mutedConversations = muted,
         readElsewhereAction = readElsewhere,
         autoMuteAds = autoMuteAds,
+        autoMuteChannels = autoMuteChannels,
+        channelConversations = channels,
         indicatorBadge = indicatorBadge,
         badgeStyle = badgeStyle,
         indicatorGlow = indicatorGlow,
@@ -198,6 +202,14 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
             }
             override fun setReadElsewhereAction(action: ReadElsewhereAction) { Prefs.readElsewhere.value = action }
             override fun setAutoMuteAds(enabled: Boolean) { Prefs.autoMuteAds.value = enabled }
+            override fun setAutoMuteChannels(enabled: Boolean) { Prefs.autoMuteChannels.value = enabled }
+            override fun muteAllChannels(deleteExisting: Boolean) {
+                scope.launch {
+                    val n = chat.muteAllChannels(deleteExisting)
+                    WidgetUpdater.request(context)
+                    if (n > 0) toast(context.resources.getQuantityString(R.plurals.settings_channels_muted, n, n))
+                }
+            }
             override fun setIndicatorBadge(enabled: Boolean) { Prefs.indicatorBadge.value = enabled }
             override fun setBadgeStyle(style: BadgeStyle) { Prefs.badgeStyle.value = style }
             override fun setIndicatorGlow(enabled: Boolean) { Prefs.indicatorGlow.value = enabled }

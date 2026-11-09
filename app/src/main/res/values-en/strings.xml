@@ -285,6 +285,15 @@
     <string name="settings_read_elsewhere_remove">Remove from panel</string>
     <string name="settings_read_elsewhere_keep">Keep</string>
     <string name="settings_read_elsewhere_remove_hint">History stays in the app. The chat returns to the panel when a new message arrives.</string>
+    <string name="conversation_channel_tag">Channel</string>
+    <string name="settings_channels_section">KakaoTalk channels</string>
+    <string name="settings_channels_toggle">Don\'t save KakaoTalk channels from the start</string>
+    <string name="settings_channels_hint">New chats for KakaoTalk alerts you cannot reply to (cards, shopping, securities, deliveries, and channel updates) will not be saved. Off by default.</string>
+    <string name="settings_channels_mute_all">Stop saving all %1$d current channel chats</string>
+    <string name="settings_channels_confirm_title">Stop saving %1$d channel chats?</string>
+    <string name="settings_channels_more">%1$d more</string>
+    <string name="settings_channels_empty">No channel chats are currently being saved.</string>
+    <string name="settings_channels_confirm_action">Stop saving all</string>
     <string name="settings_auto_mute_ads">Do not save new chats that look like ads</string>
     <string name="settings_auto_mute_ads_hint">New chats with messages starting with “(광고)” are not saved. Off by default.</string>
     <string name="settings_muted_conversations">Chats with saving turned off (%1$d)</string>
@@ -341,4 +350,7 @@
     <string name="settings_badge_style_number">Number</string>
     <string name="settings_badge_style_dot">Dot only</string>
     <string name="settings_badge_style_dot_hint">Shows a small dot instead of the count.</string>
+    <plurals name="settings_channels_muted">
+        <item quantity="other">Stopped saving %1$d channel chats</item>
+    </plurals>
 </resources>

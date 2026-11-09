@@ -44,6 +44,8 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
     var keyword by remember { mutableStateOf("") }
     var passwordDialog by remember { mutableStateOf<Boolean?>(null) }
     var pendingRetention by remember(state.retentionDays) { mutableStateOf<Int?>(null) }
+    var showChannelMuteDialog by rememberSaveable { mutableStateOf(false) }
+    var deleteChannelHistory by rememberSaveable { mutableStateOf(false) }
     val positionDescription = stringResource(R.string.settings_screen_position_description)
     val position = state.handlePosition.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: 0.5f
 
@@ -110,6 +112,65 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             }
                         }
                     }
+                }
+                HorizontalDivider(color = NotiColors.Divider)
+                SettingsSection(stringResource(R.string.settings_channels_section)) {
+                    SettingsSwitchRow(stringResource(R.string.settings_channels_toggle), state.autoMuteChannels,
+                        actions::setAutoMuteChannels, detail = stringResource(R.string.settings_channels_hint))
+                    if (state.channelConversations.isEmpty()) {
+                        SettingsHelper(stringResource(R.string.settings_channels_empty))
+                    } else {
+                        OutlinedButton(onClick = { deleteChannelHistory = false; showChannelMuteDialog = true },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)) {
+                            Text(stringResource(R.string.settings_channels_mute_all, state.channelConversations.size),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        }
+                    }
+                }
+                if (showChannelMuteDialog) {
+                    val rooms = state.channelConversations
+                    AlertDialog(
+                        onDismissRequest = { showChannelMuteDialog = false },
+                        title = { Text(stringResource(R.string.settings_channels_confirm_title, rooms.size)) },
+                        text = {
+                            Column(Modifier.verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(NotiSpacing.medium)) {
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    rooms.take(6).forEach { room ->
+                                        Text(room.title, Modifier.widthIn(max = 120.dp)
+                                            .background(NotiColors.DetailBackground, NotiShapes.pill)
+                                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                                            maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                            style = MaterialTheme.typography.labelMedium)
+                                    }
+                                    if (rooms.size > 6) Text(stringResource(R.string.settings_channels_more, rooms.size - 6),
+                                        Modifier.background(NotiColors.DetailBackground, NotiShapes.pill)
+                                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                                        style = MaterialTheme.typography.labelMedium)
+                                }
+                                Column(Modifier.selectableGroup()) {
+                                    listOf(true, false).forEach { delete ->
+                                        Row(Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)
+                                            .selectable(deleteChannelHistory == delete, role = Role.RadioButton,
+                                                onClick = { deleteChannelHistory = delete }),
+                                            verticalAlignment = Alignment.CenterVertically) {
+                                            RadioButton(selected = deleteChannelHistory == delete, onClick = null)
+                                            Text(stringResource(if (delete) R.string.conversation_mute_delete_existing
+                                                else R.string.conversation_mute_keep_existing), Modifier.weight(1f))
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        dismissButton = { TextButton(onClick = { showChannelMuteDialog = false }) {
+                            Text(stringResource(R.string.conversations_cancel))
+                        } },
+                        confirmButton = { TextButton(onClick = {
+                            showChannelMuteDialog = false
+                            actions.muteAllChannels(deleteChannelHistory)
+                        }) { Text(stringResource(R.string.settings_channels_confirm_action)) } },
+                    )
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_read_elsewhere)) {

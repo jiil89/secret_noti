@@ -43,6 +43,8 @@ data class ConversationEntity(
     @ColumnInfo(defaultValue = "0") val readAt: Long = 0,
     /** 시크릿노티 안에서 이 방을 마지막으로 연 시각. "삭제 N" 꼬리표는 그 뒤에 삭제된 것만 센다. */
     @ColumnInfo(defaultValue = "0") val seenAt: Long = 0,
+    /** 카톡 채널·알림톡 대화방. */
+    @ColumnInfo(defaultValue = "0") val isChannel: Boolean = false,
 )
 
 @Entity(
@@ -211,6 +213,12 @@ interface ChatDao {
 
     @Query("UPDATE conversation SET isMuted = :muted WHERE id = :id")
     suspend fun setMuted(id: Long, muted: Boolean)
+
+    @Query("SELECT id FROM conversation WHERE isChannel = 1 AND isMuted = 0")
+    suspend fun unmutedChannelIds(): List<Long>
+
+    @Query("UPDATE conversation SET isChannel = 1 WHERE packageName = :packageName AND roomKey IN (:roomKeys)")
+    suspend fun markChannels(packageName: String, roomKeys: List<String>)
 
     @Query("DELETE FROM message WHERE conversationId = :conversationId")
     suspend fun deleteMessagesOf(conversationId: Long)

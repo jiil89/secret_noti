@@ -137,7 +137,12 @@ fun ConversationRow(
         .padding(horizontal = 4.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box {
-            if (conversation.isGroup) {
+            if (conversation.isChannel) {
+                val initial = conversation.title.trim().let { if (it.isEmpty()) "?" else String(Character.toChars(it.codePointAt(0))) }
+                Box(Modifier.size(44.dp).background(NotiColors.ChannelBackground, CircleShape), contentAlignment = Alignment.Center) {
+                    Text(initial, color = NotiColors.ChannelForeground, style = MaterialTheme.typography.titleSmall)
+                }
+            } else if (conversation.isGroup) {
                 Box(Modifier.size(44.dp).background(NotiColors.NoticeBackground, CircleShape),
                     contentAlignment = Alignment.Center) {
                     Icon(NotiIcons.users, stringResource(R.string.messages_group), Modifier.size(24.dp),
@@ -175,7 +180,11 @@ fun ConversationRow(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 SourceLabel(conversation.appLabel, Modifier.weight(1f, fill = false))
-                if (conversation.isGroup && conversation.senderCount >= 2) {
+                if (conversation.isChannel) {
+                    Text(stringResource(R.string.conversation_channel_tag), Modifier.background(NotiColors.ChannelBackground, NotiShapes.pill)
+                        .padding(horizontal = 6.dp, vertical = 2.dp), color = NotiColors.ChannelForeground,
+                        style = MaterialTheme.typography.labelSmall)
+                } else if (conversation.isGroup && conversation.senderCount >= 2) {
                     MessageTag(pluralStringResource(R.plurals.messages_group_senders,
                         conversation.senderCount, conversation.senderCount))
                 }
@@ -189,10 +198,10 @@ fun ConversationRow(
                 if (conversation.deletedCount > 0) MessageTag(pluralStringResource(R.plurals.messages_deleted_count, conversation.deletedCount, conversation.deletedCount))
                 if (conversation.hasKeyword) MessageTag(stringResource(R.string.messages_keyword), accent = true)
             }
-            if (!conversation.isMuted && conversation.looksLikeAd && onMute != null) {
+            if (!conversation.isMuted && (conversation.looksLikeAd || conversation.isChannel) && onMute != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.conversation_looks_like_ad), Modifier.weight(1f),
-                        color = NotiColors.Secondary, style = MaterialTheme.typography.labelSmall)
+                    if (!conversation.isChannel) Text(stringResource(R.string.conversation_looks_like_ad), Modifier.weight(1f),
+                        color = NotiColors.Secondary, style = MaterialTheme.typography.labelSmall) else Spacer(Modifier.weight(1f))
                     TextButton(onClick = onMute, contentPadding = PaddingValues(horizontal = 4.dp),
                         modifier = Modifier.heightIn(min = 48.dp)) {
                         Text(stringResource(R.string.conversation_mute), color = NotiColors.Secondary,

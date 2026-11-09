@@ -279,6 +279,15 @@
     <string name="settings_read_elsewhere_remove">엣지패널에서 빼기</string>
     <string name="settings_read_elsewhere_keep">그대로 두기</string>
     <string name="settings_read_elsewhere_remove_hint">기록은 앱에 그대로 남고, 새 메시지가 오면 다시 패널에 보여요.</string>
+    <string name="conversation_channel_tag">채널</string>
+    <string name="settings_channels_section">카톡 채널·알림톡</string>
+    <string name="settings_channels_toggle">채널·알림톡은 처음부터 저장 안 함</string>
+    <string name="settings_channels_hint">답장할 수 없는 카톡 알림(카드·쇼핑·증권·배송 알림, 채널 소식)은 새 대화방부터 저장하지 않아요. 기본은 꺼짐.</string>
+    <string name="settings_channels_mute_all">지금 있는 채널 대화방 %1$d개 모두 저장 끄기</string>
+    <string name="settings_channels_confirm_title">채널 대화방 %1$d개 저장을 끌까요?</string>
+    <string name="settings_channels_more">외 %1$d개</string>
+    <string name="settings_channels_empty">저장 중인 채널 대화방이 없어요.</string>
+    <string name="settings_channels_confirm_action">모두 저장 끄기</string>
     <string name="settings_auto_mute_ads">광고로 보이는 대화방은 처음부터 저장 안 함</string>
     <string name="settings_auto_mute_ads_hint">‘(광고)’로 시작하는 메시지가 오는 새 대화방은 저장하지 않아요. 기본은 꺼짐.</string>
     <string name="settings_muted_conversations">저장 끈 대화방 (%1$d)</string>
@@ -335,4 +344,7 @@
     <string name="settings_badge_style_number">숫자</string>
     <string name="settings_badge_style_dot">점만</string>
     <string name="settings_badge_style_dot_hint">몇 개인지 대신 새 메시지가 있다는 것만 작은 점으로 알려요.</string>
+    <plurals name="settings_channels_muted">
+        <item quantity="other">채널 대화방 %1$d개의 저장을 끌었어요</item>
+    </plurals>
 </resources>

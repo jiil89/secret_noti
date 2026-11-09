@@ -51,6 +51,11 @@ class NotiListenerService : NotificationListenerService() {
         // 연결이 끊겨 있던 동안 쌓인 알림도 저장하고, 하루 한 번 보관 기간이 지난 기록을 지운다.
         runCatching { activeNotifications }.getOrNull()?.forEach { ingest(it) }
         cleanupIfDue()
+        if (!Prefs.channelBackfillDone.value) {
+            scope.launch(Dispatchers.IO) {
+                runCatching { chat.backfillChannelsFromDumps() }.onSuccess { Prefs.channelBackfillDone.value = true }
+            }
+        }
     }
 
     override fun onListenerDisconnected() {

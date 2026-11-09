@@ -32,6 +32,8 @@ data class NotiPalette(
     val DeletedOutline: Color,
     val OnAccent: Color,
     val Scrim: Color,
+    val ChannelBackground: Color,
+    val ChannelForeground: Color,
 )
 
 val NotiLightPalette = NotiPalette(
@@ -50,6 +52,8 @@ val NotiLightPalette = NotiPalette(
     DeletedOutline = Color(0xFF848B98),
     OnAccent = Color(0xFFFFFFFF),
     Scrim = Color(0x800A0C10),
+    ChannelBackground = Color(0xFFFFF1D6),
+    ChannelForeground = Color(0xFF7A4B00),
 )
 
 val NotiDarkPalette = NotiPalette(
@@ -68,6 +72,8 @@ val NotiDarkPalette = NotiPalette(
     DeletedOutline = Color(0xFF929CAC),
     OnAccent = Color(0xFF10265A),
     Scrim = Color(0xB3000000),
+    ChannelBackground = Color(0xFF3A2B18),
+    ChannelForeground = Color(0xFFFFD58A),
 )
 
 val LocalNotiPalette = staticCompositionLocalOf { NotiLightPalette }
@@ -88,6 +94,8 @@ object NotiColors {
     val DeletedOutline: Color @Composable get() = LocalNotiPalette.current.DeletedOutline
     val OnAccent: Color @Composable get() = LocalNotiPalette.current.OnAccent
     val Scrim: Color @Composable get() = LocalNotiPalette.current.Scrim
+    val ChannelBackground: Color @Composable get() = LocalNotiPalette.current.ChannelBackground
+    val ChannelForeground: Color @Composable get() = LocalNotiPalette.current.ChannelForeground
 }
 
 fun notiColorScheme(dark: Boolean): ColorScheme {

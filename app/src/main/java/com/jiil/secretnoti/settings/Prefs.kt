@@ -61,6 +61,8 @@ object Prefs {
     val themeMode = enum("theme_mode", ThemeMode.SYSTEM)
     val readElsewhere = enum("read_elsewhere", ReadElsewhereAction.REMOVE_FROM_PANEL)
     val autoMuteAds = bool("auto_mute_ads", false)
+    val autoMuteChannels = bool("auto_mute_channels", false)
+    val channelBackfillDone = bool("channel_backfill_done", false)
     val indicatorBadge = bool("indicator_badge", true)
     val badgeStyle = enum("badge_style", BadgeStyle.NUMBER)
     val indicatorGlow = bool("indicator_glow", true)
@@ -71,7 +73,7 @@ object Prefs {
     private val all = listOf(
         overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, dumpAllApps, lastPanelOpenedAt,
         retentionDays, lastCleanupAt, enabledApps, lockEnabled, hidePreviews, deletionAlerts, savePhotos,
-        keywords, themeMode, readElsewhere, autoMuteAds, indicatorBadge, badgeStyle, indicatorGlow, glowUsesAppColor, glowColor,
+        keywords, themeMode, readElsewhere, autoMuteAds, autoMuteChannels, channelBackfillDone, indicatorBadge, badgeStyle, indicatorGlow, glowUsesAppColor, glowColor,
         peekBubble,
     )
 

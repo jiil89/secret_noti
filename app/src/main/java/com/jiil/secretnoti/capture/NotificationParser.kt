@@ -21,6 +21,8 @@ data class NotificationSnapshot(
     val messages: List<RawMessage>,
     /** 알림에 붙은 대화 바로가기의 이름. 카톡 단톡방은 알림에 방 이름이 없고 여기에만 있다. */
     val shortcutLabel: String? = null,
+    /** 알림에서 바로 답장할 수 있는가 (RemoteInput 버튼이 있음). */
+    val canReply: Boolean = true,
 )
 
 /** MessagingStyle 메시지 하나. sender가 null이면 내가 보낸 메시지다. */
@@ -55,6 +57,8 @@ data class ParsedNotification(
     val titleReliable: Boolean = true,
     /** 앱이 알림에 1:1/단톡을 직접 밝혔는가. 밝혔으면 그 값을 따른다 (예전에 잘못 단톡으로 저장된 방을 바로잡기 위함). */
     val groupExplicit: Boolean = false,
+    /** 카톡 채널·알림톡 (사람이 아닌 기업·서비스가 보낸 대화방). */
+    val isChannel: Boolean = false,
 )
 
 object NotificationParser {
@@ -72,6 +76,12 @@ object NotificationParser {
     )
 
     fun isDeletionMarker(text: String): Boolean = deletionMarkers.any { text.contains(it) }
+
+    /**
+     * 카톡 채널·알림톡: 사람 대화(1:1·단톡)는 알림에 "답장" 버튼이 있고, 채널·알림톡은 "읽음"만 있다.
+     * 실기기 알림 88건에서 이 기준으로 사람 11개 방·채널 13개 방이 100% 갈렸다.
+     */
+    fun isKakaoChannel(s: NotificationSnapshot): Boolean = s.packageName == "com.kakao.talk" && !s.canReply
 
     /** 정보통신망법상 광고 메시지는 "(광고)"로 시작해야 한다. */
     fun looksLikeAd(text: String): Boolean {
@@ -146,6 +156,7 @@ object NotificationParser {
         return ParsedNotification(
             roomKey, roomTitle, isGroup, messages, titleReliable,
             groupExplicit = s.isGroupConversation != null && distinctSenders.size < 2,
+            isChannel = isKakaoChannel(s),
         )
     }
 }
