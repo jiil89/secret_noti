@@ -86,7 +86,8 @@ class NotiListenerService : NotificationListenerService() {
         record(sbn, "removed", reason)
         lastKeys.remove(sbn.key)
         // 원래 앱이 스스로 알림을 지웠거나(그 앱에서 읽음) 알림을 눌러 열었다 → 그 대화방은 읽은 것으로 본다.
-        // 사용자가 밀어서 지운 것(REASON_CANCEL)은 읽은 게 아니므로 그대로 둔다.
+        // 사용자가 밀어서 지운 것(REASON_CANCEL, 모두 지우기 REASON_CANCEL_ALL)은 읽은 게 아니므로 그대로 둔다.
+        // 그 뒤 카톡에서 읽은 것은 다음 메시지의 안 읽은 수로 알아챈다 (ParsedNotification.appUnread).
         if (reason == REASON_APP_CANCEL || reason == REASON_CLICK) markReadElsewhere(sbn)
     }
 

@@ -254,4 +254,8 @@ interface ChatDao {
 
     @Query("SELECT * FROM message WHERE conversationId = :conversationId ORDER BY postedAt ASC, id ASC")
     suspend fun messagesOf(conversationId: Long): List<MessageEntity>
+
+    /** 받은 메시지를 최신부터 셀 때 [offset]번째(0부터)의 받은 시각. */
+    @Query("SELECT receivedAt FROM message WHERE conversationId = :conversationId AND isMine = 0 ORDER BY postedAt DESC, id DESC LIMIT 1 OFFSET :offset")
+    suspend fun incomingReceivedAt(conversationId: Long, offset: Int): Long?
 }

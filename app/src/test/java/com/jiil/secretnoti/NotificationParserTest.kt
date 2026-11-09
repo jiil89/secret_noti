@@ -83,6 +83,15 @@ class NotificationParserTest {
     )
 
     @Test
+    fun kakaoNumberIsAppUnreadCount() {
+        val msgs = listOf(RawMessage("엄마", "mom", "밥 먹자", 10, "1"))
+        assertEquals(3, NotificationParser.parse(base(msgs).copy(number = 3))!!.appUnread)
+        assertNull(NotificationParser.parse(base(msgs).copy(number = 0))!!.appUnread)
+        // 카톡 외 앱의 number는 뜻이 제각각이라 쓰지 않는다.
+        assertNull(NotificationParser.parse(base(msgs).copy(packageName = "com.microsoft.teams", number = 3))!!.appUnread)
+    }
+
+    @Test
     fun groupConversationKeepsSendersAndMarksMine() {
         val parsed = NotificationParser.parse(
             base(

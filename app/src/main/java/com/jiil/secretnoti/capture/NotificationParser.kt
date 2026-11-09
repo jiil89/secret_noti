@@ -23,6 +23,8 @@ data class NotificationSnapshot(
     val shortcutLabel: String? = null,
     /** 알림에서 바로 답장할 수 있는가 (RemoteInput 버튼이 있음). */
     val canReply: Boolean = true,
+    /** Notification.number. 카톡은 그 방의 "안 읽은 메시지 수"를 넣는다. */
+    val number: Int = 0,
 )
 
 /** MessagingStyle 메시지 하나. sender가 null이면 내가 보낸 메시지다. */
@@ -59,6 +61,12 @@ data class ParsedNotification(
     val groupExplicit: Boolean = false,
     /** 카톡 채널·알림톡 (사람이 아닌 기업·서비스가 보낸 대화방). */
     val isChannel: Boolean = false,
+    /**
+     * 원래 앱이 알려 준 이 방의 안 읽은 수. 카톡만 믿을 만하다 (알림의 number).
+     * 알림을 밀어서 지운 뒤 카톡에서 읽으면 알림이 이미 없어 "읽음"을 알 수 없는데,
+     * 다음 메시지가 올 때 이 수가 1로 돌아가 있으면 그 전 것은 읽었다는 뜻이다.
+     */
+    val appUnread: Int? = null,
 )
 
 object NotificationParser {
@@ -181,6 +189,7 @@ object NotificationParser {
             roomKey, roomTitle, isGroup, messages, titleReliable,
             groupExplicit = s.isGroupConversation != null && distinctSenders.size < 2,
             isChannel = isKakaoChannel(s),
+            appUnread = s.number.takeIf { s.packageName == "com.kakao.talk" && it > 0 },
         )
     }
 }

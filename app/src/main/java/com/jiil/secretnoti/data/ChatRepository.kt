@@ -110,12 +110,22 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
 
         val conv = dao.getConversation(conversationId)!!
         val newer = latest?.takeIf { it.postedAt >= conv.lastMessageAt }
+        // 카톡이 알려 준 안 읽은 수보다 우리가 센 게 많으면, 그 앞의 것은 카톡에서 이미 읽은 것.
+        // 가장 오래된 "아직 안 읽은" 메시지 바로 전까지를 읽음으로 본다 (같은 시각에 받은 것은 안 읽은 쪽으로 남김).
+        var readAt = conv.readAt
+        var unread = conv.unreadCount + newUnread
+        parsed.appUnread?.let { appUnread ->
+            val oldestUnread = dao.incomingReceivedAt(conversationId, appUnread - 1)
+            if (oldestUnread != null && oldestUnread - 1 > readAt) readAt = oldestUnread - 1
+            unread = minOf(unread, appUnread)
+        }
         dao.updateConversation(
             conv.copy(
                 // 단톡방 이름을 모를 때(보낸 사람 이름만 있을 때)는 이미 아는 방 이름을 지킨다.
                 roomTitle = if (parsed.titleReliable || conv.lastMessageAt == 0L) parsed.roomTitle else conv.roomTitle,
                 isGroup = if (parsed.groupExplicit) parsed.isGroup else conv.isGroup || parsed.isGroup,
-                unreadCount = conv.unreadCount + newUnread,
+                unreadCount = unread,
+                readAt = readAt,
                 lastMessageAt = newer?.postedAt ?: conv.lastMessageAt,
                 lastSender = if (newer != null) newer.sender else conv.lastSender,
                 lastText = newer?.text ?: conv.lastText,
