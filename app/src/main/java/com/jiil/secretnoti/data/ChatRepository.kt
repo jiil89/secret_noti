@@ -285,6 +285,15 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
         dao.markReadElsewhere(packageName, roomKey, now, if (removeFromPanel) now else 0)
     }
 
+    /**
+     * 시크릿노티의 "카톡에서 열기"로 그 방을 열었다. 원래 앱에서 읽음 처리되므로 여기서도 읽음으로 본다.
+     * 알림창에서 이미 지운 알림이면 원래 앱이 방을 열어도 알림 제거 소식이 안 와서 따로 처리해야 한다.
+     */
+    suspend fun markOpenedInApp(conversationId: Long, removeFromPanel: Boolean) {
+        val now = System.currentTimeMillis()
+        dao.markOpenedInApp(conversationId, now, if (removeFromPanel) now else 0)
+    }
+
     suspend fun deleteConversation(conversationId: Long) {
         dao.imagePathsOf(conversationId).forEach { File(it).delete() }
         dao.deleteConversation(conversationId)

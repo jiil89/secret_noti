@@ -17,6 +17,7 @@ import com.jiil.secretnoti.capture.AppLauncher
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.model.AppRef
 import com.jiil.secretnoti.ui.model.ConversationUi
+import com.jiil.secretnoti.ui.model.ReadElsewhereAction
 import com.jiil.secretnoti.ui.screens.ConversationListScreen
 import com.jiil.secretnoti.ui.screens.RoomScreen
 import com.jiil.secretnoti.ui.screens.SearchScreen
@@ -98,8 +99,15 @@ fun RoomRoute(conversationId: Long, onBack: () -> Unit) {
             }
         },
         onOpenInApp = {
-            if (!AppLauncher.openConversation(context, conv.id, conv.packageName)) {
-                Toast.makeText(context, context.getString(R.string.app_not_found, conv.appLabel), Toast.LENGTH_SHORT).show()
+            when (AppLauncher.openConversation(context, conv.id, conv.packageName)) {
+                // 그 방이 열렸으면 원래 앱에서 읽음 처리된다. 알림을 이미 지웠으면 알 길이 없으니 여기서 읽음으로 둔다.
+                AppLauncher.Opened.ROOM -> scope.launch {
+                    chat.markOpenedInApp(conv.id, Prefs.readElsewhere.value == ReadElsewhereAction.REMOVE_FROM_PANEL)
+                    WidgetUpdater.request(context)
+                }
+                AppLauncher.Opened.APP -> Unit
+                AppLauncher.Opened.FAILED ->
+                    Toast.makeText(context, context.getString(R.string.app_not_found, conv.appLabel), Toast.LENGTH_SHORT).show()
             }
         },
     )

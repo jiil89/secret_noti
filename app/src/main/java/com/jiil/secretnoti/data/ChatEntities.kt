@@ -242,6 +242,16 @@ interface ChatDao {
     )
     suspend fun markReadElsewhere(packageName: String, roomKey: String, now: Long, dismissAt: Long)
 
+    /** 시크릿노티에서 원래 앱의 그 방을 열었음: 위와 같지만 대화방 id로 찾는다. */
+    @Query(
+        """
+        UPDATE conversation SET unreadCount = 0, readAt = MAX(readAt, :now),
+            panelDismissedAt = MAX(panelDismissedAt, :dismissAt)
+        WHERE id = :id
+        """,
+    )
+    suspend fun markOpenedInApp(id: Long, now: Long, dismissAt: Long)
+
     @Upsert
     suspend fun upsertSeenApp(app: SeenAppEntity)
 

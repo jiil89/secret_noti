@@ -18,8 +18,10 @@ object AppLauncher {
         contentIntents[conversationId] = intent
     }
 
-    /** 대화방 알림이 있으면 그 방으로, 없으면 앱만 연다. 원래 앱이 열리면 거기서 읽음 처리된다. */
-    fun openConversation(context: Context, conversationId: Long, packageName: String): Boolean {
+    enum class Opened { ROOM, APP, FAILED }
+
+    /** 대화방 알림이 있으면 그 방으로([Opened.ROOM]), 없으면 앱만 연다. 방이 열리면 원래 앱에서 읽음 처리된다. */
+    fun openConversation(context: Context, conversationId: Long, packageName: String): Opened {
         contentIntents[conversationId]?.let { pi ->
             val sent = runCatching {
                 val options = ActivityOptions.makeBasic()
@@ -35,11 +37,11 @@ object AppLauncher {
                 }
                 pi.send(context, 0, null, null, null, null, options.toBundle())
             }.isSuccess
-            if (sent) return true
+            if (sent) return Opened.ROOM
             contentIntents.remove(conversationId)
         }
-        val launch = context.packageManager.getLaunchIntentForPackage(packageName) ?: return false
+        val launch = context.packageManager.getLaunchIntentForPackage(packageName) ?: return Opened.FAILED
         context.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        return true
+        return Opened.APP
     }
 }
