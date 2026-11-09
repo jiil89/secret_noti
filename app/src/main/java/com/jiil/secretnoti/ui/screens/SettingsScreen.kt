@@ -1,5 +1,9 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import com.jiil.secretnoti.ui.components.MuteChannelsDialog
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
@@ -431,6 +435,14 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)) {
                     Text(stringResource(R.string.settings_screen_diagnostics), color = NotiColors.Secondary)
                 }
+                // 맨 아래 버전 (테스터가 어떤 판을 쓰는지 바로 알 수 있게).
+                val context = LocalContext.current
+                val version = remember {
+                    runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
+                }
+                if (version != null) Text(stringResource(R.string.settings_screen_version, version),
+                    Modifier.fillMaxWidth().padding(bottom = 8.dp), color = NotiColors.Secondary,
+                    style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
             }
         }
     }

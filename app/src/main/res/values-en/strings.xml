@@ -210,6 +210,7 @@
     <string name="settings_screen_backup_hint">Backups are encrypted with a password. You cannot restore them if you forget it.</string>
     <string name="settings_screen_create_backup">Create backup</string>
     <string name="settings_screen_restore_backup">Restore from backup</string>
+    <string name="settings_screen_version">Version %1$s</string>
     <string name="settings_screen_diagnostics">Diagnostics (notification dumps and gesture logs)</string>
     <string name="settings_screen_shorten_retention">Shorten the retention period?</string>
     <string name="settings_screen_delete">Delete</string>

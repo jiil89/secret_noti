@@ -208,6 +208,7 @@
     <string name="settings_screen_backup_hint">백업 파일은 비밀번호로 암호화돼요. 비밀번호를 잊으면 복원할 수 없어요.</string>
     <string name="settings_screen_create_backup">백업 파일 만들기</string>
     <string name="settings_screen_restore_backup">백업에서 복원</string>
+    <string name="settings_screen_version">버전 %1$s</string>
     <string name="settings_screen_diagnostics">진단 도구 (알림 덤프·제스처 기록)</string>
     <string name="settings_screen_shorten_retention">보관 기간을 줄일까요?</string>
     <string name="settings_screen_delete">지우기</string>
