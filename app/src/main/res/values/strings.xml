@@ -345,6 +345,6 @@
     <string name="settings_badge_style_dot">점만</string>
     <string name="settings_badge_style_dot_hint">몇 개인지 대신 새 메시지가 있다는 것만 작은 점으로 알려요.</string>
     <plurals name="settings_channels_muted">
-        <item quantity="other">채널 대화방 %1$d개의 저장을 끌었어요</item>
+        <item quantity="other">채널 대화방 %1$d개의 저장을 껐어요</item>
     </plurals>
 </resources>
