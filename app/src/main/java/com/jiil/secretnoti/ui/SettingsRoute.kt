@@ -27,6 +27,8 @@ import com.jiil.secretnoti.data.WrongPasswordException
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.model.AppSettingUi
 import com.jiil.secretnoti.ui.model.BadgeStyle
+import com.jiil.secretnoti.ui.model.PreviewLines
+import com.jiil.secretnoti.ui.model.TextSize
 import com.jiil.secretnoti.ui.model.HandleSize
 import com.jiil.secretnoti.ui.model.ReadElsewhereAction
 import com.jiil.secretnoti.ui.model.SettingsActions
@@ -75,6 +77,8 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
     val keywords by Prefs.keywords.flow.collectAsStateWithLifecycle()
     val themeMode by Prefs.themeMode.flow.collectAsStateWithLifecycle()
     val panelWidth by Prefs.panelWidthDp.flow.collectAsStateWithLifecycle()
+    val textSize by Prefs.textSize.flow.collectAsStateWithLifecycle()
+    val previewLines by Prefs.previewLines.flow.collectAsStateWithLifecycle()
     val muted by remember { chat.observeMutedConversations() }.collectAsStateWithLifecycle(emptyList())
     val readElsewhere by Prefs.readElsewhere.flow.collectAsStateWithLifecycle()
     val autoMuteAds by Prefs.autoMuteAds.flow.collectAsStateWithLifecycle()
@@ -143,6 +147,8 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
         hiddenConversations = hidden,
         themeMode = themeMode,
         panelWidthDp = panelWidth,
+        textSize = textSize,
+        previewLines = previewLines,
         mutedConversations = muted,
         readElsewhereAction = readElsewhere,
         autoMuteAds = autoMuteAds,
@@ -197,6 +203,8 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
             }
             override fun setThemeMode(mode: ThemeMode) { Prefs.themeMode.value = mode }
             override fun setPanelWidth(dp: Int) { Prefs.panelWidthDp.value = dp }
+            override fun setTextSize(size: TextSize) { Prefs.textSize.value = size }
+            override fun setPreviewLines(lines: PreviewLines) { Prefs.previewLines.value = lines }
             override fun unmuteConversation(id: Long) {
                 scope.launch { chat.unmute(id); WidgetUpdater.request(context) }
             }

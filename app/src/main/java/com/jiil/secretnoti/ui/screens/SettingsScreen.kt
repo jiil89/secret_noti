@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.jiil.secretnoti.ui.components.AppIcon
+import com.jiil.secretnoti.ui.components.ConversationRow
 import com.jiil.secretnoti.ui.components.GlowColorPicker
 import com.jiil.secretnoti.ui.design.*
 import com.jiil.secretnoti.ui.model.*
@@ -365,6 +366,29 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                                 modifier = Modifier.heightIn(min = NotiSpacing.button)) { Text(stringResource(mode.labelRes)) }
                         }
                     }
+                    Text(stringResource(R.string.settings_text_size), style = MaterialTheme.typography.titleSmall)
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        TextSize.entries.forEachIndexed { index, size ->
+                            SegmentedButton(selected = state.textSize == size, onClick = { actions.setTextSize(size) },
+                                shape = SegmentedButtonDefaults.itemShape(index, TextSize.entries.size), icon = {},
+                                modifier = Modifier.heightIn(min = NotiSpacing.button)) {
+                                Text(stringResource(size.labelRes), maxLines = 1, softWrap = false)
+                            }
+                        }
+                    }
+                    SettingsHelper(stringResource(R.string.settings_text_size_hint))
+                    Text(stringResource(R.string.settings_preview_lines), style = MaterialTheme.typography.titleSmall)
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        PreviewLines.entries.forEachIndexed { index, lines ->
+                            SegmentedButton(selected = state.previewLines == lines, onClick = { actions.setPreviewLines(lines) },
+                                shape = SegmentedButtonDefaults.itemShape(index, PreviewLines.entries.size), icon = {},
+                                modifier = Modifier.heightIn(min = NotiSpacing.button)) {
+                                Text(stringResource(lines.labelRes), maxLines = 1, softWrap = false)
+                            }
+                        }
+                    }
+                    SettingsHelper(stringResource(R.string.settings_preview_lines_hint))
+                    TextSizePreview(state.previewLines)
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_retention)) {
@@ -434,6 +458,26 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     modifier = Modifier.heightIn(min = NotiSpacing.button)) { Text(stringResource(R.string.settings_screen_cancel)) }
             },
         )
+    }
+}
+
+/** 글자 크기·줄 수를 고르면 바로 바뀌는 대화방 한 줄 미리보기 (설정 화면도 같은 배율이 적용된다). */
+@Composable
+private fun TextSizePreview(previewLines: PreviewLines) {
+    val sample = ConversationUi(
+        id = -1, source = com.jiil.secretnoti.capture.Source.KAKAO, packageName = "com.kakao.talk",
+        appLabel = stringResource(R.string.source_kakao), title = stringResource(R.string.settings_text_preview_name),
+        isGroup = false, lastSender = null, preview = stringResource(R.string.settings_text_preview_message),
+        lastAt = System.currentTimeMillis() - 3 * 60_000, unread = 2,
+    )
+    Surface(shape = NotiShapes.banner, color = NotiColors.DetailBackground) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+            SettingsHelper(stringResource(R.string.settings_text_preview))
+            Surface(shape = NotiShapes.banner, color = NotiColors.Background, modifier = Modifier.padding(top = 6.dp)) {
+                ConversationRow(sample, onClick = {}, modifier = Modifier.padding(horizontal = 8.dp),
+                    maxLines = previewLines.lines.takeIf { it > 0 } ?: 2)
+            }
+        }
     }
 }
 

@@ -30,6 +30,22 @@ enum class BadgeStyle(@StringRes val labelRes: Int) {
     DOT(R.string.settings_badge_style_dot),
 }
 
+/** 패널·앱 화면의 글자 크기. 휴대폰 글자 크기 설정에 곱한다. */
+enum class TextSize(@StringRes val labelRes: Int, val scale: Float) {
+    SMALL(R.string.settings_text_size_small, 0.9f),
+    NORMAL(R.string.settings_text_size_normal, 1f),
+    LARGE(R.string.settings_text_size_large, 1.15f),
+    XLARGE(R.string.settings_text_size_xlarge, 1.3f),
+}
+
+/** 대화방 목록의 마지막 메시지 미리보기 줄 수. 0(자동)은 패널 폭에 따라 2~3줄. */
+enum class PreviewLines(@StringRes val labelRes: Int, val lines: Int) {
+    AUTO(R.string.settings_preview_lines_auto, 0),
+    ONE(R.string.settings_preview_lines_one, 1),
+    TWO(R.string.settings_preview_lines_two, 2),
+    THREE(R.string.settings_preview_lines_three, 3),
+}
+
 /** 보관 기간 선택지(일). 0은 기간 없이 계속 보관. */
 val RETENTION_OPTIONS = listOf(7, 30, 90, 180, 365, 0)
 
@@ -79,6 +95,8 @@ data class SettingsUi(
     val themeMode: ThemeMode,
     /** 엣지패널 폭(dp). 프리셋 값이 아니면 사용자가 끌어서 맞춘 폭. */
     val panelWidthDp: Int,
+    val textSize: TextSize,
+    val previewLines: PreviewLines,
     /** 저장을 끈 대화방 (다시 켤 수 있게 보여준다). */
     val mutedConversations: List<ConversationUi>,
     val readElsewhereAction: ReadElsewhereAction,
@@ -124,6 +142,8 @@ interface SettingsActions {
     fun unhideConversation(id: Long)
     fun setThemeMode(mode: ThemeMode)
     fun setPanelWidth(dp: Int)
+    fun setTextSize(size: TextSize)
+    fun setPreviewLines(lines: PreviewLines)
     fun unmuteConversation(id: Long)
     fun setReadElsewhereAction(action: ReadElsewhereAction)
     fun setAutoMuteAds(enabled: Boolean)

@@ -7,6 +7,8 @@ import com.jiil.secretnoti.capture.TargetApps
 import com.jiil.secretnoti.ui.model.BadgeStyle
 import com.jiil.secretnoti.ui.model.HandleSize
 import com.jiil.secretnoti.ui.model.PanelWidth
+import com.jiil.secretnoti.ui.model.PreviewLines
+import com.jiil.secretnoti.ui.model.TextSize
 import com.jiil.secretnoti.ui.model.ReadElsewhereAction
 import com.jiil.secretnoti.ui.model.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,12 +71,14 @@ object Prefs {
     val glowUsesAppColor = bool("glow_uses_app_color", false)
     val glowColor = int("glow_color", 0xFF2558E8.toInt())
     val peekBubble = bool("peek_bubble", false)
+    val textSize = enum("text_size", TextSize.NORMAL)
+    val previewLines = enum("preview_lines", PreviewLines.AUTO)
 
     private val all = listOf(
         overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, dumpAllApps, lastPanelOpenedAt,
         retentionDays, lastCleanupAt, enabledApps, lockEnabled, hidePreviews, deletionAlerts, savePhotos,
         keywords, themeMode, readElsewhere, autoMuteAds, autoMuteChannels, channelBackfillDone, indicatorBadge, badgeStyle, indicatorGlow, glowUsesAppColor, glowColor,
-        peekBubble,
+        peekBubble, textSize, previewLines,
     )
 
     fun init(context: Context) {

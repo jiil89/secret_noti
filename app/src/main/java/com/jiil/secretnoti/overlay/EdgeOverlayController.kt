@@ -106,7 +106,7 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         root.addView(
             ComposeView(context).apply {
                 setContent {
-                    NotiTheme(Prefs.themeMode.value) {
+                    NotiTheme(Prefs.themeMode.value, Prefs.textSize.value, Prefs.previewLines.value) {
                         PeekBubble(event.title, event.text, event.packageName, onLeft) {
                             hidePeek()
                             openPanel()
@@ -186,7 +186,7 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         root.addView(
             ComposeView(context).apply {
                 setContent {
-                    NotiTheme(Prefs.themeMode.value) {
+                    NotiTheme(Prefs.themeMode.value, Prefs.textSize.value, Prefs.previewLines.value) {
                         PanelContent(
                             onLeft = Prefs.handleOnLeft.value,
                             onClose = ::closePanel,

@@ -52,6 +52,21 @@
     <string name="messages_photo_close">닫기</string>
     <string name="time_today">오늘</string>
     <string name="time_yesterday">어제</string>
+    <string name="settings_text_size">글자 크기</string>
+    <string name="settings_text_size_small">작게</string>
+    <string name="settings_text_size_normal">보통</string>
+    <string name="settings_text_size_large">크게</string>
+    <string name="settings_text_size_xlarge">아주 크게</string>
+    <string name="settings_text_size_hint">패널과 앱 화면의 글자만 커지고 작아져요. 휴대폰 글자 크기 설정에 곱해서 적용돼요.</string>
+    <string name="settings_preview_lines">미리보기 줄 수</string>
+    <string name="settings_preview_lines_auto">자동</string>
+    <string name="settings_preview_lines_one">1줄</string>
+    <string name="settings_preview_lines_two">2줄</string>
+    <string name="settings_preview_lines_three">3줄</string>
+    <string name="settings_preview_lines_hint">대화방 목록에서 마지막 메시지를 몇 줄까지 보여줄지 정해요. 자동은 패널 폭에 따라 2~3줄이에요.</string>
+    <string name="settings_text_preview">미리보기</string>
+    <string name="settings_text_preview_name">친구</string>
+    <string name="settings_text_preview_message">오늘 저녁 어디서 볼까? 7시쯤 괜찮으면 역 앞 카페에서 만나자. 늦으면 연락해 줘!</string>
     <plurals name="messages_unread">
         <item quantity="other">이 앱에서 확인하지 않은 메시지 %1$d개</item>
     </plurals>

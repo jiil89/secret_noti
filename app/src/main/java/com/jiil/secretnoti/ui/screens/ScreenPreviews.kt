@@ -146,6 +146,7 @@ private fun sampleSettings() = SettingsUi(
     notificationPermission = false, savePhotos = true, keywords = listOf(stringResource(R.string.screen_preview_friday), stringResource(R.string.screen_preview_place)),
     hiddenConversations = sampleConversations().take(1), themeMode = ThemeMode.SYSTEM,
     panelWidthDp = PanelWidth.NORMAL.dp,
+    textSize = TextSize.NORMAL, previewLines = PreviewLines.AUTO,
     mutedConversations = sampleMutedConversations(),
     readElsewhereAction = ReadElsewhereAction.REMOVE_FROM_PANEL,
     autoMuteAds = false, autoMuteChannels = false,
@@ -181,6 +182,8 @@ private object PreviewSettingsActions : SettingsActions {
     override fun muteAllChannels(deleteExisting: Boolean) {}
     override fun setIndicatorBadge(enabled: Boolean) {}
     override fun setBadgeStyle(style: BadgeStyle) {}
+    override fun setTextSize(size: TextSize) {}
+    override fun setPreviewLines(lines: PreviewLines) {}
     override fun setIndicatorGlow(enabled: Boolean) {}
     override fun setGlowUsesAppColor(enabled: Boolean) {}
     override fun setGlowColor(argb: Int) {}

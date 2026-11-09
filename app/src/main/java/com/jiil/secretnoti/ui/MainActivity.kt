@@ -45,7 +45,9 @@ class MainActivity : FragmentActivity() {
 
         setContent {
             val theme by Prefs.themeMode.flow.collectAsState()
-            NotiTheme(theme) {
+            val textSize by Prefs.textSize.flow.collectAsState()
+            val previewLines by Prefs.previewLines.flow.collectAsState()
+            NotiTheme(theme, textSize, previewLines) {
                 val locked by AppLock.locked.collectAsState()
                 if (locked && AppLock.isActive(this)) {
                     LockGate(this)

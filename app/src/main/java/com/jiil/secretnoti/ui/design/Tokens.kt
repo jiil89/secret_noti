@@ -78,6 +78,9 @@ val NotiDarkPalette = NotiPalette(
 
 val LocalNotiPalette = staticCompositionLocalOf { NotiLightPalette }
 
+/** 대화방 목록 미리보기 줄 수. 0이면 화면이 정한 기본값(자동). */
+val LocalPreviewLines = staticCompositionLocalOf { 0 }
+
 object NotiColors {
     val Text: Color @Composable get() = LocalNotiPalette.current.Text
     val Secondary: Color @Composable get() = LocalNotiPalette.current.Secondary

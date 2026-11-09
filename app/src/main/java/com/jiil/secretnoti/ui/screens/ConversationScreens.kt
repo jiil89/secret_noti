@@ -238,6 +238,7 @@ private fun ConversationItems(
     onUnmute: ((Long) -> Unit)? = null,
 ) {
     val dismissLabel = stringResource(R.string.panel_dismiss)
+    val lines = LocalPreviewLines.current.takeIf { it > 0 } ?: maxLines
     // 앱을 새로 열면 다시 접힌 상태 (같은 화면 안에서는 회전 등에도 유지).
     var mutedExpanded by rememberSaveable { mutableStateOf(false) }
     if (conversations.isEmpty() && mutedConversations.isEmpty()) {
@@ -266,7 +267,7 @@ private fun ConversationItems(
                                 if (onDismiss != null) customActions = listOf(
                                     CustomAccessibilityAction(dismissLabel) { onDismiss(conversation.id); true })
                             },
-                            maxLines = maxLines, onLongClick = { menuOpen = true },
+                            maxLines = lines, onLongClick = { menuOpen = true },
                             onMute = { onMute(conversation) })
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             if (onDismiss != null) DropdownMenuItem(text = { Text(dismissLabel) },
@@ -332,7 +333,7 @@ private fun ConversationItems(
                     var menuOpen by remember { mutableStateOf(false) }
                     Box {
                         ConversationRow(conversation, onClick = { onOpenConversation(conversation.id) },
-                            maxLines = maxLines, onLongClick = { menuOpen = true })
+                            maxLines = lines, onLongClick = { menuOpen = true })
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             if (onUnmute != null) DropdownMenuItem(
                                 text = { Text(stringResource(R.string.conversation_unmute)) },
