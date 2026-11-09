@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -38,7 +39,7 @@ fun RoomScreen(
     onMute: (deleteExisting: Boolean) -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    var muteDialog by remember { mutableStateOf(false) }
+    var muteDialog by rememberSaveable { mutableStateOf(false) }
     val ordered = remember(messages) { messages.sortedBy { it.at } }
     val firstInRunIds = remember(ordered) {
         ordered.filterIndexed { index, message ->
@@ -80,7 +81,7 @@ fun RoomScreen(
                     }
                 }
                 Box {
-                    IconButton(onClick = { menuOpen = true }) {
+                    IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(NotiSpacing.button)) {
                         Icon(NotiIcons.more, stringResource(R.string.conversation_more))
                     }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
@@ -110,12 +111,12 @@ fun RoomScreen(
             }
             Column(Modifier.background(NotiColors.Background)) {
                 HorizontalDivider(color = NotiColors.Divider)
-                Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
+                Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.room_screen_reply_hint, appLabel),
                         Modifier.fillMaxWidth(), color = NotiColors.Secondary,
                         style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
-                    OutlinedButton(onOpenInApp, Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    OutlinedButton(onOpenInApp, Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button),
                         shape = NotiShapes.banner, border = BorderStroke(1.dp, NotiColors.Outline),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = NotiColors.Text)) {
                         Text(stringResource(R.string.room_screen_open, appLabel), style = MaterialTheme.typography.labelLarge)

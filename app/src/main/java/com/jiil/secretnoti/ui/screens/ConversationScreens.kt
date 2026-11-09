@@ -24,6 +24,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -72,8 +74,11 @@ fun EdgePanel(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(stringResource(R.string.conversations_recent), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                        if (conversations.isNotEmpty()) TextButton(onClick = onDismissAll) {
-                            Text(stringResource(R.string.panel_clear_all))
+                        if (conversations.isNotEmpty()) TextButton(onClick = onDismissAll,
+                            modifier = Modifier.heightIn(min = NotiSpacing.button),
+                            contentPadding = PaddingValues(horizontal = 8.dp)) {
+                            Text(stringResource(R.string.panel_clear_all), color = NotiColors.Secondary,
+                                style = MaterialTheme.typography.labelLarge)
                         }
                     }
                     NoticeChip()
@@ -177,8 +182,10 @@ fun ConversationListScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(stringResource(R.string.conversations_all_messages), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                IconButton(onClick = onOpenSearch) { Icon(NotiIcons.search, stringResource(R.string.conversations_search)) }
-                SettingsButton(onOpenSettings)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HeaderButton(NotiIcons.search, stringResource(R.string.conversations_search), onOpenSearch)
+                    SettingsButton(onOpenSettings)
+                }
             }
             NoticeChip()
             Spacer(Modifier.height(14.dp))
@@ -230,10 +237,11 @@ private fun ConversationItems(
             if (onDismiss == null) EmptyConversations()
             else Column(horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.panel_all_read), style = MaterialTheme.typography.titleMedium)
+                Icon(NotiIcons.message, null, Modifier.size(28.dp), tint = NotiColors.Secondary)
+                Text(stringResource(R.string.panel_all_read), style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center)
                 Text(stringResource(R.string.panel_all_read_hint), color = NotiColors.Secondary,
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
             }
         }
     } else {
@@ -333,8 +341,13 @@ private fun ConversationItems(
 }
 
 @Composable
-private fun SettingsButton(onClick: () -> Unit) {
+private fun SettingsButton(onClick: () -> Unit) =
+    HeaderButton(NotiIcons.sliders, stringResource(R.string.conversations_settings), onClick)
+
+/** 화면 머리의 동그란 아이콘 버튼 (48dp 터치, 옅은 배경). */
+@Composable
+private fun HeaderButton(icon: ImageVector, description: String, onClick: () -> Unit) {
     IconButton(onClick, Modifier.size(NotiSpacing.button).background(NotiColors.DetailBackground, NotiShapes.pill)) {
-        Icon(NotiIcons.sliders, stringResource(R.string.conversations_settings), Modifier.size(20.dp), tint = NotiColors.Body)
+        Icon(icon, description, Modifier.size(20.dp), tint = NotiColors.Body)
     }
 }

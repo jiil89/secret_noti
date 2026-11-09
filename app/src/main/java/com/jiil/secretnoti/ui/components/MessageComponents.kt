@@ -33,6 +33,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,7 +69,8 @@ fun UnreadBadge(count: Int, modifier: Modifier = Modifier) {
         .clearAndSetSemantics { contentDescription = description },
         contentAlignment = Alignment.Center) {
         Text(if (count > 99) stringResource(R.string.messages_badge_overflow) else count.toString(), color = NotiColors.OnAccent,
-            style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            style = MaterialTheme.typography.labelSmall.copy(lineHeightStyle = SingleLineCentered),
+            fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 
@@ -128,7 +131,7 @@ fun NoticeBanner(modifier: Modifier = Modifier) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun ConversationRow(
     conversation: ConversationUi,
@@ -167,25 +170,27 @@ fun ConversationRow(
                 Text(formatRelativeTime(LocalContext.current, conversation.lastAt), style = MaterialTheme.typography.labelSmall,
                     color = NotiColors.Secondary)
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val preview = if (conversation.isMuted && !conversation.hasRecords) stringResource(R.string.conversation_records_deleted)
-                else if (conversation.previewHidden) stringResource(R.string.preview_locked)
-                else if (conversation.isGroup && !conversation.isChannel)
-                    stringResource(R.string.messages_sender_preview, conversation.lastSender?.takeIf { it.isNotBlank() } ?: stringResource(R.string.me), conversation.preview)
-                else conversation.preview
-                val sender = conversation.lastSender?.takeIf { it.isNotBlank() } ?: stringResource(R.string.me)
-                val senderStart = preview.indexOf(sender)
-                val styledPreview = if (conversation.isGroup && !conversation.isChannel && !conversation.previewHidden &&
-                    !(conversation.isMuted && !conversation.hasRecords) && senderStart >= 0) {
-                    AnnotatedString(preview, listOf(AnnotatedString.Range(
-                        SpanStyle(fontWeight = FontWeight.Bold), senderStart, senderStart + sender.length)))
-                } else AnnotatedString(preview)
-                Text(styledPreview, Modifier.weight(1f), color = if (conversation.previewHidden || (conversation.isMuted && !conversation.hasRecords)) NotiColors.Secondary else NotiColors.Body,
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+                val recordsGone = conversation.isMuted && !conversation.hasRecords
+                val dimmed = recordsGone || conversation.previewHidden
+                val me = stringResource(R.string.me)
+                // 단톡은 "보낸 사람: 내용"으로, 보낸 사람만 굵게. 번역 문구의 %1$s 자리를 찾아 그 부분만 강조한다.
+                val senderTemplate = stringResource(R.string.messages_sender_preview, "\u0000", "\u0001")
+                val preview = when {
+                    recordsGone -> AnnotatedString(stringResource(R.string.conversation_records_deleted))
+                    conversation.previewHidden -> AnnotatedString(stringResource(R.string.preview_locked))
+                    conversation.isGroup && !conversation.isChannel -> senderPreview(senderTemplate,
+                        conversation.lastSender?.takeIf { it.isNotBlank() } ?: me, conversation.preview)
+                    else -> AnnotatedString(conversation.preview)
+                }
+                Text(preview, Modifier.weight(1f), color = if (dimmed) NotiColors.Secondary else NotiColors.Body,
                     style = MaterialTheme.typography.bodyMedium, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
-                UnreadBadge(conversation.unread)
+                UnreadBadge(conversation.unread, Modifier.padding(top = 1.dp))
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                SourceLabel(conversation.appLabel, Modifier.weight(1f, fill = false))
+            // 꼬리표가 많아 한 줄을 넘기면 다음 줄로 넘긴다 (좁은 패널에서도 잘리지 않게).
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp),
+                itemVerticalAlignment = Alignment.CenterVertically) {
+                SourceLabel(conversation.appLabel)
                 if (conversation.isChannel) {
                     MessageTag(stringResource(R.string.conversation_channel_tag), TagTone.Channel)
                 } else if (conversation.isGroup && conversation.senderCount >= 2) {
@@ -286,7 +291,7 @@ fun MessageBubble(
                             style = MaterialTheme.typography.bodyLarge)
                     }
                 }
-                if (!message.isMine && !message.deletedBySender) {
+                if (!message.isMine) {
                     Spacer(Modifier.width(6.dp))
                     Text(formatClockTime(message.at), color = NotiColors.Secondary,
                         style = MaterialTheme.typography.labelSmall)
@@ -301,8 +306,26 @@ fun DateDivider(date: LocalDate, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Text(formatDateLabel(LocalContext.current, date), Modifier.background(NotiColors.Divider, NotiShapes.pill)
             .padding(horizontal = 12.dp, vertical = 4.dp),
-            color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall)
+            color = NotiColors.Secondary,
+            style = MaterialTheme.typography.bodySmall.copy(lineHeightStyle = SingleLineCentered))
     }
+}
+
+/** "%1$s: %2$s" 같은 번역 문구에 보낸 사람·내용을 넣고, 보낸 사람 부분만 굵게 만든다. */
+private fun senderPreview(template: String, sender: String, text: String): AnnotatedString = buildAnnotatedString {
+    val s = template.indexOf('\u0000')
+    val t = template.indexOf('\u0001')
+    if (s < 0 || t < 0) {
+        append(template.replace("\u0000", sender).replace("\u0001", text))
+        return@buildAnnotatedString
+    }
+    var i = 0
+    for ((pos, isSender) in listOf(s to true, t to false).sortedBy { it.first }) {
+        append(template.substring(i, pos))
+        if (isSender) withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(sender) } else append(text)
+        i = pos + 1
+    }
+    append(template.substring(i))
 }
 
 @Composable

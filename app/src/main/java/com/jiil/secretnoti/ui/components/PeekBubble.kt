@@ -1,4 +1,4 @@
-﻿package com.jiil.secretnoti.ui.components
+package com.jiil.secretnoti.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -81,7 +81,7 @@ fun PeekBubble(title: String, text: String, packageName: String, onLeftSide: Boo
         Column(Modifier.weight(1f, fill = false).clearAndSetSemantics {}) {
             Text(title, color = Color.White, fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(text, color = Color.White, style = MaterialTheme.typography.bodySmall,
+            Text(text, color = Color.White.copy(alpha = 0.82f), style = MaterialTheme.typography.bodySmall,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }

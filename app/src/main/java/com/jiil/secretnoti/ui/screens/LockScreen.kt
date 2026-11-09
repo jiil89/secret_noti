@@ -21,9 +21,12 @@ fun LockScreen(onUnlock: () -> Unit, error: String?) {
             Spacer(Modifier.height(24.dp))
             Text(stringResource(R.string.lock_screen_app_name), style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(8.dp))
-            Text(stringResource(R.string.lock_screen_locked), color = NotiColors.Secondary)
+            Text(stringResource(R.string.lock_screen_locked), color = NotiColors.Secondary, textAlign = TextAlign.Center)
             Spacer(Modifier.height(24.dp))
-            Button(onClick = onUnlock, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.lock_screen_unlock)) }
+            Button(onClick = onUnlock, shape = NotiShapes.banner,
+                modifier = Modifier.widthIn(min = 200.dp).heightIn(min = NotiSpacing.button)) {
+                Text(stringResource(R.string.lock_screen_unlock), style = MaterialTheme.typography.labelLarge)
+            }
             if (error != null) Text(error, Modifier.padding(top = 16.dp),
                 color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
         }

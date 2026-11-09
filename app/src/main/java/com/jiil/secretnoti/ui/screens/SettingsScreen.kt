@@ -11,7 +11,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import com.jiil.secretnoti.R
 
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.Canvas
@@ -102,7 +105,8 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 AppIcon(conversation.packageName, 24.dp)
                                 Column(Modifier.weight(1f)) {
-                                    Text(conversation.title, style = MaterialTheme.typography.bodyLarge)
+                                    Text(conversation.title, style = MaterialTheme.typography.bodyLarge,
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     SettingsHelper(stringResource(if (conversation.hasRecords) R.string.settings_muted_records_kept
                                         else R.string.settings_muted_records_deleted, conversation.appLabel))
                                 }
@@ -295,12 +299,17 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         Text(stringResource(R.string.settings_screen_hidden), style = MaterialTheme.typography.titleSmall)
                         state.hiddenConversations.forEach { conversation ->
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                AppIcon(conversation.packageName, 24.dp)
                                 Column(Modifier.weight(1f)) {
-                                    Text(conversation.title, style = MaterialTheme.typography.bodyLarge)
+                                    Text(conversation.title, style = MaterialTheme.typography.bodyLarge,
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     SettingsHelper(conversation.appLabel)
                                 }
-                                TextButton(onClick = { actions.unhideConversation(conversation.id) }) { Text(stringResource(R.string.settings_screen_unhide)) }
+                                TextButton(onClick = { actions.unhideConversation(conversation.id) },
+                                    modifier = Modifier.heightIn(min = NotiSpacing.button)) {
+                                    Text(stringResource(R.string.settings_screen_unhide))
+                                }
                             }
                         }
                     }
@@ -317,10 +326,12 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         }
                     }
                 }
+                HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_photos)) {
                     SettingsSwitchRow(stringResource(R.string.settings_screen_save_photos), state.savePhotos, actions::setSavePhotos,
                         detail = stringResource(R.string.settings_screen_photos_hint))
                 }
+                HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_keywords)) {
                     SettingsHelper(stringResource(R.string.settings_screen_keywords_hint))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -332,21 +343,26 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                                 trailingIcon = { Icon(NotiIcons.close, null, Modifier.size(16.dp)) })
                         }
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val canAdd = keyword.isNotBlank() && state.keywords.none { it.equals(keyword.trim(), ignoreCase = true) }
+                    val addKeyword = { if (canAdd) { actions.addKeyword(keyword.trim()); keyword = "" } }
+                    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(keyword, { keyword = it }, Modifier.weight(1f),
-                            label = { Text(stringResource(R.string.settings_screen_keywords)) }, singleLine = true)
-                        Button(onClick = { actions.addKeyword(keyword.trim()); keyword = "" },
-                            enabled = keyword.isNotBlank() && state.keywords.none { it.equals(keyword.trim(), ignoreCase = true) }) {
+                            label = { Text(stringResource(R.string.settings_screen_keywords)) }, singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { addKeyword() }))
+                        Button(onClick = addKeyword, enabled = canAdd, shape = NotiShapes.banner,
+                            modifier = Modifier.height(56.dp)) {
                             Text(stringResource(R.string.settings_screen_add))
                         }
                     }
                 }
+                HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_appearance)) {
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         ThemeMode.entries.forEachIndexed { index, mode ->
                             SegmentedButton(selected = state.themeMode == mode, onClick = { actions.setThemeMode(mode) },
                                 shape = SegmentedButtonDefaults.itemShape(index, ThemeMode.entries.size), icon = {},
-                                modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(mode.labelRes)) }
+                                modifier = Modifier.heightIn(min = NotiSpacing.button)) { Text(stringResource(mode.labelRes)) }
                         }
                     }
                 }
@@ -375,12 +391,15 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     }
                     SettingsHelper(stringResource(R.string.settings_screen_retention_hint))
                 }
+                HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_backup)) {
                     SettingsHelper(stringResource(R.string.settings_screen_backup_hint))
-                    OutlinedButton(onClick = { passwordDialog = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                    OutlinedButton(onClick = { passwordDialog = true }, shape = NotiShapes.banner,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)) {
                         Text(stringResource(R.string.settings_screen_create_backup))
                     }
-                    OutlinedButton(onClick = { passwordDialog = false }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                    OutlinedButton(onClick = { passwordDialog = false }, shape = NotiShapes.banner,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)) {
                         Text(stringResource(R.string.settings_screen_restore_backup))
                     }
                 }
@@ -482,7 +501,7 @@ private fun SettingsPermissions(permissions: PermissionSummaryUi, onOpenPermissi
                     color = if (permissions.allGranted) NotiColors.Body else NotiColors.NoticeForeground)
             }
             if (!permissions.allGranted) {
-                Text(stringResource(R.string.settings_screen_missing_permissions, missing.joinToString(" / ")),
+                Text(stringResource(R.string.settings_screen_missing_permissions, missing.joinToString(", ")),
                     style = MaterialTheme.typography.bodyMedium, color = NotiColors.NoticeForeground)
                 TextButton(onClick = onOpenPermissions, modifier = Modifier.heightIn(min = NotiSpacing.button)) {
                     Text(stringResource(R.string.settings_screen_permissions_settings), color = NotiColors.NoticeForeground)

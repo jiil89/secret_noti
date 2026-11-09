@@ -28,6 +28,8 @@ import com.jiil.secretnoti.ui.design.*
 import com.jiil.secretnoti.capture.KakaoEmoticons
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -118,12 +120,16 @@ fun MessagePhoto(path: String, sticker: Boolean = false) {
         val maxH = if (sticker) 140f else 300f
         val (w, h) = if (ratio >= maxW / maxH) maxW to maxW / ratio else maxH * ratio to maxH
         Image(bitmap, stringResource(R.string.messages_photo_expand), Modifier.size(w.dp, h.dp)
-            .clip(NotiShapes.banner).clickable { expanded = true },
+            .clip(NotiShapes.banner).clickable(role = Role.Image) { expanded = true },
             contentScale = if (sticker) ContentScale.Fit else ContentScale.Crop)
     } else {
-        Text(if (photo.loading) stringResource(R.string.messages_photo_loading) else stringResource(R.string.messages_photo_unavailable),
-            Modifier.padding(vertical = 16.dp), color = NotiColors.Secondary,
-            style = MaterialTheme.typography.bodyMedium)
+        // 불러오는 동안에도 자리를 잡아 두어 말풍선 크기가 덜 흔들리게 한다.
+        Box(Modifier.size(if (sticker) 140.dp else 200.dp, if (sticker) 140.dp else 150.dp)
+            .background(NotiColors.DetailBackground, NotiShapes.banner), contentAlignment = Alignment.Center) {
+            Text(if (photo.loading) stringResource(R.string.messages_photo_loading) else stringResource(R.string.messages_photo_unavailable),
+                Modifier.padding(12.dp), color = NotiColors.Secondary,
+                style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+        }
     }
     if (expanded) {
         Dialog(onDismissRequest = { expanded = false }, properties = DialogProperties(

@@ -7,8 +7,14 @@ import com.jiil.secretnoti.R
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.Role
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,15 +35,28 @@ fun SearchScreen(
     keywords: List<String>, onOpenResult: (conversationId: Long) -> Unit, onBack: () -> Unit,
 ) {
     val focus = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
     val q = query.trim()
     LaunchedEffect(Unit) { focus.requestFocus() }
     Surface(color = NotiColors.Background) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
-            Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) { Icon(NotiIcons.chevronLeft, stringResource(R.string.search_screen_back)) }
-                TextField(query, onQueryChange, Modifier.weight(1f).focusRequester(focus),
+            Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack, modifier = Modifier.size(NotiSpacing.button)) {
+                    Icon(NotiIcons.chevronLeft, stringResource(R.string.search_screen_back), tint = NotiColors.Body)
+                }
+                TextField(query, onQueryChange, Modifier.weight(1f).padding(end = 12.dp).focusRequester(focus),
                     placeholder = { Text(stringResource(R.string.search_screen_placeholder)) }, singleLine = true,
+                    shape = NotiShapes.banner,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = NotiColors.DetailBackground,
+                        unfocusedContainerColor = NotiColors.DetailBackground,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    ),
+                    leadingIcon = { Icon(NotiIcons.search, null, Modifier.size(20.dp), tint = NotiColors.Secondary) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
                     trailingIcon = {
                         if (query.isNotEmpty()) IconButton(onClick = { onQueryChange("") }) {
                             Icon(NotiIcons.close, stringResource(R.string.search_screen_clear))
@@ -46,35 +65,46 @@ fun SearchScreen(
             }
             if (q.isEmpty() || results.isEmpty()) {
                 Box(Modifier.weight(1f).fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    Text(if (q.isEmpty()) stringResource(R.string.search_screen_hint)
-                        else stringResource(R.string.search_screen_no_results, q), color = NotiColors.Secondary,
-                        textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyLarge)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(NotiIcons.search, null, Modifier.size(28.dp), tint = NotiColors.Secondary)
+                        Text(if (q.isEmpty()) stringResource(R.string.search_screen_hint)
+                            else stringResource(R.string.search_screen_no_results, q), color = NotiColors.Secondary,
+                            textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyLarge)
+                    }
                 }
             } else {
-                LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(results, key = { it.messageId }) { result ->
-                        Column(Modifier.fillMaxWidth().clickable { onOpenResult(result.conversationId) }
-                            .padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                AppIcon(result.packageName, 24.dp)
-                                Text(result.roomTitle, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
-                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text(formatRelativeTime(LocalContext.current, result.at), color = NotiColors.Secondary,
-                                    style = MaterialTheme.typography.labelSmall)
-                            }
-                            SourceLabel(result.appLabel)
-                            Text(highlightedText(if (result.isMine) stringResource(R.string.search_screen_me) else result.sender ?: stringResource(R.string.search_screen_unknown_sender), keywords + q),
-                                style = MaterialTheme.typography.labelMedium, color = NotiColors.Secondary)
-                            val snippet = remember(result.text, q) { searchSnippet(result.text, q) }
-                            Text(highlightedText(snippet, keywords + q), color = NotiColors.Body,
-                                style = MaterialTheme.typography.bodyLarge, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                            if (result.deletedBySender) MessageTag(stringResource(R.string.search_screen_deleted))
-                            HorizontalDivider(Modifier.padding(top = 8.dp), color = NotiColors.Divider)
-                        }
+                LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) {
+                    itemsIndexed(results, key = { _, it -> it.messageId }) { index, result ->
+                        if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 4.dp), color = NotiColors.Divider)
+                        SearchResultRow(result, q, keywords) { onOpenResult(result.conversationId) }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SearchResultRow(result: SearchResultUi, q: String, keywords: List<String>, onClick: () -> Unit) {
+    val sender = if (result.isMine) stringResource(R.string.search_screen_me)
+        else result.sender ?: stringResource(R.string.search_screen_unknown_sender)
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(role = Role.Button, onClick = onClick)
+        .padding(horizontal = 4.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AppIcon(result.packageName, 20.dp)
+            Text(result.roomTitle, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(formatRelativeTime(LocalContext.current, result.at), color = NotiColors.Secondary,
+                style = MaterialTheme.typography.labelSmall)
+        }
+        Text(highlightedText(sender, keywords + q), Modifier.padding(start = 28.dp),
+            style = MaterialTheme.typography.labelMedium, color = NotiColors.Secondary,
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
+        val snippet = remember(result.text, q) { searchSnippet(result.text, q) }
+        Text(highlightedText(snippet, keywords + q), Modifier.padding(start = 28.dp), color = NotiColors.Body,
+            style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis)
+        if (result.deletedBySender) Box(Modifier.padding(start = 28.dp, top = 2.dp)) {
+            MessageTag(stringResource(R.string.search_screen_deleted))
         }
     }
 }
