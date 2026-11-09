@@ -9,6 +9,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import com.jiil.secretnoti.ui.ContactSheet
+import kotlinx.coroutines.launch
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -58,6 +68,20 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
     var showChannelMuteDialog by rememberSaveable { mutableStateOf(false) }
     val positionDescription = stringResource(R.string.settings_screen_position_description)
     val position = state.handlePosition.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: 0.5f
+    var showContactSheet by rememberSaveable { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
+    // 구역마다 스크롤 안에서의 위쪽 위치. 위 칩을 누르면 그 위치로 스크롤하고, 스크롤하면 지나는 구역의 칩이 켜진다.
+    val sectionTops = remember { mutableStateMapOf<Int, Int>() }
+    fun anchor(index: Int) = Modifier.onGloballyPositioned { sectionTops[index] = it.positionInParent().y.toInt() }
+    val sections = listOf(R.string.settings_section_saving, R.string.settings_section_panel, R.string.settings_new_messages,
+        R.string.settings_screen_appearance, R.string.settings_screen_privacy, R.string.settings_screen_backup)
+    val currentSection by remember {
+        derivedStateOf {
+            if (scrollState.maxValue in 1..scrollState.value) sections.lastIndex
+            else sectionTops.entries.filter { it.value <= scrollState.value + 1 }.maxByOrNull { it.value }?.key ?: 0
+        }
+    }
 
     Surface(color = NotiColors.Background) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
@@ -70,13 +94,17 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                 }
                 Text(stringResource(R.string.settings_screen_title), style = MaterialTheme.typography.titleLarge, color = NotiColors.Text)
             }
+            SectionChips(sections.map { stringResource(it) }, currentSection) { index ->
+                scope.launch { scrollState.animateScrollTo(sectionTops[index] ?: 0) }
+            }
+            HorizontalDivider(color = NotiColors.Divider)
             Column(
-                Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(NotiSpacing.content),
+                Modifier.weight(1f).verticalScroll(scrollState).padding(NotiSpacing.content),
                 verticalArrangement = Arrangement.spacedBy(NotiSpacing.panel),
             ) {
                 // 권한이 모두 있으면 아무것도 보이지 않는다. 빠진 게 있을 때만 맨 위에 알린다.
                 if (!state.permissions.allGranted) SettingsPermissions(state.permissions, actions::openPermissions)
-                SettingsSection(stringResource(R.string.settings_section_saving)) {
+                SettingsSection(stringResource(R.string.settings_section_saving), anchor(0)) {
                     val suggested = state.apps.filter { it.suggested }
                     val others = state.apps.filterNot { it.suggested }
                     (suggested + if (expandedApps) others else emptyList()).forEach { app ->
@@ -148,7 +176,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     )
                 }
                 HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_section_panel)) {
+                SettingsSection(stringResource(R.string.settings_section_panel), anchor(1)) {
                     SettingsSwitchRow(stringResource(R.string.settings_screen_show_handle), checked = state.handleEnabled,
                         onCheckedChange = actions::setHandleEnabled)
                     SettingsLabel(stringResource(R.string.settings_screen_side))
@@ -220,7 +248,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     )
                 }
                 HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_new_messages)) {
+                SettingsSection(stringResource(R.string.settings_new_messages), anchor(2)) {
                     SettingsSwitchRow(stringResource(R.string.settings_indicator_badge), state.indicatorBadge, actions::setIndicatorBadge)
                     if (state.indicatorBadge) {
                         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -282,7 +310,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     }
                 }
                 HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_screen_appearance)) {
+                SettingsSection(stringResource(R.string.settings_screen_appearance), anchor(3)) {
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         ThemeMode.entries.forEachIndexed { index, mode ->
                             SegmentedButton(selected = state.themeMode == mode, onClick = { actions.setThemeMode(mode) },
@@ -313,7 +341,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     TextSizePreview(state.previewLines)
                 }
                 HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_screen_privacy)) {
+                SettingsSection(stringResource(R.string.settings_screen_privacy), anchor(4)) {
                     SettingsSwitchRow(stringResource(R.string.settings_screen_lock), state.lockEnabled, actions::setLock,
                         enabled = state.lockAvailable,
                         detail = if (state.lockAvailable) null else stringResource(R.string.settings_screen_lock_unavailable))
@@ -347,7 +375,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     }
                 }
                 HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_screen_backup)) {
+                SettingsSection(stringResource(R.string.settings_screen_backup), anchor(5)) {
                     SettingsHelper(stringResource(R.string.settings_screen_backup_hint))
                     Row(horizontalArrangement = Arrangement.spacedBy(NotiSpacing.small)) {
                         OutlinedButton(onClick = { passwordDialog = true }, shape = NotiShapes.banner,
@@ -358,6 +386,13 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             modifier = Modifier.weight(1f).heightIn(min = NotiSpacing.button)) {
                             Text(stringResource(R.string.settings_screen_restore_backup), textAlign = TextAlign.Center)
                         }
+                    }
+                }
+                HorizontalDivider(color = NotiColors.Divider)
+                SettingsSection(stringResource(R.string.settings_section_help)) {
+                    SettingsNavRow(stringResource(R.string.settings_help), null, actions::openHelp)
+                    SettingsNavRow(stringResource(R.string.settings_contact), stringResource(R.string.settings_contact_hint)) {
+                        showContactSheet = true
                     }
                 }
                 // 맨 아래: 진단 기록 · 버전 (테스터가 어떤 판을 쓰는지 바로 알 수 있게).
@@ -377,6 +412,11 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
             }
         }
     }
+
+    if (showContactSheet) ContactSheet(
+        onPick = { showContactSheet = false; actions.openContact(it) },
+        onDismiss = { showContactSheet = false },
+    )
 
     passwordDialog?.let { backup ->
         BackupPasswordDialog(backup, onDismiss = { passwordDialog = null }, onConfirm = { password ->
@@ -456,11 +496,51 @@ private fun requiresRetentionConfirmation(current: Int, next: Int): Boolean =
     next != 0 && (current == 0 || next < current)
 
 @Composable
-private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(NotiSpacing.medium)) {
+private fun SettingsSection(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(NotiSpacing.medium)) {
         Text(title, modifier = Modifier.semantics { heading() },
             style = MaterialTheme.typography.titleMedium, color = NotiColors.Text)
         content()
+    }
+}
+
+/** 설정 맨 위에 붙어 있는 구역 칩. 누르면 그 구역으로 스크롤한다. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SectionChips(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = NotiSpacing.content)
+        .selectableGroup(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        labels.forEachIndexed { index, label ->
+            val on = index == selected
+            // 좁은 화면에서 칩이 넘치면, 켜진 칩이 보이도록 칩 줄도 따라 움직인다.
+            val requester = remember { BringIntoViewRequester() }
+            LaunchedEffect(on) { if (on) requester.bringIntoView() }
+            Box(Modifier.bringIntoViewRequester(requester).heightIn(min = 48.dp)
+                .selectable(on, role = Role.Tab, onClick = { onSelect(index) }),
+                contentAlignment = Alignment.Center) {
+                Surface(shape = NotiShapes.pill, color = if (on) NotiColors.Text else NotiColors.Background,
+                    border = if (on) null else BorderStroke(1.dp, NotiColors.Outline)) {
+                    Box(Modifier.heightIn(min = 34.dp).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
+                        Text(label, color = if (on) NotiColors.Background else NotiColors.Body, maxLines = 1,
+                            style = MaterialTheme.typography.labelLarge.copy(lineHeightStyle = SingleLineCentered))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** 다른 화면으로 넘어가는 한 줄 (도움말·문의하기). */
+@Composable
+private fun SettingsNavRow(label: String, detail: String?, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button).clickable(role = Role.Button, onClick = onClick)
+        .padding(vertical = NotiSpacing.small),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NotiSpacing.medium)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(NotiSpacing.tiny)) {
+            Text(label, style = MaterialTheme.typography.bodyLarge, color = NotiColors.Text)
+            if (detail != null) SettingsHelper(detail)
+        }
+        Icon(NotiIcons.chevronLeft, null, Modifier.size(20.dp).graphicsLayer { scaleX = -1f }, tint = NotiColors.Secondary)
     }
 }
 

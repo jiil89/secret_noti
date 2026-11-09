@@ -132,6 +132,8 @@ interface SettingsActions {
     fun setRetention(days: Int)
     fun openPermissions()
     fun openDiagnostics()
+    fun openHelp() {}
+    fun openContact(kind: ContactKind) {}
     fun setLock(enabled: Boolean)
     fun setHidePreviews(enabled: Boolean)
     fun setDeletionAlerts(enabled: Boolean)

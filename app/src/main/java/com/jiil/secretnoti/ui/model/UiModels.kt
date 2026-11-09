@@ -70,6 +70,18 @@ data class SearchResultUi(
 )
 
 /** 원래 앱(카톡 등)에서 먼저 읽은 대화방을 어떻게 할지. 안 읽은 수는 어느 쪽이든 0이 된다. */
+/** 설정 → 문의하기의 종류. 메일 제목·본문 틀이 다르다. */
+enum class ContactKind(
+    @StringRes val labelRes: Int,
+    @StringRes val hintRes: Int?,
+    @StringRes val subjectRes: Int,
+    @StringRes val bodyRes: Int,
+) {
+    BUG(R.string.contact_bug, R.string.contact_bug_hint, R.string.contact_subject_bug, R.string.contact_body_bug),
+    NEW_APP(R.string.contact_new_app, R.string.contact_new_app_hint, R.string.contact_subject_new_app, R.string.contact_body_new_app),
+    OTHER(R.string.contact_other, null, R.string.contact_subject_other, R.string.contact_body_other),
+}
+
 enum class ReadElsewhereAction(@StringRes val labelRes: Int) {
     REMOVE_FROM_PANEL(R.string.settings_read_elsewhere_remove),
     KEEP(R.string.settings_read_elsewhere_keep),

@@ -23,6 +23,8 @@ import com.jiil.secretnoti.capture.ListenerStatus
 import com.jiil.secretnoti.overlay.AppVisibility
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.screens.LockScreen
+import com.jiil.secretnoti.ui.model.ContactKind
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -87,7 +89,12 @@ class MainActivity : FragmentActivity() {
         const val ROUTE_PERMISSIONS = "permissions"
         const val ROUTE_DIAGNOSTICS = "diagnostics"
         const val ROUTE_SEARCH = "search"
+        const val ROUTE_INTRO = "intro"
+        /** 처음 소개 뒤의 권한 설정. 뒤로 가면 설정이 아니라 목록으로. */
+        const val ROUTE_SETUP = "setup"
+        const val ROUTE_HELP = "help"
         fun routeRoom(conversationId: Long) = "room:$conversationId"
+        fun routeContact(kind: ContactKind) = "contact:${kind.name}"
 
         fun intent(context: Context, route: String): Intent =
             Intent(context, MainActivity::class.java)
@@ -106,7 +113,12 @@ private fun LockGate(activity: FragmentActivity) {
 
 @Composable
 private fun AppRoot(requestedRoute: MutableStateFlow<String?>) {
-    var route by rememberSaveable { mutableStateOf(MainActivity.ROUTE_LIST) }
+    val context = LocalContext.current
+    // 처음 켤 때만 소개를 보여 준다. 알림 접근을 이미 켜 둔 사용자(업데이트)는 건너뛴다.
+    val firstRun = remember { !Prefs.onboardingDone.value && !readPermissionSummary(context).notificationAccess }
+    var route by rememberSaveable { mutableStateOf(if (firstRun) MainActivity.ROUTE_INTRO else MainActivity.ROUTE_LIST) }
+    var introFromHelp by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) { Prefs.onboardingDone.value = true }
     val requested by requestedRoute.collectAsState()
     LaunchedEffect(requested) {
         requested?.let {
@@ -114,9 +126,10 @@ private fun AppRoot(requestedRoute: MutableStateFlow<String?>) {
             requestedRoute.value = null
         }
     }
-    // 권한·진단 화면은 설정으로, 나머지는 목록으로 돌아간다.
-    val parent = when (route) {
-        MainActivity.ROUTE_PERMISSIONS, MainActivity.ROUTE_DIAGNOSTICS -> MainActivity.ROUTE_SETTINGS
+    // 권한·진단·도움말·문의 화면은 설정으로, 나머지는 목록으로 돌아간다.
+    val parent = when {
+        route == MainActivity.ROUTE_PERMISSIONS || route == MainActivity.ROUTE_DIAGNOSTICS ||
+            route == MainActivity.ROUTE_HELP || route.startsWith("contact:") -> MainActivity.ROUTE_SETTINGS
         else -> MainActivity.ROUTE_LIST
     }
     val goBack = { route = parent }
@@ -133,7 +146,28 @@ private fun AppRoot(requestedRoute: MutableStateFlow<String?>) {
             onBack = goBack,
             onOpenPermissions = { route = MainActivity.ROUTE_PERMISSIONS },
             onOpenDiagnostics = { route = MainActivity.ROUTE_DIAGNOSTICS },
+            onOpenHelp = { route = MainActivity.ROUTE_HELP },
+            onOpenContact = { route = MainActivity.routeContact(it) },
         )
+        route == MainActivity.ROUTE_INTRO -> OnboardingScreen(onFinish = {
+            route = when {
+                !readPermissionSummary(context).allGranted -> MainActivity.ROUTE_SETUP
+                introFromHelp -> MainActivity.ROUTE_HELP
+                else -> MainActivity.ROUTE_LIST
+            }
+            introFromHelp = false
+        })
+        route == MainActivity.ROUTE_SETUP -> BackScaffold(stringResource(R.string.route_permissions), onBack = goBack) { PermissionsScreen() }
+        route == MainActivity.ROUTE_HELP -> HelpScreen(
+            onBack = goBack,
+            onReplayIntro = { introFromHelp = true; route = MainActivity.ROUTE_INTRO },
+            onOpenPermissions = { route = MainActivity.ROUTE_PERMISSIONS },
+            onContact = { route = MainActivity.routeContact(it) },
+        )
+        route.startsWith("contact:") -> {
+            val kind = ContactKind.entries.find { it.name == route.removePrefix("contact:") } ?: ContactKind.OTHER
+            ContactScreen(kind, onBack = goBack)
+        }
         route == MainActivity.ROUTE_PERMISSIONS -> BackScaffold(stringResource(R.string.route_permissions), onBack = goBack) { PermissionsScreen() }
         route == MainActivity.ROUTE_DIAGNOSTICS -> DiagnosticsScreen(onBack = goBack)
         else -> ConversationListRoute(

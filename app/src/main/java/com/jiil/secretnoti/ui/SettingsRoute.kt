@@ -32,6 +32,7 @@ import com.jiil.secretnoti.ui.model.TextSize
 import com.jiil.secretnoti.ui.model.HandleSize
 import com.jiil.secretnoti.ui.model.ReadElsewhereAction
 import com.jiil.secretnoti.ui.model.SettingsActions
+import com.jiil.secretnoti.ui.model.ContactKind
 import com.jiil.secretnoti.ui.model.SettingsUi
 import com.jiil.secretnoti.ui.model.ThemeMode
 import com.jiil.secretnoti.ui.screens.SettingsScreen
@@ -45,7 +46,13 @@ import java.util.Locale
 
 /** 설정 화면과 Prefs·저장소를 잇는다. */
 @Composable
-fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagnostics: () -> Unit) {
+fun SettingsRoute(
+    onBack: () -> Unit,
+    onOpenPermissions: () -> Unit,
+    onOpenDiagnostics: () -> Unit,
+    onOpenHelp: () -> Unit = {},
+    onOpenContact: (ContactKind) -> Unit = {},
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val chat = remember { NotiApp.instance.chat }
@@ -178,6 +185,8 @@ fun SettingsRoute(onBack: () -> Unit, onOpenPermissions: () -> Unit, onOpenDiagn
             }
             override fun openPermissions() = onOpenPermissions()
             override fun openDiagnostics() = onOpenDiagnostics()
+            override fun openHelp() = onOpenHelp()
+            override fun openContact(kind: ContactKind) = onOpenContact(kind)
             override fun setLock(enabled: Boolean) {
                 Prefs.lockEnabled.value = enabled
                 AppLock.onSettingChanged(enabled)
