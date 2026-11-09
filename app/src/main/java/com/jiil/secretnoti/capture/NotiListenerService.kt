@@ -193,6 +193,9 @@ class NotiListenerService : NotificationListenerService() {
     private fun record(sbn: StatusBarNotification, event: String, reason: Int?) {
         val pkg = sbn.packageName
         if (pkg == packageName) return
+        val now = System.currentTimeMillis()
+        // 다른 앱 알림까지 기록하는 것은 켜 두고 잊기 쉬워서 24시간 뒤 저절로 끈다.
+        if (Prefs.dumpAllApps.value && now - Prefs.dumpAllAppsSince.value > DUMP_ALL_APPS_MS) Prefs.dumpAllApps.value = false
         if (!Prefs.dumpAllApps.value && !isTarget(pkg)) return
 
         val json = try {
@@ -213,6 +216,13 @@ class NotiListenerService : NotificationListenerService() {
         scope.launch(Dispatchers.IO) {
             dao.insert(dump)
             dao.trim(keep = 3000)
+            // 대화방 기록을 지워도 원본이 여기 남지 않게, 진단 기록은 최근 3일 것만 둔다.
+            dao.deleteBefore(now - DUMP_KEEP_MS)
         }
+    }
+
+    companion object {
+        private const val DUMP_ALL_APPS_MS = 24L * 60 * 60 * 1000
+        private const val DUMP_KEEP_MS = 3L * 24 * 60 * 60 * 1000
     }
 }

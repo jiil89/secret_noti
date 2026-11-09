@@ -70,13 +70,10 @@ fun RoomScreen(
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        // 앱은 아이콘이 알려 준다. 단톡이면 참여자만 적는다.
                         AppIcon(packageName, 16.dp)
-                        val subtitle = if (isGroup) {
-                            val group = stringResource(R.string.room_screen_group_subtitle, appLabel)
-                            if (participants.isEmpty()) group
-                            else stringResource(R.string.room_screen_group_participants, group, participants.joinToString(", "))
-                        } else appLabel
-                        Text(subtitle, color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall,
+                        if (isGroup && participants.isNotEmpty()) Text(participants.joinToString(", "),
+                            color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall,
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
@@ -91,7 +88,6 @@ fun RoomScreen(
                 }
             }
             HorizontalDivider(color = NotiColors.Divider)
-            NoticeBanner(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp))
             LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = listState, contentPadding = PaddingValues(16.dp),
                 reverseLayout = true,
                 verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.Bottom)) {
@@ -111,15 +107,14 @@ fun RoomScreen(
             }
             Column(Modifier.background(NotiColors.Background)) {
                 HorizontalDivider(color = NotiColors.Divider)
-                Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.room_screen_reply_hint, appLabel),
-                        Modifier.fillMaxWidth(), color = NotiColors.Secondary,
-                        style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                // 꼭 알아야 할 것은 "열면 읽음 처리된다" 하나라서 버튼 안에 함께 적는다.
+                Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)) {
                     OutlinedButton(onOpenInApp, Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button),
                         shape = NotiShapes.banner, border = BorderStroke(1.dp, NotiColors.Outline),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = NotiColors.Text)) {
                         Text(stringResource(R.string.room_screen_open, appLabel), style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(R.string.room_screen_marks_read), color = NotiColors.Secondary,
+                            style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }

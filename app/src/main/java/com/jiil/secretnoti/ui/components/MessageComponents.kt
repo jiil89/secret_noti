@@ -2,6 +2,8 @@ package com.jiil.secretnoti.ui.components
 
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -75,11 +77,6 @@ fun UnreadBadge(count: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SourceLabel(appLabel: String, modifier: Modifier = Modifier) {
-    Text(appLabel, modifier, color = NotiColors.Secondary, style = MaterialTheme.typography.labelSmall)
-}
-
-@Composable
 fun AppFilterChips(
     availableApps: List<AppRef>, filter: String?, onFilterChange: (String?) -> Unit,
     modifier: Modifier = Modifier,
@@ -108,30 +105,7 @@ fun AppFilterChips(
     }
 }
 
-@Composable
-fun NoticeChip(modifier: Modifier = Modifier) {
-    Row(modifier.background(NotiColors.NoticeBackground, NotiShapes.pill)
-        .padding(horizontal = 10.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Icon(NotiIcons.eyeOff, null, Modifier.size(14.dp), tint = NotiColors.NoticeForeground)
-        Text(stringResource(R.string.messages_no_read_receipt), color = NotiColors.NoticeForeground,
-            style = MaterialTheme.typography.labelMedium.copy(lineHeightStyle = SingleLineCentered))
-    }
-}
-
-@Composable
-fun NoticeBanner(modifier: Modifier = Modifier) {
-    Row(modifier.fillMaxWidth().background(NotiColors.NoticeBackground, NotiShapes.banner)
-        .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Icon(NotiIcons.eyeOff, null, Modifier.size(16.dp), tint = NotiColors.NoticeForeground)
-        Text(stringResource(R.string.messages_notice),
-            color = NotiColors.NoticeForeground, style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium)
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ConversationRow(
     conversation: ConversationUi,
@@ -167,6 +141,13 @@ fun ConversationRow(
                 if (conversation.isPinned) Icon(NotiIcons.pin, stringResource(R.string.messages_pinned), Modifier.size(14.dp), tint = NotiColors.Secondary)
                 Text(conversation.title, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
+                // 꼬리표 글자 대신 작은 아이콘. 앱·단톡·채널은 아바타가 이미 보여 주므로 따로 적지 않는다.
+                if (conversation.isMuted) Icon(NotiIcons.saveOff, stringResource(R.string.conversation_saving_off),
+                    Modifier.size(14.dp), tint = NotiColors.Secondary)
+                if (conversation.hasKeyword) Icon(NotiIcons.tag, stringResource(R.string.messages_keyword),
+                    Modifier.size(14.dp), tint = NotiColors.NoticeForeground)
+                if (conversation.deletedCount > 0) DeletedCount(conversation.deletedCount)
+                if (onMute != null && !conversation.isMuted && conversation.looksLikeAd && !conversation.isChannel) AdChip(onMute)
                 Text(formatRelativeTime(LocalContext.current, conversation.lastAt), style = MaterialTheme.typography.labelSmall,
                     color = NotiColors.Secondary)
             }
@@ -187,39 +168,30 @@ fun ConversationRow(
                     style = MaterialTheme.typography.bodyMedium, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
                 UnreadBadge(conversation.unread, Modifier.padding(top = 1.dp))
             }
-            // 꼬리표가 많아 한 줄을 넘기면 다음 줄로 넘긴다 (좁은 패널에서도 잘리지 않게).
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp),
-                itemVerticalAlignment = Alignment.CenterVertically) {
-                SourceLabel(conversation.appLabel)
-                if (conversation.isChannel) {
-                    MessageTag(stringResource(R.string.conversation_channel_tag), TagTone.Channel)
-                } else if (conversation.isGroup && conversation.senderCount >= 2) {
-                    MessageTag(pluralStringResource(R.plurals.messages_group_senders,
-                        conversation.senderCount, conversation.senderCount))
-                }
-                if (conversation.isMuted) {
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Icon(NotiIcons.saveOff, null, Modifier.size(12.dp), tint = NotiColors.Secondary)
-                        MessageTag(stringResource(R.string.conversation_saving_off))
-                    }
-                }
-                if (conversation.deletedCount > 0) MessageTag(pluralStringResource(R.plurals.messages_deleted_count, conversation.deletedCount, conversation.deletedCount))
-                if (conversation.hasKeyword) MessageTag(stringResource(R.string.messages_keyword), TagTone.Accent)
-            }
-            if (!conversation.isMuted && conversation.looksLikeAd && !conversation.isChannel && onMute != null) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.conversation_looks_like_ad), Modifier.weight(1f),
-                        color = NotiColors.Secondary, style = MaterialTheme.typography.labelSmall)
-                    TextButton(onClick = onMute, contentPadding = PaddingValues(horizontal = 4.dp),
-                        modifier = Modifier.heightIn(min = 48.dp)) {
-                        Text(stringResource(R.string.conversation_mute), color = NotiColors.Secondary,
-                            style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
         }
     }
+}
+
+/** 삭제된 메시지 수: 휴지통 아이콘 + 숫자. */
+@Composable
+private fun DeletedCount(count: Int) {
+    val description = pluralStringResource(R.plurals.messages_deleted_count, count, count)
+    Row(Modifier.clearAndSetSemantics { contentDescription = description },
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+        Icon(NotiIcons.trash, null, Modifier.size(13.dp), tint = NotiColors.Secondary)
+        Text(count.toString(), color = NotiColors.Secondary, maxLines = 1,
+            style = MaterialTheme.typography.labelSmall.copy(lineHeightStyle = SingleLineCentered))
+    }
+}
+
+/** 광고로 보이는 방: 누르면 저장 끄기 확인 창 (길게 눌러 여는 메뉴에도 같은 항목이 있다). */
+@Composable
+private fun AdChip(onClick: () -> Unit) {
+    Text(stringResource(R.string.conversation_ad_chip),
+        Modifier.clip(NotiShapes.pill).border(1.dp, NotiColors.Divider, NotiShapes.pill)
+            .clickable(role = Role.Button, onClick = onClick).padding(horizontal = 7.dp, vertical = 2.dp),
+        color = NotiColors.Secondary, maxLines = 1,
+        style = MaterialTheme.typography.labelSmall.copy(lineHeightStyle = SingleLineCentered))
 }
 
 @Composable
@@ -278,8 +250,11 @@ fun MessageBubble(
                     .then(border).background(background, shape).padding(horizontal = 14.dp, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (message.deletedBySender) {
-                        Text(stringResource(R.string.messages_deleted_original_saved), color = NotiColors.Secondary,
-                            style = MaterialTheme.typography.labelMedium)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(NotiIcons.trash, null, Modifier.size(14.dp), tint = NotiColors.Secondary)
+                            Text(stringResource(R.string.messages_deleted_original_saved), color = NotiColors.Secondary,
+                                style = MaterialTheme.typography.labelMedium)
+                        }
                     }
                     // The UI contract supplies preserved original content in text.
                     val sticker = KakaoEmoticons.isSticker(message.text)

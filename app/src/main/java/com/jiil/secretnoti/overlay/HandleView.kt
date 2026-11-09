@@ -106,7 +106,6 @@ class HandleView(context: Context, private val onOpen: () -> Unit) : View(contex
 
     private var downX = 0f
     private var downY = 0f
-    private var maxInward = 0f
     private var opened = false
 
     override fun onDraw(canvas: Canvas) {
@@ -179,29 +178,19 @@ class HandleView(context: Context, private val onOpen: () -> Unit) : View(contex
             MotionEvent.ACTION_DOWN -> {
                 downX = e.rawX
                 downY = e.rawY
-                maxInward = 0f
                 opened = false
             }
             MotionEvent.ACTION_MOVE -> {
                 val inward = if (onLeft) e.rawX - downX else downX - e.rawX
-                maxInward = max(maxInward, inward)
                 if (!opened && inward > openDistance) {
                     opened = true
-                    GestureLog.add(context.getString(R.string.gesture_open_swipe, dp(inward)))
                     onOpen()
                 }
             }
             MotionEvent.ACTION_UP -> if (!opened) {
                 val moved = abs(e.rawX - downX) + abs(e.rawY - downY)
-                if (moved < tapSlop && e.eventTime - e.downTime < 400) {
-                    GestureLog.add(context.getString(R.string.gesture_open_tap))
-                    performClick()
-                } else {
-                    GestureLog.add(context.getString(R.string.gesture_release_closed, dp(maxInward)))
-                }
+                if (moved < tapSlop && e.eventTime - e.downTime < 400) performClick()
             }
-            MotionEvent.ACTION_CANCEL ->
-                GestureLog.add(context.getString(R.string.gesture_cancelled, dp(maxInward)))
         }
         return true
     }
@@ -212,5 +201,4 @@ class HandleView(context: Context, private val onOpen: () -> Unit) : View(contex
         return true
     }
 
-    private fun dp(px: Float) = (px / d).toInt()
 }

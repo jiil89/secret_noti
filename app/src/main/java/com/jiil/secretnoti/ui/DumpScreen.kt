@@ -84,7 +84,10 @@ fun DumpScreen() {
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.route_dump_all), Modifier.weight(1f))
-                    Switch(checked = dumpAll, onCheckedChange = { Prefs.dumpAllApps.value = it })
+                    Switch(checked = dumpAll, onCheckedChange = {
+                        if (it) Prefs.dumpAllAppsSince.value = System.currentTimeMillis()
+                        Prefs.dumpAllApps.value = it
+                    })
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilledTonalButton(onClick = {

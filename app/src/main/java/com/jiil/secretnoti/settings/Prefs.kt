@@ -46,6 +46,8 @@ object Prefs {
     /** 엣지패널 폭(dp). */
     val panelWidthDp = int("panel_width_dp", PanelWidth.NORMAL.dp)
     val dumpAllApps = bool("dump_all_apps", false)
+    /** "다른 앱 알림도 기록"을 켠 시각. 24시간이 지나면 저절로 꺼진다. */
+    val dumpAllAppsSince = long("dump_all_apps_since", 0L)
     val lastPanelOpenedAt = long("last_panel_opened_at", 0L)
 
     /** 보관 기간(일). 0이면 지우지 않고 계속 보관. */
@@ -76,7 +78,7 @@ object Prefs {
     val previewLines = enum("preview_lines", PreviewLines.AUTO)
 
     private val all = listOf(
-        overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, dumpAllApps, lastPanelOpenedAt,
+        overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, dumpAllApps, dumpAllAppsSince, lastPanelOpenedAt,
         retentionDays, lastCleanupAt, enabledApps, lockEnabled, hidePreviews, deletionAlerts, savePhotos,
         keywords, themeMode, readElsewhere, autoMuteAds, autoMuteChannels, channelBackfillDone, adBackfillDone, indicatorBadge, badgeStyle, indicatorGlow, glowUsesAppColor, glowColor,
         peekBubble, textSize, previewLines,

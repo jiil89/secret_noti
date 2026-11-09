@@ -73,8 +73,9 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                 Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(NotiSpacing.content),
                 verticalArrangement = Arrangement.spacedBy(NotiSpacing.panel),
             ) {
-                SettingsPermissions(state.permissions, actions::openPermissions)
-                SettingsSection(stringResource(R.string.settings_screen_apps)) {
+                // 권한이 모두 있으면 아무것도 보이지 않는다. 빠진 게 있을 때만 맨 위에 알린다.
+                if (!state.permissions.allGranted) SettingsPermissions(state.permissions, actions::openPermissions)
+                SettingsSection(stringResource(R.string.settings_section_saving)) {
                     val suggested = state.apps.filter { it.suggested }
                     val others = state.apps.filterNot { it.suggested }
                     (suggested + if (expandedApps) others else emptyList()).forEach { app ->
@@ -85,14 +86,20 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     if (others.isNotEmpty()) TextButton(onClick = { expandedApps = !expandedApps }) {
                         Text(if (expandedApps) stringResource(R.string.settings_screen_collapse_apps) else pluralStringResource(R.plurals.settings_screen_more_apps, others.size, others.size))
                     }
-                    SettingsHelper(stringResource(R.string.settings_screen_apps_hint))
                     SettingsSwitchRow(stringResource(R.string.settings_auto_mute_ads), state.autoMuteAds,
                         actions::setAutoMuteAds, detail = stringResource(R.string.settings_auto_mute_ads_hint))
-                }
-                if (state.mutedConversations.isNotEmpty()) {
-                    HorizontalDivider(color = NotiColors.Divider)
-                    SettingsSection(stringResource(R.string.settings_muted_conversations, state.mutedConversations.size)) {
-                        SettingsHelper(stringResource(R.string.settings_muted_conversations_hint))
+                    SettingsSwitchRow(stringResource(R.string.settings_channels_toggle), state.autoMuteChannels,
+                        actions::setAutoMuteChannels, detail = stringResource(R.string.settings_channels_hint))
+                    if (state.channelConversations.isNotEmpty()) {
+                        OutlinedButton(onClick = { showChannelMuteDialog = true },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button),
+                            shape = NotiShapes.banner,
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)) {
+                            Text(stringResource(R.string.settings_channels_mute_all, state.channelConversations.size),
+                                textAlign = TextAlign.Center, style = MaterialTheme.typography.labelLarge)
+                        }
+                    }
+                    if (state.mutedConversations.isNotEmpty()) {
                         // 많아지면 길어지므로 평소에는 접어 두고 "보기"로 펼친다 (설정을 새로 열면 다시 접힘).
                         var mutedExpanded by rememberSaveable { mutableStateOf(false) }
                         Row(Modifier.fillMaxWidth().clip(NotiShapes.banner).background(NotiColors.DetailBackground)
@@ -122,20 +129,27 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             }
                         }
                     }
-                }
-                HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_channels_section)) {
-                    SettingsSwitchRow(stringResource(R.string.settings_channels_toggle), state.autoMuteChannels,
-                        actions::setAutoMuteChannels, detail = stringResource(R.string.settings_channels_hint))
-                    if (state.channelConversations.isEmpty()) {
-                        SettingsHelper(stringResource(R.string.settings_channels_empty))
-                    } else {
-                        OutlinedButton(onClick = { showChannelMuteDialog = true },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button),
-                            shape = NotiShapes.banner,
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)) {
-                            Text(stringResource(R.string.settings_channels_mute_all, state.channelConversations.size),
-                                textAlign = TextAlign.Center, style = MaterialTheme.typography.labelLarge)
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_save_photos), state.savePhotos, actions::setSavePhotos)
+                    SettingsLabel(stringResource(R.string.settings_screen_retention))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(NotiSpacing.small),
+                        verticalArrangement = Arrangement.spacedBy(NotiSpacing.tiny),
+                    ) {
+                        RETENTION_OPTIONS.forEach { days ->
+                            FilterChip(
+                                selected = state.retentionDays == days,
+                                onClick = {
+                                    if (days != state.retentionDays) {
+                                        if (requiresRetentionConfirmation(state.retentionDays, days)) {
+                                            pendingRetention = days
+                                        } else {
+                                            actions.setRetention(days)
+                                        }
+                                    }
+                                },
+                                label = { Text(when (days) { 0 -> stringResource(R.string.settings_screen_forever); 365 -> stringResource(R.string.settings_screen_year); else -> pluralStringResource(R.plurals.settings_screen_days, days, days) }) },
+                                modifier = Modifier.heightIn(min = NotiSpacing.button),
+                            )
                         }
                     }
                 }
@@ -150,32 +164,10 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     )
                 }
                 HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_read_elsewhere)) {
-                    SettingsHelper(stringResource(R.string.settings_read_elsewhere_hint))
-                    Column(Modifier.selectableGroup()) {
-                        ReadElsewhereAction.entries.forEach { action ->
-                            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                                .selectable(state.readElsewhereAction == action, role = Role.RadioButton,
-                                    onClick = { actions.setReadElsewhereAction(action) })
-                                .padding(vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                RadioButton(selected = state.readElsewhereAction == action, onClick = null)
-                                Column(Modifier.weight(1f)) {
-                                    Text(stringResource(action.labelRes), style = MaterialTheme.typography.bodyLarge)
-                                    if (action == ReadElsewhereAction.REMOVE_FROM_PANEL) {
-                                        SettingsHelper(stringResource(R.string.settings_read_elsewhere_remove_hint))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_screen_handle)) {
+                SettingsSection(stringResource(R.string.settings_section_panel)) {
                     SettingsSwitchRow(stringResource(R.string.settings_screen_show_handle), checked = state.handleEnabled,
                         onCheckedChange = actions::setHandleEnabled)
-                    Text(stringResource(R.string.settings_screen_side), style = MaterialTheme.typography.titleSmall)
+                    SettingsLabel(stringResource(R.string.settings_screen_side))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         listOf(true, false).forEachIndexed { index, onLeft ->
                             SegmentedButton(
@@ -188,33 +180,27 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             ) { Text(if (onLeft) stringResource(R.string.settings_screen_left) else stringResource(R.string.settings_screen_right)) }
                         }
                     }
-                    Surface(shape = NotiShapes.banner, color = NotiColors.DetailBackground) {
-                        Row(
-                            Modifier.fillMaxWidth().padding(NotiSpacing.content),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(NotiSpacing.content),
-                        ) {
-                            HandlePreview(state.handleOnLeft, position, state.handleSize, state.handleEnabled)
-                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(stringResource(R.string.settings_screen_handle_preview), style = MaterialTheme.typography.labelLarge)
-                                SettingsHelper(stringResource(R.string.settings_screen_handle_hint))
+                    // 세로 위치는 옆의 작은 폰 그림에서 바로 보인다.
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(NotiSpacing.content)) {
+                        HandlePreview(state.handleOnLeft, position, state.handleSize, state.handleEnabled)
+                        Column(Modifier.weight(1f)) {
+                            SettingsLabel(stringResource(R.string.settings_screen_position))
+                            Slider(
+                                value = position,
+                                onValueChange = actions::setHandlePosition,
+                                valueRange = 0f..1f,
+                                enabled = state.handleEnabled,
+                                modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)
+                                    .semantics { contentDescription = positionDescription },
+                            )
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                SettingsHelper(stringResource(R.string.settings_screen_top))
+                                SettingsHelper(stringResource(R.string.settings_screen_bottom))
                             }
                         }
                     }
-                    Text(stringResource(R.string.settings_screen_position), style = MaterialTheme.typography.titleSmall)
-                    Slider(
-                        value = position,
-                        onValueChange = actions::setHandlePosition,
-                        valueRange = 0f..1f,
-                        enabled = state.handleEnabled,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)
-                            .semantics { contentDescription = positionDescription },
-                    )
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        SettingsHelper(stringResource(R.string.settings_screen_top))
-                        SettingsHelper(stringResource(R.string.settings_screen_bottom))
-                    }
-                    Text(stringResource(R.string.settings_screen_size), style = MaterialTheme.typography.titleSmall)
+                    SettingsLabel(stringResource(R.string.settings_screen_size))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         HandleSize.entries.forEachIndexed { index, handleSize ->
                             SegmentedButton(
@@ -227,7 +213,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             ) { Text(stringResource(handleSize.labelRes)) }
                         }
                     }
-                    Text(stringResource(R.string.settings_panel_width), style = MaterialTheme.typography.titleSmall)
+                    SettingsLabel(stringResource(R.string.settings_panel_width))
                     val panelWidthPreset = PanelWidth.of(state.panelWidthDp)
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         PanelWidth.entries.forEachIndexed { index, preset ->
@@ -240,13 +226,10 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             ) { Text(stringResource(preset.labelRes)) }
                         }
                     }
-                    if (panelWidthPreset == null) {
-                        SettingsHelper(stringResource(R.string.settings_panel_width_custom, state.panelWidthDp))
-                    }
-                    SettingsHelper(stringResource(R.string.settings_panel_width_hint))
+                    SettingsHelper(if (panelWidthPreset == null) stringResource(R.string.settings_panel_width_custom, state.panelWidthDp)
+                        else stringResource(R.string.settings_panel_width_hint))
                     SettingsSwitchRow(
                         label = stringResource(R.string.settings_screen_gesture),
-                        detail = stringResource(R.string.settings_screen_gesture_hint),
                         checked = state.gestureExclusion,
                         onCheckedChange = actions::setGestureExclusion,
                         enabled = state.handleEnabled,
@@ -254,11 +237,8 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_new_messages)) {
-                    SettingsHelper(stringResource(R.string.settings_new_messages_hint))
-                    SettingsSwitchRow(stringResource(R.string.settings_indicator_badge), state.indicatorBadge,
-                        actions::setIndicatorBadge, detail = stringResource(R.string.settings_indicator_badge_hint))
+                    SettingsSwitchRow(stringResource(R.string.settings_indicator_badge), state.indicatorBadge, actions::setIndicatorBadge)
                     if (state.indicatorBadge) {
-                        Text(stringResource(R.string.settings_badge_style), style = MaterialTheme.typography.titleSmall)
                         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                             BadgeStyle.entries.forEachIndexed { index, style ->
                                 SegmentedButton(
@@ -269,12 +249,9 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                                 ) { Text(stringResource(style.labelRes)) }
                             }
                         }
-                        if (state.badgeStyle == BadgeStyle.DOT) SettingsHelper(stringResource(R.string.settings_badge_style_dot_hint))
                     }
-                    SettingsSwitchRow(stringResource(R.string.settings_indicator_glow), state.indicatorGlow,
-                        actions::setIndicatorGlow, detail = stringResource(R.string.settings_indicator_glow_hint))
+                    SettingsSwitchRow(stringResource(R.string.settings_indicator_glow), state.indicatorGlow, actions::setIndicatorGlow)
                     if (state.indicatorGlow) {
-                        Text(stringResource(R.string.settings_glow_color), style = MaterialTheme.typography.titleSmall)
                         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                             listOf(true, false).forEachIndexed { index, useAppColor ->
                                 SegmentedButton(
@@ -289,57 +266,16 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         }
                         if (!state.glowUsesAppColor) GlowColorPicker(state.glowColor, actions::setGlowColor)
                         TextButton(onClick = actions::previewGlow) { Text(stringResource(R.string.settings_glow_preview)) }
-                        SettingsHelper(stringResource(R.string.settings_glow_preview_hint))
                     }
                     SettingsSwitchRow(stringResource(R.string.settings_peek_bubble), state.peekBubble,
                         actions::setPeekBubble, detail = stringResource(R.string.settings_peek_bubble_hint))
-                }
-                HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_screen_privacy)) {
-                    SettingsSwitchRow(stringResource(R.string.settings_screen_lock), state.lockEnabled, actions::setLock,
-                        enabled = state.lockAvailable,
-                        detail = if (state.lockAvailable) stringResource(R.string.settings_screen_lock_hint) else stringResource(R.string.settings_screen_lock_unavailable))
-                    SettingsSwitchRow(stringResource(R.string.settings_screen_hide_previews), state.hidePreviews, actions::setHidePreviews)
-                    if (state.hiddenConversations.isNotEmpty()) {
-                        Text(stringResource(R.string.settings_screen_hidden), style = MaterialTheme.typography.titleSmall)
-                        state.hiddenConversations.forEach { conversation ->
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                AppIcon(conversation.packageName, 24.dp)
-                                Column(Modifier.weight(1f)) {
-                                    Text(conversation.title, style = MaterialTheme.typography.bodyLarge,
-                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    SettingsHelper(conversation.appLabel)
-                                }
-                                TextButton(onClick = { actions.unhideConversation(conversation.id) },
-                                    modifier = Modifier.heightIn(min = NotiSpacing.button)) {
-                                    Text(stringResource(R.string.settings_screen_unhide))
-                                }
-                            }
-                        }
-                    }
-                }
-                HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_screen_deleted_messages)) {
-                    SettingsSwitchRow(stringResource(R.string.settings_screen_deletion_alerts), state.deletionAlerts, actions::setDeletionAlerts)
-                    if (state.deletionAlerts && !state.notificationPermission) {
-                        Surface(color = NotiColors.NoticeBackground, shape = NotiShapes.banner) {
-                            Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                                Text(stringResource(R.string.settings_screen_notification_required), color = NotiColors.NoticeForeground)
-                                TextButton(onClick = actions::requestNotificationPermission) { Text(stringResource(R.string.settings_screen_allow_notifications)) }
-                            }
-                        }
-                    }
-                }
-                HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_screen_photos)) {
-                    SettingsSwitchRow(stringResource(R.string.settings_screen_save_photos), state.savePhotos, actions::setSavePhotos,
-                        detail = stringResource(R.string.settings_screen_photos_hint))
-                }
-                HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_screen_keywords)) {
-                    SettingsHelper(stringResource(R.string.settings_screen_keywords_hint))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SettingsSwitchRow(stringResource(R.string.settings_read_elsewhere_switch),
+                        state.readElsewhereAction == ReadElsewhereAction.REMOVE_FROM_PANEL,
+                        onCheckedChange = { actions.setReadElsewhereAction(
+                            if (it) ReadElsewhereAction.REMOVE_FROM_PANEL else ReadElsewhereAction.KEEP) },
+                        detail = stringResource(R.string.settings_read_elsewhere_switch_hint))
+                    SettingsLabel(stringResource(R.string.settings_keywords_highlight))
+                    if (state.keywords.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         state.keywords.forEach { word ->
                             val removeDescription = stringResource(R.string.settings_screen_remove_keyword, word)
                             InputChip(selected = true, onClick = { actions.removeKeyword(word) },
@@ -370,7 +306,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                                 modifier = Modifier.heightIn(min = NotiSpacing.button)) { Text(stringResource(mode.labelRes)) }
                         }
                     }
-                    Text(stringResource(R.string.settings_text_size), style = MaterialTheme.typography.titleSmall)
+                    SettingsLabel(stringResource(R.string.settings_text_size))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         TextSize.entries.forEachIndexed { index, size ->
                             SegmentedButton(selected = state.textSize == size, onClick = { actions.setTextSize(size) },
@@ -380,8 +316,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             }
                         }
                     }
-                    SettingsHelper(stringResource(R.string.settings_text_size_hint))
-                    Text(stringResource(R.string.settings_preview_lines), style = MaterialTheme.typography.titleSmall)
+                    SettingsLabel(stringResource(R.string.settings_preview_lines))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         PreviewLines.entries.forEachIndexed { index, lines ->
                             SegmentedButton(selected = state.previewLines == lines, onClick = { actions.setPreviewLines(lines) },
@@ -391,58 +326,70 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             }
                         }
                     }
-                    SettingsHelper(stringResource(R.string.settings_preview_lines_hint))
                     TextSizePreview(state.previewLines)
                 }
                 HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_screen_retention)) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(NotiSpacing.small),
-                        verticalArrangement = Arrangement.spacedBy(NotiSpacing.tiny),
-                    ) {
-                        RETENTION_OPTIONS.forEach { days ->
-                            FilterChip(
-                                selected = state.retentionDays == days,
-                                onClick = {
-                                    if (days != state.retentionDays) {
-                                        if (requiresRetentionConfirmation(state.retentionDays, days)) {
-                                            pendingRetention = days
-                                        } else {
-                                            actions.setRetention(days)
-                                        }
-                                    }
-                                },
-                                label = { Text(when (days) { 0 -> stringResource(R.string.settings_screen_forever); 365 -> stringResource(R.string.settings_screen_year); else -> pluralStringResource(R.plurals.settings_screen_days, days, days) }) },
-                                modifier = Modifier.heightIn(min = NotiSpacing.button),
-                            )
+                SettingsSection(stringResource(R.string.settings_screen_privacy)) {
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_lock), state.lockEnabled, actions::setLock,
+                        enabled = state.lockAvailable,
+                        detail = if (state.lockAvailable) null else stringResource(R.string.settings_screen_lock_unavailable))
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_hide_previews), state.hidePreviews, actions::setHidePreviews)
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_deletion_alerts), state.deletionAlerts, actions::setDeletionAlerts)
+                    if (state.deletionAlerts && !state.notificationPermission) {
+                        Surface(color = NotiColors.NoticeBackground, shape = NotiShapes.banner) {
+                            Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                                Text(stringResource(R.string.settings_screen_notification_required), color = NotiColors.NoticeForeground)
+                                TextButton(onClick = actions::requestNotificationPermission) { Text(stringResource(R.string.settings_screen_allow_notifications)) }
+                            }
                         }
                     }
-                    SettingsHelper(stringResource(R.string.settings_screen_retention_hint))
+                    if (state.hiddenConversations.isNotEmpty()) {
+                        SettingsLabel(stringResource(R.string.settings_screen_hidden))
+                        state.hiddenConversations.forEach { conversation ->
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                AppIcon(conversation.packageName, 24.dp)
+                                Column(Modifier.weight(1f)) {
+                                    Text(conversation.title, style = MaterialTheme.typography.bodyLarge,
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    SettingsHelper(conversation.appLabel)
+                                }
+                                TextButton(onClick = { actions.unhideConversation(conversation.id) },
+                                    modifier = Modifier.heightIn(min = NotiSpacing.button)) {
+                                    Text(stringResource(R.string.settings_screen_unhide))
+                                }
+                            }
+                        }
+                    }
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_backup)) {
                     SettingsHelper(stringResource(R.string.settings_screen_backup_hint))
-                    OutlinedButton(onClick = { passwordDialog = true }, shape = NotiShapes.banner,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)) {
-                        Text(stringResource(R.string.settings_screen_create_backup))
-                    }
-                    OutlinedButton(onClick = { passwordDialog = false }, shape = NotiShapes.banner,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)) {
-                        Text(stringResource(R.string.settings_screen_restore_backup))
+                    Row(horizontalArrangement = Arrangement.spacedBy(NotiSpacing.small)) {
+                        OutlinedButton(onClick = { passwordDialog = true }, shape = NotiShapes.banner,
+                            modifier = Modifier.weight(1f).heightIn(min = NotiSpacing.button)) {
+                            Text(stringResource(R.string.settings_screen_create_backup), textAlign = TextAlign.Center)
+                        }
+                        OutlinedButton(onClick = { passwordDialog = false }, shape = NotiShapes.banner,
+                            modifier = Modifier.weight(1f).heightIn(min = NotiSpacing.button)) {
+                            Text(stringResource(R.string.settings_screen_restore_backup), textAlign = TextAlign.Center)
+                        }
                     }
                 }
-                TextButton(onClick = actions::openDiagnostics,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)) {
-                    Text(stringResource(R.string.settings_screen_diagnostics), color = NotiColors.Secondary)
-                }
-                // 맨 아래 버전 (테스터가 어떤 판을 쓰는지 바로 알 수 있게).
+                // 맨 아래: 진단 기록 · 버전 (테스터가 어떤 판을 쓰는지 바로 알 수 있게).
                 val context = LocalContext.current
                 val version = remember {
                     runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
                 }
-                if (version != null) Text(stringResource(R.string.settings_screen_version, version),
-                    Modifier.fillMaxWidth().padding(bottom = 8.dp), color = NotiColors.Secondary,
-                    style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center) {
+                    TextButton(onClick = actions::openDiagnostics, modifier = Modifier.heightIn(min = NotiSpacing.button)) {
+                        Text(stringResource(R.string.settings_screen_diagnostics), color = NotiColors.Secondary,
+                            style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (version != null) Text(stringResource(R.string.settings_screen_version, version),
+                        color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall)
+                }
             }
         }
     }
@@ -505,6 +452,12 @@ private fun SettingsSection(title: String, content: @Composable ColumnScope.() -
     }
 }
 
+/** 구역 안의 작은 제목 (세그먼트 버튼·슬라이더 위). */
+@Composable
+private fun SettingsLabel(text: String) {
+    Text(text, style = MaterialTheme.typography.titleSmall, color = NotiColors.Text)
+}
+
 @Composable
 private fun SettingsHelper(text: String) {
     Text(text, style = MaterialTheme.typography.bodyMedium, color = NotiColors.Secondary)
@@ -535,6 +488,7 @@ private fun SettingsSwitchRow(
     }
 }
 
+/** 빠진 권한이 있을 때만 맨 위에 보이는 경고 카드. */
 @Composable
 private fun SettingsPermissions(permissions: PermissionSummaryUi, onOpenPermissions: () -> Unit) {
     val missing = buildList {
@@ -542,26 +496,19 @@ private fun SettingsPermissions(permissions: PermissionSummaryUi, onOpenPermissi
         if (!permissions.overlay) add(stringResource(R.string.settings_screen_overlay))
         if (!permissions.batteryExempt) add(stringResource(R.string.settings_screen_battery))
     }
-    Surface(
-        shape = NotiShapes.banner,
-        color = if (permissions.allGranted) NotiColors.DetailBackground else NotiColors.NoticeBackground,
-    ) {
+    Surface(shape = NotiShapes.banner, color = NotiColors.NoticeBackground) {
         Column(Modifier.fillMaxWidth().padding(NotiSpacing.content),
             verticalArrangement = Arrangement.spacedBy(NotiSpacing.small)) {
             Row(horizontalArrangement = Arrangement.spacedBy(NotiSpacing.small),
                 verticalAlignment = Alignment.CenterVertically) {
-                Icon(NotiIcons.info, null, Modifier.size(20.dp),
-                    tint = if (permissions.allGranted) NotiColors.Secondary else NotiColors.NoticeForeground)
-                Text(if (permissions.allGranted) stringResource(R.string.settings_screen_permissions_granted) else stringResource(R.string.settings_screen_permissions_needed),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = if (permissions.allGranted) NotiColors.Body else NotiColors.NoticeForeground)
+                Icon(NotiIcons.info, null, Modifier.size(20.dp), tint = NotiColors.NoticeForeground)
+                Text(stringResource(R.string.settings_screen_permissions_needed),
+                    style = MaterialTheme.typography.titleSmall, color = NotiColors.NoticeForeground)
             }
-            if (!permissions.allGranted) {
-                Text(stringResource(R.string.settings_screen_missing_permissions, missing.joinToString(", ")),
-                    style = MaterialTheme.typography.bodyMedium, color = NotiColors.NoticeForeground)
-                TextButton(onClick = onOpenPermissions, modifier = Modifier.heightIn(min = NotiSpacing.button)) {
-                    Text(stringResource(R.string.settings_screen_permissions_settings), color = NotiColors.NoticeForeground)
-                }
+            Text(stringResource(R.string.settings_screen_missing_permissions, missing.joinToString(", ")),
+                style = MaterialTheme.typography.bodyMedium, color = NotiColors.NoticeForeground)
+            TextButton(onClick = onOpenPermissions, modifier = Modifier.heightIn(min = NotiSpacing.button)) {
+                Text(stringResource(R.string.settings_screen_permissions_settings), color = NotiColors.NoticeForeground)
             }
         }
     }

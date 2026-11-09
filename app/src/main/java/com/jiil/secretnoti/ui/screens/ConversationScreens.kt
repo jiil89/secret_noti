@@ -195,8 +195,7 @@ fun ConversationListScreen(
                     SettingsButton(onOpenSettings)
                 }
             }
-            NoticeChip()
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(6.dp))
             AppFilterChips(availableApps, filter, onFilterChange)
             Spacer(Modifier.height(8.dp))
             ConversationItems(visibleConversations(conversations, filter), onOpenConversation, Modifier.weight(1f),

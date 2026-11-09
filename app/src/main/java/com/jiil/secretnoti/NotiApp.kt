@@ -15,6 +15,7 @@ class NotiApp : Application() {
         instance = this
         Prefs.init(this)
         db = AppDatabase.create(this)
+        java.io.File(filesDir, "gesture.log").delete()
     }
 
     companion object {

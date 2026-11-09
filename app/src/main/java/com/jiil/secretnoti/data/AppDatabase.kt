@@ -51,6 +51,9 @@ interface DumpDao {
 
     @Query("DELETE FROM notification_dump WHERE id <= (SELECT MAX(id) FROM notification_dump) - :keep")
     suspend fun trim(keep: Int)
+
+    @Query("DELETE FROM notification_dump WHERE receivedAt < :before")
+    suspend fun deleteBefore(before: Long)
 }
 
 @Database(
