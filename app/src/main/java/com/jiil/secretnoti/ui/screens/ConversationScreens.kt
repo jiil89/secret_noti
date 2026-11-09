@@ -24,6 +24,11 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Alignment
@@ -71,17 +76,12 @@ fun EdgePanel(
                 start = if (onLeftSide) 16.dp else 20.dp,
                 end = if (onLeftSide) 20.dp else 16.dp, top = 20.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(stringResource(R.string.conversations_recent), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                        if (conversations.isNotEmpty()) TextButton(onClick = onDismissAll,
-                            modifier = Modifier.heightIn(min = NotiSpacing.button),
-                            contentPadding = PaddingValues(horizontal = 8.dp)) {
-                            Text(stringResource(R.string.panel_clear_all), color = NotiColors.Secondary,
-                                style = MaterialTheme.typography.labelLarge)
-                        }
-                    }
-                    NoticeChip()
+                // 머리: 앱 아이콘 + 제목 + 설정. "읽음 표시 안 남음" 안내는 패널에서는 뺐다 (앱 화면에는 남김).
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SecretNotiMark()
+                    Text(stringResource(R.string.conversations_recent), Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    SettingsButton(onOpenSettings)
                 }
                 AppFilterChips(availableApps, filter, onFilterChange)
                 ConversationItems(visibleConversations(conversations, filter).take(10),
@@ -96,7 +96,15 @@ fun EdgePanel(
                             contentPadding = PaddingValues(horizontal = 4.dp)) {
                             Text(stringResource(R.string.conversations_all_history), color = NotiColors.NoticeForeground)
                         }
-                        SettingsButton(onOpenSettings)
+                        // 패널에서만 빼는 것이라 기록은 남는다. 뺄 대화방이 없으면 숨긴다.
+                        if (conversations.isNotEmpty()) TextButton(onClick = onDismissAll,
+                            modifier = Modifier.heightIn(min = NotiSpacing.button),
+                            contentPadding = PaddingValues(horizontal = 8.dp)) {
+                            Icon(NotiIcons.trash, null, Modifier.size(18.dp), tint = NotiColors.Secondary)
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.panel_clear_all), color = NotiColors.Secondary,
+                                style = MaterialTheme.typography.labelLarge)
+                        }
                     }
                 }
             }
@@ -337,6 +345,16 @@ private fun ConversationItems(
                 }
             }
         }
+    }
+}
+
+/** 패널 제목 앞의 작은 시크릿노티 아이콘 (런처 아이콘과 같은 그림). */
+@Composable
+private fun SecretNotiMark() {
+    Box(Modifier.size(22.dp).clip(RoundedCornerShape(6.dp)).background(Color(0xFF16181D)),
+        contentAlignment = Alignment.Center) {
+        // 108dp 캔버스 중 그림이 있는 가운데 부분만 22dp 안에 들어오게 크게 그리고 잘라낸다.
+        Image(painterResource(R.drawable.ic_noti_foreground), null, Modifier.requiredSize(36.dp))
     }
 }
 
