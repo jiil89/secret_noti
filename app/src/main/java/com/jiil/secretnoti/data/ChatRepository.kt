@@ -244,6 +244,19 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
         if (channels.isNotEmpty()) dao.markChannels(TargetApps.KAKAO, channels)
     }
 
+    /**
+     * 광고 판별이 바뀌기 전에 저장된 방을 다시 본다 (문자의 "<제목: (광고)…>", "[Web발신] (광고)…").
+     * 광고로 보이면 표시를 붙이고, "광고는 처음부터 저장 안 함"이 켜져 있으면 저장도 끈다 (기록은 남김).
+     */
+    suspend fun backfillAdFlags() {
+        for (conv in dao.allConversations()) {
+            if (conv.looksLikeAd) continue
+            if (dao.messagesOf(conv.id).none { NotificationParser.looksLikeAd(it.text) }) continue
+            dao.updateConversation(conv.copy(looksLikeAd = true,
+                isMuted = conv.isMuted || Prefs.autoMuteAds.value))
+        }
+    }
+
     /** 아직 저장 중인 카톡 채널·알림톡 대화방 (설정의 "한 번에 끄기"용). */
     fun observeChannelConversations(): Flow<List<ConversationUi>> =
         dao.observeConversations().map { list ->

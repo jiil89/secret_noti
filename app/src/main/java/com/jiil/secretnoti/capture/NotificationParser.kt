@@ -83,10 +83,34 @@ object NotificationParser {
      */
     fun isKakaoChannel(s: NotificationSnapshot): Boolean = s.packageName == "com.kakao.talk" && !s.canReply
 
-    /** 정보통신망법상 광고 메시지는 "(광고)"로 시작해야 한다. */
+    private val AD_MARKERS = listOf("(광고)", "[광고]", "(AD)", "[AD]")
+    private val SENDER_TAGS = listOf("[Web발신]", "[국제발신]", "[국외발신]", "[해외발신]")
+
+    /** 보이지 않는 방향 표시 글자(U+200E, U+2068 등)를 뺀다. 삼성 메시지가 번호·제목에 넣는다. */
+    fun stripInvisible(text: String): String =
+        text.filterNot { Character.getType(it) == Character.FORMAT.toInt() }
+
+    /**
+     * 정보통신망법상 광고 메시지는 "(광고)"로 시작해야 한다.
+     * 문자는 앞에 "<제목: …>"(MMS 제목), "[Web발신]" 같은 꼬리표가 붙어 오므로 그것들을 건너뛰고 본다.
+     * 예: "<제목: (광고)핫딜>\n[Web발신] (광고)…", "[Web발신] [광고] (광고)…"
+     */
     fun looksLikeAd(text: String): Boolean {
-        val t = text.trimStart()
-        return t.startsWith("(광고)") || t.startsWith("[광고]") || t.startsWith("(AD)", ignoreCase = true)
+        var t = stripInvisible(text)
+        repeat(4) {
+            t = t.trimStart()
+            if (AD_MARKERS.any { t.startsWith(it, ignoreCase = true) }) return true
+            t = when {
+                t.startsWith("<제목:") -> {
+                    val subject = t.removePrefix("<제목:").trimStart()
+                    if (AD_MARKERS.any { subject.startsWith(it, ignoreCase = true) }) return true
+                    t.substringAfter('>', "")
+                }
+                SENDER_TAGS.any { t.startsWith(it) } -> t.substringAfter(']')
+                else -> return false
+            }
+        }
+        return false
     }
 
     /**
@@ -113,7 +137,7 @@ object NotificationParser {
         // 보낸 사람이 둘 이상이면 단톡방으로 본다 (앱이 단톡 표시를 빼먹어도).
         val distinctSenders = s.messages.mapNotNull { m -> m.senderKey ?: m.sender }.filter { it != s.selfKey }.toSet()
         val isGroup = (s.isGroupConversation ?: (s.conversationTitle != null)) || distinctSenders.size >= 2
-        fun String?.clean() = this?.trim()?.takeIf { it.isNotEmpty() }
+        fun String?.clean() = this?.let(::stripInvisible)?.trim()?.takeIf { it.isNotEmpty() }
         val namedTitle = if (isGroup) {
             s.conversationTitle.clean() ?: s.shortcutLabel.clean() ?: s.hiddenConversationTitle.clean() ?: s.subText.clean()
         } else {

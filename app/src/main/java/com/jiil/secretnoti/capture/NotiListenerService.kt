@@ -56,6 +56,11 @@ class NotiListenerService : NotificationListenerService() {
                 runCatching { chat.backfillChannelsFromDumps() }.onSuccess { Prefs.channelBackfillDone.value = true }
             }
         }
+        if (!Prefs.adBackfillDone.value) {
+            scope.launch(Dispatchers.IO) {
+                runCatching { chat.backfillAdFlags() }.onSuccess { Prefs.adBackfillDone.value = true }
+            }
+        }
     }
 
     override fun onListenerDisconnected() {

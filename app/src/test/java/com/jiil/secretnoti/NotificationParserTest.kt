@@ -173,6 +173,13 @@ class NotificationParserTest {
         assertTrue(NotificationParser.looksLikeAd("(광고) 오늘만 50% 할인"))
         assertTrue(NotificationParser.looksLikeAd("  [광고] 신상품 안내"))
         assertFalse(NotificationParser.looksLikeAd("광고 봤어? 웃기더라"))
+        // 삼성 메시지 실제 알림: MMS 제목, [Web발신], 보이지 않는 방향 글자(U+200E)
+        assertTrue(NotificationParser.looksLikeAd("<제목:\u200E (광고)나비잠기저귀\u200E 핫딜(지마켓)>\u200E\n[Web발신] (광고)더자람"))
+        assertTrue(NotificationParser.looksLikeAd("<제목:\u200E 태미안의원입니다.>\u200E\n[Web발신] [광고] (광고)상봉역"))
+        assertTrue(NotificationParser.looksLikeAd("<제목:\u200E [LG라이프케어]>\u200E\n[Web발신] (광고) [LG라이프케어] 쇼핑지원금"))
+        assertTrue(NotificationParser.looksLikeAd("[Web발신]\n(광고) 할인 안내"))
+        assertFalse(NotificationParser.looksLikeAd("[Web발신] [남양주도시공사] 예매취소 (광고) 아님"))
+        assertFalse(NotificationParser.looksLikeAd("<제목: 회의 자료>\n오늘 회의는 (광고) 건입니다"))
     }
 
     @Test

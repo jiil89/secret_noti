@@ -65,6 +65,7 @@ object Prefs {
     val autoMuteAds = bool("auto_mute_ads", false)
     val autoMuteChannels = bool("auto_mute_channels", false)
     val channelBackfillDone = bool("channel_backfill_done", false)
+    val adBackfillDone = bool("ad_backfill_v2_done", false)
     val indicatorBadge = bool("indicator_badge", true)
     val badgeStyle = enum("badge_style", BadgeStyle.NUMBER)
     val indicatorGlow = bool("indicator_glow", true)
@@ -77,7 +78,7 @@ object Prefs {
     private val all = listOf(
         overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, dumpAllApps, lastPanelOpenedAt,
         retentionDays, lastCleanupAt, enabledApps, lockEnabled, hidePreviews, deletionAlerts, savePhotos,
-        keywords, themeMode, readElsewhere, autoMuteAds, autoMuteChannels, channelBackfillDone, indicatorBadge, badgeStyle, indicatorGlow, glowUsesAppColor, glowColor,
+        keywords, themeMode, readElsewhere, autoMuteAds, autoMuteChannels, channelBackfillDone, adBackfillDone, indicatorBadge, badgeStyle, indicatorGlow, glowUsesAppColor, glowColor,
         peekBubble, textSize, previewLines,
     )
 
