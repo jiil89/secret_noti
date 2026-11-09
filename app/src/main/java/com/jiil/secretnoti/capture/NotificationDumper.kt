@@ -21,6 +21,8 @@ object NotificationDumper {
         return JSONObject().apply {
             put("event", event)
             removalReason?.let { put("removalReason", it) }
+            // postTime은 지운 알림에도 "올린 시각"이 그대로라, 언제 지워졌는지 알려면 기록 시각이 따로 필요하다.
+            put("recordedAt", System.currentTimeMillis())
             put("package", sbn.packageName)
             put("id", sbn.id)
             put("tag", sbn.tag ?: JSONObject.NULL)
