@@ -168,7 +168,6 @@
     <string name="settings_screen_add">추가</string>
     <string name="settings_screen_appearance">화면</string>
     <string name="settings_screen_retention">보관 기간</string>
-    <string name="settings_screen_forever">계속 보관</string>
     <string name="settings_screen_year">1년</string>
     <string name="settings_screen_backup">백업</string>
     <string name="settings_screen_backup_hint">비밀번호를 잊으면 복원할 수 없어요</string>
@@ -314,4 +313,5 @@
     <string name="settings_keywords_highlight">키워드 강조</string>
     <string name="conversation_ad_chip">광고 · 저장 끄기</string>
     <string name="room_screen_marks_read">" · 읽음 처리돼요"</string>
+    <string name="settings_retention_forever_short">계속</string>
 </resources>

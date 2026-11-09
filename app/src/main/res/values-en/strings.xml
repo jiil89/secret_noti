@@ -170,7 +170,6 @@
     <string name="settings_screen_add">Add</string>
     <string name="settings_screen_appearance">Appearance</string>
     <string name="settings_screen_retention">Retention period</string>
-    <string name="settings_screen_forever">Keep forever</string>
     <string name="settings_screen_year">1 year</string>
     <string name="settings_screen_backup">Back up</string>
     <string name="settings_screen_backup_hint">You can’t restore a backup if you forget its password</string>
@@ -320,4 +319,5 @@
     <string name="settings_keywords_highlight">Highlight keywords</string>
     <string name="conversation_ad_chip">Ad · Stop saving</string>
     <string name="room_screen_marks_read">" · marks as read"</string>
+    <string name="settings_retention_forever_short">Forever</string>
 </resources>

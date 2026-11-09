@@ -8,6 +8,7 @@ import com.jiil.secretnoti.ui.components.MuteChannelsDialog
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -131,26 +132,9 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     }
                     SettingsSwitchRow(stringResource(R.string.settings_screen_save_photos), state.savePhotos, actions::setSavePhotos)
                     SettingsLabel(stringResource(R.string.settings_screen_retention))
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(NotiSpacing.small),
-                        verticalArrangement = Arrangement.spacedBy(NotiSpacing.tiny),
-                    ) {
-                        RETENTION_OPTIONS.forEach { days ->
-                            FilterChip(
-                                selected = state.retentionDays == days,
-                                onClick = {
-                                    if (days != state.retentionDays) {
-                                        if (requiresRetentionConfirmation(state.retentionDays, days)) {
-                                            pendingRetention = days
-                                        } else {
-                                            actions.setRetention(days)
-                                        }
-                                    }
-                                },
-                                label = { Text(when (days) { 0 -> stringResource(R.string.settings_screen_forever); 365 -> stringResource(R.string.settings_screen_year); else -> pluralStringResource(R.plurals.settings_screen_days, days, days) }) },
-                                modifier = Modifier.heightIn(min = NotiSpacing.button),
-                            )
-                        }
+                    RetentionSelector(state.retentionDays) { days ->
+                        if (requiresRetentionConfirmation(state.retentionDays, days)) pendingRetention = days
+                        else actions.setRetention(days)
                     }
                 }
                 if (showChannelMuteDialog) {
@@ -435,6 +419,34 @@ private fun TextSizePreview(previewLines: PreviewLines) {
             Surface(shape = NotiShapes.banner, color = NotiColors.Background, modifier = Modifier.padding(top = 6.dp)) {
                 ConversationRow(sample, onClick = {}, modifier = Modifier.padding(horizontal = 8.dp),
                     maxLines = previewLines.lines.takeIf { it > 0 } ?: 2)
+            }
+        }
+    }
+}
+
+/**
+ * 보관 기간 6개를 한 줄에. 세그먼트 버튼은 안쪽 여백이 커서 "180일"이 잘리므로 여백 없이 직접 그린다.
+ */
+@Composable
+private fun RetentionSelector(selectedDays: Int, onSelect: (Int) -> Unit) {
+    val outline = NotiColors.Outline
+    Row(Modifier.fillMaxWidth().height(NotiSpacing.button).clip(NotiShapes.pill)
+        .border(1.dp, outline, NotiShapes.pill).selectableGroup()) {
+        RETENTION_OPTIONS.forEachIndexed { index, days ->
+            if (index > 0) Box(Modifier.width(1.dp).fillMaxHeight().background(outline))
+            val selected = selectedDays == days
+            Box(Modifier.weight(1f).fillMaxHeight()
+                .background(if (selected) NotiColors.NoticeBackground else NotiColors.Background)
+                .selectable(selected, role = Role.RadioButton, onClick = { if (!selected) onSelect(days) }),
+                contentAlignment = Alignment.Center) {
+                Text(when (days) {
+                    0 -> stringResource(R.string.settings_retention_forever_short)
+                    365 -> stringResource(R.string.settings_screen_year)
+                    else -> pluralStringResource(R.plurals.settings_screen_days, days, days)
+                }, maxLines = 1, softWrap = false,
+                    color = if (selected) NotiColors.NoticeForeground else NotiColors.Body,
+                    fontWeight = if (selected) FontWeight.Bold else null,
+                    style = MaterialTheme.typography.labelLarge.copy(lineHeightStyle = SingleLineCentered))
             }
         }
     }
