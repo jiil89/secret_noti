@@ -172,7 +172,7 @@
     <string name="settings_screen_retention">Retention period</string>
     <string name="settings_screen_year">1 year</string>
     <string name="settings_screen_backup">Back up</string>
-    <string name="settings_screen_backup_hint">You can’t restore a backup if you forget its password</string>
+    <string name="settings_screen_backup_hint">Exports saved messages to a password-locked file, for moving to a new phone. You can’t restore it if you forget the password</string>
     <string name="settings_screen_create_backup">Create backup</string>
     <string name="settings_screen_restore_backup">Restore from backup</string>
     <string name="settings_screen_version">Version %1$s</string>
@@ -262,7 +262,7 @@
     <string name="settings_read_elsewhere_keep">Keep</string>
     <string name="settings_channels_section">KakaoTalk channels</string>
     <string name="settings_channels_toggle">Don\'t save KakaoTalk channels from the start</string>
-    <string name="settings_channels_hint">Card, shopping, and delivery alerts, channel updates</string>
+    <string name="settings_channels_hint">KakaoTalk messages sent by channels, such as card, shopping, and delivery alerts</string>
     <string name="settings_channels_mute_all">Stop saving all %1$d current channel chats</string>
     <string name="settings_channels_confirm_title">Stop saving %1$d channel chats?</string>
     <string name="settings_channels_more">%1$d more</string>
@@ -280,7 +280,7 @@
     <string name="settings_glow_custom_color">Choose a color</string>
     <string name="settings_glow_preview">Preview glow</string>
     <string name="settings_peek_bubble">Peek bubble</string>
-    <string name="settings_peek_bubble_hint">People nearby may see it</string>
+    <string name="settings_peek_bubble_hint">Shows the sender and first line next to the handle for 3 seconds. People nearby may see it</string>
     <string name="glow_color_blue">Blue</string>
     <string name="glow_color_purple">Purple</string>
     <string name="glow_color_pink">Pink</string>
@@ -315,7 +315,7 @@
     <string name="settings_section_saving">Saving</string>
     <string name="settings_section_panel">Edge panel</string>
     <string name="settings_read_elsewhere_switch">Remove from panel when read in the app</string>
-    <string name="settings_read_elsewhere_switch_hint">History is kept</string>
+    <string name="settings_read_elsewhere_switch_hint">Rooms you already read in the original app leave the panel list. History is kept</string>
     <string name="settings_keywords_highlight">Highlight keywords</string>
     <string name="conversation_ad_chip">Ad · Stop saving</string>
     <string name="room_screen_marks_read">" · marks as read"</string>
@@ -379,4 +379,18 @@
     <string name="contact_body_new_app">"Which app should be supported? (app name)\n\n\nWhen you received its notification:\n"</string>
     <string name="contact_body_other">"\n"</string>
     <string name="contact_body_info">──────────\nApp version: %1$s\nModel: %2$s\nAndroid: %3$s\nApps: %4$s</string>
+    <string name="settings_saving_hint">Only message notifications from the apps switched on here are saved, on this phone only</string>
+    <string name="settings_screen_save_photos_hint">Also saves the picture that comes with a notification. Off saves text only</string>
+    <string name="settings_retention_hint">Messages older than this are deleted automatically. “Keep” never deletes</string>
+    <string name="settings_screen_show_handle_hint">The thin bar at the screen edge. Swipe it inward to open the panel</string>
+    <string name="settings_screen_gesture_hint">Keep this on if swiping the handle triggers Back instead</string>
+    <string name="settings_indicator_badge_hint">Shows the number of unchecked messages on the handle</string>
+    <string name="settings_indicator_glow_hint">The handle glows briefly when a new message arrives</string>
+    <string name="settings_keywords_hint">Rooms with a message containing these words get a tag icon</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_preview_lines_hint">How many lines of each message the list shows</string>
+    <string name="settings_screen_lock_hint">Asks for fingerprint, face, or screen lock when you open SecretNoti</string>
+    <string name="settings_screen_hide_previews_hint">Lists show “Locked” instead of the message text</string>
+    <string name="settings_screen_deletion_alerts_hint">Notifies you when the sender deletes a message. The original stays saved</string>
+    <string name="settings_help_hint">Common questions · Replay intro</string>
 </resources>

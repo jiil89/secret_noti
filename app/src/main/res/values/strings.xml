@@ -170,7 +170,7 @@
     <string name="settings_screen_retention">보관 기간</string>
     <string name="settings_screen_year">1년</string>
     <string name="settings_screen_backup">백업</string>
-    <string name="settings_screen_backup_hint">비밀번호를 잊으면 복원할 수 없어요</string>
+    <string name="settings_screen_backup_hint">저장된 메시지를 비밀번호로 잠근 파일로 내보내요. 폰을 바꿀 때 쓰세요. 비밀번호를 잊으면 복원할 수 없어요</string>
     <string name="settings_screen_create_backup">백업 파일 만들기</string>
     <string name="settings_screen_restore_backup">백업에서 복원</string>
     <string name="settings_screen_version">버전 %1$s</string>
@@ -256,7 +256,7 @@
     <string name="settings_read_elsewhere_keep">그대로 두기</string>
     <string name="settings_channels_section">카톡 채널·알림톡</string>
     <string name="settings_channels_toggle">채널·알림톡은 처음부터 저장 안 함</string>
-    <string name="settings_channels_hint">카드·쇼핑·배송 알림, 채널 소식</string>
+    <string name="settings_channels_hint">카드·쇼핑·배송 알림처럼 사람이 아닌 채널이 보내는 카톡</string>
     <string name="settings_channels_mute_all">지금 있는 채널 대화방 %1$d개 모두 저장 끄기</string>
     <string name="settings_channels_confirm_title">채널 대화방 %1$d개 저장을 끌까요?</string>
     <string name="settings_channels_more">외 %1$d개</string>
@@ -274,7 +274,7 @@
     <string name="settings_glow_custom_color">직접 고르기</string>
     <string name="settings_glow_preview">반짝임 미리 보기</string>
     <string name="settings_peek_bubble">미리보기 말풍선</string>
-    <string name="settings_peek_bubble_hint">옆 사람이 볼 수 있어요</string>
+    <string name="settings_peek_bubble_hint">새 메시지가 오면 손잡이 옆에 보낸 사람과 첫 줄을 3초간 띄워요. 옆 사람이 볼 수 있어요</string>
     <string name="glow_color_blue">파랑</string>
     <string name="glow_color_purple">보라</string>
     <string name="glow_color_pink">분홍</string>
@@ -309,7 +309,7 @@
     <string name="settings_section_saving">저장</string>
     <string name="settings_section_panel">엣지 패널</string>
     <string name="settings_read_elsewhere_switch">카톡 등에서 읽으면 패널에서 빼기</string>
-    <string name="settings_read_elsewhere_switch_hint">기록은 남아요</string>
+    <string name="settings_read_elsewhere_switch_hint">원래 앱에서 이미 읽은 방은 패널 목록에서 사라져요. 기록은 남아요</string>
     <string name="settings_keywords_highlight">키워드 강조</string>
     <string name="conversation_ad_chip">광고 · 저장 끄기</string>
     <string name="room_screen_marks_read">" · 읽음 처리돼요"</string>
@@ -373,4 +373,18 @@
     <string name="contact_body_new_app">"어떤 앱을 지원하면 좋을까요? (앱 이름)\n\n\n그 앱 알림을 받은 시각:\n"</string>
     <string name="contact_body_other">"\n"</string>
     <string name="contact_body_info">──────────\n앱 버전: %1$s\n기종: %2$s\n안드로이드: %3$s\n대상 앱: %4$s</string>
+    <string name="settings_saving_hint">켠 앱의 메시지 알림만 이 폰 안에 저장해요</string>
+    <string name="settings_screen_save_photos_hint">알림에 함께 온 사진도 저장해요. 끄면 글만 저장해요</string>
+    <string name="settings_retention_hint">기간이 지난 메시지는 자동으로 지워져요. ‘계속’은 지우지 않아요</string>
+    <string name="settings_screen_show_handle_hint">화면 가장자리의 얇은 막대예요. 안쪽으로 밀면 패널이 열려요</string>
+    <string name="settings_screen_gesture_hint">손잡이를 밀 때 뒤로 가기가 대신 실행되면 켜 두세요</string>
+    <string name="settings_indicator_badge_hint">손잡이에 확인하지 않은 메시지 수를 보여줘요</string>
+    <string name="settings_indicator_glow_hint">새 메시지가 오면 손잡이가 잠깐 빛나요</string>
+    <string name="settings_keywords_hint">이 단어가 들어간 메시지가 있는 대화방에 태그 아이콘이 붙어요</string>
+    <string name="settings_theme">테마</string>
+    <string name="settings_preview_lines_hint">목록에서 메시지 내용을 몇 줄까지 보여줄지 정해요</string>
+    <string name="settings_screen_lock_hint">시크릿노티 앱을 열 때 지문·얼굴·화면 잠금을 확인해요</string>
+    <string name="settings_screen_hide_previews_hint">목록에 메시지 내용 대신 ‘잠금 중’이라고 나와요</string>
+    <string name="settings_screen_deletion_alerts_hint">상대가 메시지를 지우면 알림으로 알려줘요. 원문은 남아 있어요</string>
+    <string name="settings_help_hint">자주 묻는 질문 · 소개 다시 보기</string>
 </resources>

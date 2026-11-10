@@ -105,6 +105,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                 // 권한이 모두 있으면 아무것도 보이지 않는다. 빠진 게 있을 때만 맨 위에 알린다.
                 if (!state.permissions.allGranted) SettingsPermissions(state.permissions, actions::openPermissions)
                 SettingsSection(stringResource(R.string.settings_section_saving), anchor(0)) {
+                    SettingsHelper(stringResource(R.string.settings_saving_hint))
                     val suggested = state.apps.filter { it.suggested }
                     val others = state.apps.filterNot { it.suggested }
                     (suggested + if (expandedApps) others else emptyList()).forEach { app ->
@@ -158,8 +159,10 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             }
                         }
                     }
-                    SettingsSwitchRow(stringResource(R.string.settings_screen_save_photos), state.savePhotos, actions::setSavePhotos)
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_save_photos), state.savePhotos, actions::setSavePhotos,
+                        detail = stringResource(R.string.settings_screen_save_photos_hint))
                     SettingsLabel(stringResource(R.string.settings_screen_retention))
+                    SettingsHelper(stringResource(R.string.settings_retention_hint))
                     RetentionSelector(state.retentionDays) { days ->
                         if (requiresRetentionConfirmation(state.retentionDays, days)) pendingRetention = days
                         else actions.setRetention(days)
@@ -178,7 +181,8 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_section_panel), anchor(1)) {
                     SettingsSwitchRow(stringResource(R.string.settings_screen_show_handle), checked = state.handleEnabled,
-                        onCheckedChange = actions::setHandleEnabled)
+                        onCheckedChange = actions::setHandleEnabled,
+                        detail = stringResource(R.string.settings_screen_show_handle_hint))
                     SettingsLabel(stringResource(R.string.settings_screen_side))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         listOf(true, false).forEachIndexed { index, onLeft ->
@@ -245,11 +249,13 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         checked = state.gestureExclusion,
                         onCheckedChange = actions::setGestureExclusion,
                         enabled = state.handleEnabled,
+                        detail = stringResource(R.string.settings_screen_gesture_hint),
                     )
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_new_messages), anchor(2)) {
-                    SettingsSwitchRow(stringResource(R.string.settings_indicator_badge), state.indicatorBadge, actions::setIndicatorBadge)
+                    SettingsSwitchRow(stringResource(R.string.settings_indicator_badge), state.indicatorBadge, actions::setIndicatorBadge,
+                        detail = stringResource(R.string.settings_indicator_badge_hint))
                     if (state.indicatorBadge) {
                         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                             BadgeStyle.entries.forEachIndexed { index, style ->
@@ -262,7 +268,8 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             }
                         }
                     }
-                    SettingsSwitchRow(stringResource(R.string.settings_indicator_glow), state.indicatorGlow, actions::setIndicatorGlow)
+                    SettingsSwitchRow(stringResource(R.string.settings_indicator_glow), state.indicatorGlow, actions::setIndicatorGlow,
+                        detail = stringResource(R.string.settings_indicator_glow_hint))
                     if (state.indicatorGlow) {
                         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                             listOf(true, false).forEachIndexed { index, useAppColor ->
@@ -287,6 +294,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             if (it) ReadElsewhereAction.REMOVE_FROM_PANEL else ReadElsewhereAction.KEEP) },
                         detail = stringResource(R.string.settings_read_elsewhere_switch_hint))
                     SettingsLabel(stringResource(R.string.settings_keywords_highlight))
+                    SettingsHelper(stringResource(R.string.settings_keywords_hint))
                     if (state.keywords.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         state.keywords.forEach { word ->
                             val removeDescription = stringResource(R.string.settings_screen_remove_keyword, word)
@@ -311,6 +319,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_appearance), anchor(3)) {
+                    SettingsLabel(stringResource(R.string.settings_theme))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         ThemeMode.entries.forEachIndexed { index, mode ->
                             SegmentedButton(selected = state.themeMode == mode, onClick = { actions.setThemeMode(mode) },
@@ -329,6 +338,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         }
                     }
                     SettingsLabel(stringResource(R.string.settings_preview_lines))
+                    SettingsHelper(stringResource(R.string.settings_preview_lines_hint))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         PreviewLines.entries.forEachIndexed { index, lines ->
                             SegmentedButton(selected = state.previewLines == lines, onClick = { actions.setPreviewLines(lines) },
@@ -344,9 +354,12 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                 SettingsSection(stringResource(R.string.settings_screen_privacy), anchor(4)) {
                     SettingsSwitchRow(stringResource(R.string.settings_screen_lock), state.lockEnabled, actions::setLock,
                         enabled = state.lockAvailable,
-                        detail = if (state.lockAvailable) null else stringResource(R.string.settings_screen_lock_unavailable))
-                    SettingsSwitchRow(stringResource(R.string.settings_screen_hide_previews), state.hidePreviews, actions::setHidePreviews)
-                    SettingsSwitchRow(stringResource(R.string.settings_screen_deletion_alerts), state.deletionAlerts, actions::setDeletionAlerts)
+                        detail = stringResource(if (state.lockAvailable) R.string.settings_screen_lock_hint
+                            else R.string.settings_screen_lock_unavailable))
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_hide_previews), state.hidePreviews, actions::setHidePreviews,
+                        detail = stringResource(R.string.settings_screen_hide_previews_hint))
+                    SettingsSwitchRow(stringResource(R.string.settings_screen_deletion_alerts), state.deletionAlerts, actions::setDeletionAlerts,
+                        detail = stringResource(R.string.settings_screen_deletion_alerts_hint))
                     if (state.deletionAlerts && !state.notificationPermission) {
                         Surface(color = NotiColors.NoticeBackground, shape = NotiShapes.banner) {
                             Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -390,7 +403,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_section_help)) {
-                    SettingsNavRow(stringResource(R.string.settings_help), null, actions::openHelp)
+                    SettingsNavRow(stringResource(R.string.settings_help), stringResource(R.string.settings_help_hint), actions::openHelp)
                     SettingsNavRow(stringResource(R.string.settings_contact), stringResource(R.string.settings_contact_hint)) {
                         showContactSheet = true
                     }
