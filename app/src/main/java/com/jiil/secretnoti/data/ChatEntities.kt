@@ -45,6 +45,11 @@ data class ConversationEntity(
     @ColumnInfo(defaultValue = "0") val seenAt: Long = 0,
     /** 카톡 채널·알림톡 대화방. */
     @ColumnInfo(defaultValue = "0") val isChannel: Boolean = false,
+    /**
+     * 알림창에서 이 방 알림을 지운 시각 (밀어서 지우기·모두 지우기). 0이면 지운 적 없음.
+     * 그 뒤 원래 앱에서 읽어도 알 수 없으므로 패널에서 흐리게 보여 준다. 이 방 알림이 다시 오면 0으로 돌아간다.
+     */
+    @ColumnInfo(defaultValue = "0") val notificationClearedAt: Long = 0,
 )
 
 @Entity(
@@ -236,17 +241,21 @@ interface ChatDao {
     @Query(
         """
         UPDATE conversation SET unreadCount = 0, readAt = MAX(readAt, :now),
-            panelDismissedAt = MAX(panelDismissedAt, :dismissAt)
+            panelDismissedAt = MAX(panelDismissedAt, :dismissAt), notificationClearedAt = 0
         WHERE packageName = :packageName AND roomKey = :roomKey
         """,
     )
     suspend fun markReadElsewhere(packageName: String, roomKey: String, now: Long, dismissAt: Long)
 
+    /** 알림창에서 이 방 알림을 지웠다 (읽은 것은 아님). */
+    @Query("UPDATE conversation SET notificationClearedAt = :at WHERE packageName = :packageName AND roomKey = :roomKey")
+    suspend fun markNotificationCleared(packageName: String, roomKey: String, at: Long)
+
     /** 시크릿노티에서 원래 앱의 그 방을 열었음: 위와 같지만 대화방 id로 찾는다. */
     @Query(
         """
         UPDATE conversation SET unreadCount = 0, readAt = MAX(readAt, :now),
-            panelDismissedAt = MAX(panelDismissedAt, :dismissAt)
+            panelDismissedAt = MAX(panelDismissedAt, :dismissAt), notificationClearedAt = 0
         WHERE id = :id
         """,
     )

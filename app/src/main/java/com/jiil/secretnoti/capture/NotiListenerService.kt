@@ -89,6 +89,11 @@ class NotiListenerService : NotificationListenerService() {
         // 사용자가 밀어서 지운 것(REASON_CANCEL, 모두 지우기 REASON_CANCEL_ALL)은 읽은 게 아니므로 그대로 둔다.
         // 그 뒤 카톡에서 읽은 것은 다음 메시지의 안 읽은 수로 알아챈다 (ParsedNotification.appUnread).
         if (reason == REASON_APP_CANCEL || reason == REASON_CLICK) markReadElsewhere(sbn)
+        // 알림창에서 지운 방은 그 뒤 원래 앱에서 읽어도 소식이 오지 않는다 → 패널에서 흐리게 표시한다.
+        // (묶음을 통째로 밀면 안의 알림은 REASON_GROUP_SUMMARY_CANCELED로 온다.)
+        else if (reason == REASON_CANCEL || reason == REASON_CANCEL_ALL || reason == REASON_GROUP_SUMMARY_CANCELED) {
+            markNotificationCleared(sbn)
+        }
     }
 
     private fun markReadElsewhere(sbn: StatusBarNotification) {
@@ -101,6 +106,13 @@ class NotiListenerService : NotificationListenerService() {
             runCatching { chat.markReadElsewhere(pkg, parsed.roomKey, removeFromPanel) }
             WidgetUpdater.request(context)
         }
+    }
+
+    private fun markNotificationCleared(sbn: StatusBarNotification) {
+        val pkg = sbn.packageName
+        if (pkg == packageName || !isTarget(pkg)) return
+        val parsed = NotificationParser.parse(SnapshotExtractor.from(sbn)) ?: return
+        scope.launch(Dispatchers.IO) { runCatching { chat.markNotificationCleared(pkg, parsed.roomKey) } }
     }
 
     private fun stopOverlay() {

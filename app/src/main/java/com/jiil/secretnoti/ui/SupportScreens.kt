@@ -46,6 +46,7 @@ fun HelpScreen(
                 action = R.string.help_check_permissions to onOpenPermissions)
             HelpItem(R.string.help_q_read, R.string.help_a_read)
             HelpItem(R.string.help_q_stuck, R.string.help_a_stuck)
+            HelpItem(R.string.help_q_dimmed, R.string.help_a_dimmed)
             HelpItem(R.string.help_q_handle, R.string.help_a_handle)
             HelpItem(R.string.help_q_menu, R.string.help_a_menu)
             HelpItem(R.string.help_q_apps, R.string.help_a_apps,

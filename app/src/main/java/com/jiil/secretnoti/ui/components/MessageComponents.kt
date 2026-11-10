@@ -21,6 +21,11 @@ import com.jiil.secretnoti.capture.KakaoEmoticons
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -120,7 +125,11 @@ fun ConversationRow(
             onLongClickLabel = stringResource(R.string.messages_manage_conversation), role = Role.Button)
         .padding(horizontal = 4.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box {
+        // 알림창에서 알림을 지운 방: 이름·내용·프로필만 흐리게 (종 버튼과 설명은 또렷하게).
+        val cleared = conversation.notificationCleared
+        val fade = if (cleared) 0.5f else 1f
+        var clearedNoteOpen by rememberSaveable(conversation.id) { mutableStateOf(false) }
+        Box(Modifier.alpha(fade)) {
             // 채널은 단톡으로 표시돼 와도 채널로 보인다 (사람 대화와 색으로 구분).
             if (conversation.isChannel) {
                 InitialAvatar(conversation.title, background = NotiColors.ChannelBackground,
@@ -139,7 +148,7 @@ fun ConversationRow(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (conversation.isPinned) Icon(NotiIcons.pin, stringResource(R.string.messages_pinned), Modifier.size(14.dp), tint = NotiColors.Secondary)
-                Text(conversation.title, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
+                Text(conversation.title, Modifier.weight(1f).alpha(fade), style = MaterialTheme.typography.titleSmall,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 // 꼬리표 글자 대신 작은 아이콘. 앱·단톡·채널은 아바타가 이미 보여 주므로 따로 적지 않는다.
                 if (conversation.isMuted) Icon(NotiIcons.saveOff, stringResource(R.string.conversation_saving_off),
@@ -164,11 +173,33 @@ fun ConversationRow(
                         conversation.lastSender?.takeIf { it.isNotBlank() } ?: me, conversation.preview)
                     else -> AnnotatedString(conversation.preview)
                 }
-                Text(preview, Modifier.weight(1f), color = if (dimmed) NotiColors.Secondary else NotiColors.Body,
+                Text(preview, Modifier.weight(1f).alpha(fade), color = if (dimmed) NotiColors.Secondary else NotiColors.Body,
                     style = MaterialTheme.typography.bodyMedium, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
-                UnreadBadge(conversation.unread, Modifier.padding(top = 1.dp))
+                // 지운 방의 안 읽은 수는 틀릴 수 있어서 숫자 대신 종을 보여 준다. 누르면 아래에 설명이 펼쳐진다.
+                if (cleared) ClearedBell(clearedNoteOpen) { clearedNoteOpen = !clearedNoteOpen }
+                else UnreadBadge(conversation.unread, Modifier.padding(top = 1.dp))
+            }
+            if (cleared && clearedNoteOpen) {
+                Text(stringResource(R.string.panel_cleared_note, conversation.appLabel),
+                    Modifier.fillMaxWidth().background(NotiColors.DetailBackground, RoundedCornerShape(10.dp))
+                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                    color = NotiColors.Text, style = MaterialTheme.typography.bodySmall)
             }
         }
+    }
+}
+
+/** 알림창에서 알림을 지운 방의 표시. 숫자 배지 자리에 들어가고, 누르면 설명을 펼치거나 접는다. */
+@Composable
+private fun ClearedBell(open: Boolean, onToggle: () -> Unit) {
+    val description = stringResource(R.string.panel_cleared_bell)
+    Box(Modifier.size(32.dp).clip(CircleShape)
+        .background(if (open) NotiColors.Secondary else NotiColors.DetailBackground)
+        .toggleable(open, role = Role.Button) { onToggle() }
+        .clearAndSetSemantics { contentDescription = description },
+        contentAlignment = Alignment.Center) {
+        Icon(NotiIcons.bellOff, null, Modifier.size(16.dp),
+            tint = if (open) NotiColors.Background else NotiColors.Secondary)
     }
 }
 

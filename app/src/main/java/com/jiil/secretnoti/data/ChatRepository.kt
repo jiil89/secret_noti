@@ -131,6 +131,8 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
                 lastText = newer?.text ?: conv.lastText,
                 looksLikeAd = conv.looksLikeAd || adNow,
                 isChannel = parsed.isChannel,
+                // 이 방 알림이 다시 알림창에 있다 → 원래 앱에서 읽으면 다시 알 수 있다.
+                notificationClearedAt = 0,
             ),
         )
         IngestResult(conversationId, parsed.roomTitle, inserted, deleted)
@@ -169,7 +171,11 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
                 .filter { !it.conversation.isMuted }
                 .filter { includeHidden || !it.conversation.isHidden }
                 .filter { !panelOnly || it.conversation.lastMessageAt > it.conversation.panelDismissedAt }
-                .map { it.toUi(hidePreviews, it.conversation.id in keywordIds) }
+                .map {
+                    val ui = it.toUi(hidePreviews, it.conversation.id in keywordIds)
+                    // 흐리게 표시하는 것은 엣지 패널에서만.
+                    if (panelOnly && it.conversation.notificationClearedAt > 0) ui.copy(notificationCleared = true) else ui
+                }
         }
 
     fun observeHiddenConversations(): Flow<List<ConversationUi>> =
@@ -278,6 +284,10 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
         dao.setPanelDismissedAt(conversationId, now)
 
     suspend fun dismissAllFromPanel(now: Long = System.currentTimeMillis()) = dao.dismissAllFromPanel(now)
+
+    /** 알림창에서 이 방 알림을 지웠다. 읽은 것은 아니므로 패널에는 남기고 표시만 한다. */
+    suspend fun markNotificationCleared(packageName: String, roomKey: String) =
+        dao.markNotificationCleared(packageName, roomKey, System.currentTimeMillis())
 
     /** 원래 앱에서 먼저 읽었다: 안 읽은 수 0, 설정에 따라 패널에서도 뺀다. */
     suspend fun markReadElsewhere(packageName: String, roomKey: String, removeFromPanel: Boolean) {

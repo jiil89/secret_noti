@@ -404,4 +404,8 @@
     <string name="settings_panel_blur_unsupported">Not available on this Android version (needs 12 or later)</string>
     <string name="settings_panel_blur_off_now">Blur is off right now. Power saving may be on, or this phone may not support it</string>
     <string name="room_open_app_only">Couldn\'t open the chat directly, so %1$s was opened. It opens directly again after the next message in this chat</string>
+    <string name="panel_cleared_note">You cleared this notification from the shade. SecretNoti can\'t tell whether you already read it in %1$s.</string>
+    <string name="panel_cleared_bell">Notification was cleared, show explanation</string>
+    <string name="help_q_dimmed">Why are some chats dimmed in the panel?</string>
+    <string name="help_a_dimmed">You swiped away or cleared their notifications from the shade. After that, SecretNoti can\'t tell whether you read them in the original app, so it shows a bell instead of a number. They return to normal when a new message arrives in that chat.</string>
 </resources>
