@@ -120,8 +120,12 @@ fun PermissionsScreen() {
                 granted = state.battery,
                 note = stringResource(R.string.route_permission_battery_note),
                 actions = listOf(
-                    stringResource(R.string.route_request_exemption) to {
-                        context.launch(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, pkgUri))
+                    // 플레이 정책상 '제외 요청' 창을 바로 띄우는 권한은 쓰지 않는다. 사용자가 앱 정보 → 배터리에서 직접 바꾼다.
+                    stringResource(R.string.route_battery_settings) to {
+                        context.launch(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkgUri))
+                    },
+                    stringResource(R.string.route_battery_list) to {
+                        context.launch(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
                     },
                 ),
             )

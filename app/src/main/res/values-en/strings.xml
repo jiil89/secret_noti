@@ -82,10 +82,10 @@
     <string name="route_app_info">App info</string>
     <string name="route_permission_overlay_title">2. Display over other apps</string>
     <string name="route_permission_overlay_body">Required to show the edge handle and panel.</string>
-    <string name="route_permission_battery_title">3. Exclude from battery optimization</string>
+    <string name="route_permission_battery_title">3. Unrestricted battery use</string>
     <string name="route_permission_battery_body">Prevents power saving from stopping notification capture.</string>
-    <string name="route_permission_battery_note">On Galaxy phones, also add SecretNoti to Settings → Battery → Background usage limits → Never auto sleeping apps.</string>
-    <string name="route_request_exemption">Request exemption</string>
+    <string name="route_permission_battery_note">Tap “App info” → Battery → choose “Unrestricted”. On Galaxy phones, also add SecretNoti to Settings → Battery → Background usage limits → Never auto sleeping apps.</string>
+    <string name="route_battery_settings">App info</string>
     <string name="route_target_apps">Target apps</string>
     <string name="route_target_apps_help">Choose which apps to capture in Settings → Target apps.</string>
     <string name="route_permission_granted">Allowed</string>
@@ -182,7 +182,7 @@
     <string name="settings_screen_cancel">Cancel</string>
     <string name="settings_screen_notification_access">Notification access</string>
     <string name="settings_screen_overlay">Display over other apps</string>
-    <string name="settings_screen_battery">Battery optimization exemption</string>
+    <string name="settings_screen_battery">Unrestricted battery use</string>
     <string name="settings_screen_permissions_needed">Permissions needed</string>
     <string name="settings_screen_permissions_settings">Permission settings</string>
     <string name="settings_screen_handle_hidden">Handle hidden</string>
@@ -336,7 +336,7 @@
     <string name="help_title">Help</string>
     <string name="help_replay_intro">Replay intro ›</string>
     <string name="help_q_not_saved">Messages are not being saved</string>
-    <string name="help_a_not_saved">1. In KakaoTalk settings → Notifications, turn on message preview\n2. While KakaoTalk for PC is in use, your phone gets no notifications, so nothing is saved\n3. Chats with notifications turned off are not saved\n4. Turn off battery optimization for SecretNoti</string>
+    <string name="help_a_not_saved">1. In KakaoTalk settings → Notifications, turn on message preview\n2. While KakaoTalk for PC is in use, your phone gets no notifications, so nothing is saved\n3. Chats with notifications turned off are not saved\n4. Set SecretNoti’s battery use to “Unrestricted”</string>
     <string name="help_check_permissions">Check permissions ›</string>
     <string name="help_q_read">When are messages marked as read?</string>
     <string name="help_a_read">Viewing in SecretNoti never marks messages as read. They are marked as read when you open the chat in KakaoTalk or tap “Open in KakaoTalk”.</string>
@@ -393,4 +393,5 @@
     <string name="settings_screen_hide_previews_hint">Lists show “Locked” instead of the message text</string>
     <string name="settings_screen_deletion_alerts_hint">Notifies you when the sender deletes a message. The original stays saved</string>
     <string name="settings_help_hint">Common questions · Replay intro</string>
+    <string name="route_battery_list">Battery optimization list</string>
 </resources>

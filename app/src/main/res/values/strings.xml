@@ -80,10 +80,10 @@
     <string name="route_app_info">앱 정보</string>
     <string name="route_permission_overlay_title">2. 다른 앱 위에 표시</string>
     <string name="route_permission_overlay_body">화면 가장자리 손잡이와 엣지패널을 띄우는 데 필요합니다.</string>
-    <string name="route_permission_battery_title">3. 배터리 최적화 제외</string>
+    <string name="route_permission_battery_title">3. 배터리 사용 제한 없음</string>
     <string name="route_permission_battery_body">절전 기능이 알림 수집을 멈추지 않게 합니다.</string>
-    <string name="route_permission_battery_note">갤럭시는 추가로: 설정 → 배터리 → 백그라운드 사용 한도 → \'절전 예외 앱\'에 시크릿노티를 넣어 주세요.</string>
-    <string name="route_request_exemption">제외 요청</string>
+    <string name="route_permission_battery_note">‘앱 정보 열기’ → 배터리 → ‘제한 없음’을 골라 주세요. 갤럭시는 추가로: 설정 → 배터리 → 백그라운드 사용 한도 → \'절전 예외 앱\'에 시크릿노티를 넣어 주세요.</string>
+    <string name="route_battery_settings">앱 정보 열기</string>
     <string name="route_target_apps">대상 앱</string>
     <string name="route_target_apps_help">어떤 앱의 알림을 저장할지는 설정 → 대상 앱에서 고를 수 있어요.</string>
     <string name="route_permission_granted">허용됨</string>
@@ -180,7 +180,7 @@
     <string name="settings_screen_cancel">취소</string>
     <string name="settings_screen_notification_access">알림 접근</string>
     <string name="settings_screen_overlay">다른 앱 위에 표시</string>
-    <string name="settings_screen_battery">배터리 최적화 제외</string>
+    <string name="settings_screen_battery">배터리 사용 제한 없음</string>
     <string name="settings_screen_permissions_needed">권한 설정이 필요해요</string>
     <string name="settings_screen_permissions_settings">권한 설정</string>
     <string name="settings_screen_handle_hidden">손잡이 숨김</string>
@@ -330,7 +330,7 @@
     <string name="help_title">도움말</string>
     <string name="help_replay_intro">소개 다시 보기 ›</string>
     <string name="help_q_not_saved">메시지가 저장되지 않아요</string>
-    <string name="help_a_not_saved">1. 카톡 설정 → 알림 → ‘메시지 미리보기’를 켜 주세요\n2. PC 카톡을 쓰는 동안은 폰에 알림이 안 와서 저장도 안 돼요\n3. 알림을 끈 채팅방은 저장되지 않아요\n4. 배터리 최적화 제외를 켜 주세요</string>
+    <string name="help_a_not_saved">1. 카톡 설정 → 알림 → ‘메시지 미리보기’를 켜 주세요\n2. PC 카톡을 쓰는 동안은 폰에 알림이 안 와서 저장도 안 돼요\n3. 알림을 끈 채팅방은 저장되지 않아요\n4. 시크릿노티의 배터리 사용을 ‘제한 없음’으로 바꿔 주세요</string>
     <string name="help_check_permissions">권한 확인하기 ›</string>
     <string name="help_q_read">언제 읽음 처리되나요?</string>
     <string name="help_a_read">시크릿노티에서 보는 것만으로는 읽음 처리되지 않아요. 카톡에서 그 방을 열 때, 또는 “카카오톡에서 열기”를 누를 때 읽음 처리돼요.</string>
@@ -387,4 +387,5 @@
     <string name="settings_screen_hide_previews_hint">목록에 메시지 내용 대신 ‘잠금 중’이라고 나와요</string>
     <string name="settings_screen_deletion_alerts_hint">상대가 메시지를 지우면 알림으로 알려줘요. 원문은 남아 있어요</string>
     <string name="settings_help_hint">자주 묻는 질문 · 소개 다시 보기</string>
+    <string name="route_battery_list">배터리 최적화 목록</string>
 </resources>
