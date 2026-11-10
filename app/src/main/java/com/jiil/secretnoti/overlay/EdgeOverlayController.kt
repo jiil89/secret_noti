@@ -198,10 +198,13 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         val screenWidthDp = context.resources.configuration.screenWidthDp
         val maxWidthDp = (screenWidthDp - PanelWidth.SCREEN_MARGIN_DP).coerceAtLeast(PanelWidth.MIN_DP)
         val widthDp = Prefs.panelWidthDp.value.coerceIn(PanelWidth.MIN_DP, maxWidthDp)
-        // 0.4.27까지와 같은 높이: 바 사이 화면에서 위아래 96dp씩 뺀 높이 (최대 652dp).
-        val maxHeightDp = minOf(PANEL_MAX_HEIGHT_DP,
-            ((usableScreenHeight() - dp(PANEL_VERTICAL_MARGIN_DP * 2)) / density).toInt())
-        val heightPx = dp(maxHeightDp)
+        // 위쪽 끝은 예전(바 사이 화면 가운데에 위아래 96dp 여백, 최대 652dp)과 같게 두고,
+        // 높이만 그 2/3로 줄여 아래쪽을 올린다.
+        val usable = usableScreenHeight()
+        val fullHeightPx = minOf(dp(PANEL_MAX_HEIGHT_DP), usable - dp(PANEL_VERTICAL_MARGIN_DP * 2))
+        val topPx = (usable - fullHeightPx) / 2
+        val heightPx = fullHeightPx * 2 / 3
+        val maxHeightDp = (heightPx / density).toInt()
 
         val dialog = Dialog(context, android.R.style.Theme_Material_Dialog_NoActionBar)
         val content = ComposeView(context).apply {
@@ -235,8 +238,8 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
                 setColor(panelBackground(opacity))
             })
             decorView.setPadding(0, 0, 0, 0)
-            setGravity((if (onLeft) Gravity.LEFT else Gravity.RIGHT) or Gravity.CENTER_VERTICAL)
-            attributes = attributes.also { it.x = dp(PANEL_EDGE_MARGIN_DP) }
+            setGravity((if (onLeft) Gravity.LEFT else Gravity.RIGHT) or Gravity.TOP)
+            attributes = attributes.also { it.x = dp(PANEL_EDGE_MARGIN_DP); it.y = topPx }
             setLayout(dp(widthDp), heightPx)
             setWindowAnimations(0)
             // 반투명일 때 그림자는 패널 안으로 비쳐 탁해 보이므로 뺀다 (대신 얇은 테두리).
