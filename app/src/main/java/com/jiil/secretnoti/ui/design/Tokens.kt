@@ -81,6 +81,9 @@ val LocalNotiPalette = staticCompositionLocalOf { NotiLightPalette }
 /** 대화방 목록 미리보기 줄 수. 0이면 화면이 정한 기본값(자동). */
 val LocalPreviewLines = staticCompositionLocalOf { 0 }
 
+/** 엣지 패널 배경 불투명도 (1 = 불투명). 1보다 작으면 패널 안 행들은 배경을 칠하지 않는다. */
+val LocalPanelOpacity = staticCompositionLocalOf { 1f }
+
 object NotiColors {
     val Text: Color @Composable get() = LocalNotiPalette.current.Text
     val Secondary: Color @Composable get() = LocalNotiPalette.current.Secondary

@@ -57,6 +57,7 @@ import com.jiil.secretnoti.ui.components.ConversationRow
 import com.jiil.secretnoti.ui.components.GlowColorPicker
 import com.jiil.secretnoti.ui.design.*
 import com.jiil.secretnoti.ui.model.*
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -251,6 +252,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         enabled = state.handleEnabled,
                         detail = stringResource(R.string.settings_screen_gesture_hint),
                     )
+                    PanelBackgroundSettings(state, actions)
                 }
                 HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_new_messages), anchor(2)) {
@@ -455,6 +457,42 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
             },
         )
     }
+}
+
+/** 패널 투명도 슬라이더(10% 단위)와 뒤 화면 흐림 스위치. 바꾸면 다음에 패널을 열 때 적용된다. */
+@Composable
+private fun PanelBackgroundSettings(state: SettingsUi, actions: SettingsActions) {
+    val description = stringResource(R.string.settings_panel_transparency)
+    Column(verticalArrangement = Arrangement.spacedBy(NotiSpacing.tiny)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f)) { SettingsLabel(description) }
+            Text(stringResource(R.string.settings_panel_transparency_value, state.panelTransparency),
+                style = MaterialTheme.typography.bodyMedium, color = NotiColors.Text)
+        }
+        Slider(
+            value = state.panelTransparency.toFloat(),
+            onValueChange = { v ->
+                val step = ((v / 10f).roundToInt() * 10).coerceIn(0, PANEL_TRANSPARENCY_MAX)
+                if (step != state.panelTransparency) actions.setPanelTransparency(step)
+            },
+            valueRange = 0f..PANEL_TRANSPARENCY_MAX.toFloat(),
+            steps = PANEL_TRANSPARENCY_MAX / 10 - 1,
+            modifier = Modifier.fillMaxWidth().heightIn(min = NotiSpacing.button)
+                .semantics { contentDescription = description },
+        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            SettingsHelper(stringResource(R.string.settings_panel_transparency_opaque))
+            SettingsHelper(stringResource(R.string.settings_panel_transparency_clear))
+        }
+        SettingsHelper(stringResource(R.string.settings_panel_transparency_hint))
+    }
+    SettingsSwitchRow(stringResource(R.string.settings_panel_blur), state.panelBlur && state.panelBlurSupported,
+        actions::setPanelBlur, enabled = state.panelBlurSupported,
+        detail = stringResource(when {
+            !state.panelBlurSupported -> R.string.settings_panel_blur_unsupported
+            state.panelBlur && !state.panelBlurEnabledNow -> R.string.settings_panel_blur_off_now
+            else -> R.string.settings_panel_blur_hint
+        }))
 }
 
 /** 글자 크기·줄 수를 고르면 바로 바뀌는 대화방 한 줄 미리보기 (설정 화면도 같은 배율이 적용된다). */

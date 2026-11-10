@@ -46,6 +46,9 @@ enum class PreviewLines(@StringRes val labelRes: Int, val lines: Int) {
     THREE(R.string.settings_preview_lines_three, 3),
 }
 
+/** 엣지 패널 투명도 상한(%). 이보다 투명하면 글자를 읽기 어렵다. */
+const val PANEL_TRANSPARENCY_MAX = 60
+
 /** 보관 기간 선택지(일). 0은 기간 없이 계속 보관. */
 val RETENTION_OPTIONS = listOf(7, 30, 90, 180, 365, 0)
 
@@ -118,6 +121,14 @@ data class SettingsUi(
     val glowColor: Int,
     /** 새 메시지 표시: 손잡이 옆 미리보기 말풍선. */
     val peekBubble: Boolean,
+    /** 엣지 패널 배경 투명도(%). */
+    val panelTransparency: Int = 0,
+    /** 패널을 열면 뒤 화면 흐리게. */
+    val panelBlur: Boolean = false,
+    /** 안드로이드 버전이 흐림을 지원하는가 (12 이상). */
+    val panelBlurSupported: Boolean = true,
+    /** 지금 흐림이 실제로 그려지는가 (절전 모드에서는 꺼진다). */
+    val panelBlurEnabledNow: Boolean = true,
 )
 
 /** 설정 화면에서 일어나는 모든 조작. */
@@ -159,6 +170,8 @@ interface SettingsActions {
     /** ARGB. 알파는 무시하고 불투명으로 쓴다. */
     fun setGlowColor(argb: Int)
     fun setPeekBubble(enabled: Boolean)
+    fun setPanelTransparency(percent: Int) {}
+    fun setPanelBlur(enabled: Boolean) {}
     /** 지금 설정으로 손잡이를 한 번 반짝여 본다. */
     fun previewGlow()
     /** 비밀번호를 받아 암호화한 백업 파일을 만든다. */

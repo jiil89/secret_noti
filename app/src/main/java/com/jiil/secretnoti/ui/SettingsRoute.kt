@@ -23,6 +23,7 @@ import com.jiil.secretnoti.capture.DeletionNotifier
 import com.jiil.secretnoti.capture.TargetApps
 import com.jiil.secretnoti.data.BackupManager
 import com.jiil.secretnoti.overlay.OverlayEvents
+import com.jiil.secretnoti.overlay.PanelBlur
 import com.jiil.secretnoti.data.WrongPasswordException
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.model.AppSettingUi
@@ -61,7 +62,9 @@ fun SettingsRoute(
     var permissions by remember { mutableStateOf(readPermissionSummary(context)) }
     var canNotify by remember { mutableStateOf(DeletionNotifier.canNotify(context)) }
     var deviceSecure by remember { mutableStateOf(AppLock.isDeviceSecure(context)) }
+    var blurNow by remember { mutableStateOf(PanelBlur.enabledNow(context)) }
     LifecycleResumeEffect(Unit) {
+        blurNow = PanelBlur.enabledNow(context)
         permissions = readPermissionSummary(context)
         canNotify = DeletionNotifier.canNotify(context)
         deviceSecure = AppLock.isDeviceSecure(context)
@@ -97,6 +100,8 @@ fun SettingsRoute(
     val glowUsesAppColor by Prefs.glowUsesAppColor.flow.collectAsStateWithLifecycle()
     val glowColor by Prefs.glowColor.flow.collectAsStateWithLifecycle()
     val peekBubble by Prefs.peekBubble.flow.collectAsStateWithLifecycle()
+    val panelTransparency by Prefs.panelTransparency.flow.collectAsStateWithLifecycle()
+    val panelBlur by Prefs.panelBlur.flow.collectAsStateWithLifecycle()
 
     val launcherApps = remember { installedLauncherApps(context) }
     val apps = remember(enabledApps, seenApps, launcherApps) {
@@ -167,6 +172,10 @@ fun SettingsRoute(
         glowUsesAppColor = glowUsesAppColor,
         glowColor = glowColor,
         peekBubble = peekBubble,
+        panelTransparency = panelTransparency,
+        panelBlur = panelBlur,
+        panelBlurSupported = PanelBlur.supported,
+        panelBlurEnabledNow = blurNow,
     )
 
     val actions = remember {
@@ -233,6 +242,8 @@ fun SettingsRoute(
             override fun setGlowUsesAppColor(enabled: Boolean) { Prefs.glowUsesAppColor.value = enabled }
             override fun setGlowColor(argb: Int) { Prefs.glowColor.value = argb or 0xFF000000.toInt() }
             override fun setPeekBubble(enabled: Boolean) { Prefs.peekBubble.value = enabled }
+            override fun setPanelTransparency(percent: Int) { Prefs.panelTransparency.value = percent }
+            override fun setPanelBlur(enabled: Boolean) { Prefs.panelBlur.value = enabled }
             override fun previewGlow() { OverlayEvents.previewGlow() }
             override fun backup(password: String) {
                 pendingPassword = password

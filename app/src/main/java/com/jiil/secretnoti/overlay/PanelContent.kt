@@ -14,6 +14,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.jiil.secretnoti.ui.design.NotiColors
+import com.jiil.secretnoti.ui.design.LocalPanelOpacity
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalConfiguration
@@ -36,6 +38,10 @@ fun PanelContent(
     onOpenConversation: (Long) -> Unit,
     onShowAll: () -> Unit,
     onOpenSettings: () -> Unit,
+    /** 패널 배경 불투명도 (1 = 불투명). */
+    opacity: Float = 1f,
+    /** 창 뒤 흐림이 켜져 있으면 어둡게 하는 막을 옅게 한다. */
+    blurBehind: Boolean = false,
 ) {
     val chat = remember { NotiApp.instance.chat }
     val conversations by remember { chat.observePanelConversations() }.collectAsState(initial = emptyList())
@@ -51,7 +57,7 @@ fun PanelContent(
     Box(
         Modifier
             .fillMaxSize()
-            .background(NotiColors.Scrim)
+            .background(if (blurBehind) NotiColors.Scrim.copy(alpha = NotiColors.Scrim.alpha * 0.4f) else NotiColors.Scrim)
             .pointerInput(Unit) { detectTapGestures { onClose() } },
     ) {
         Box(
@@ -61,7 +67,7 @@ fun PanelContent(
                 // 카드 안을 눌렀을 때는 닫히지 않도록 탭을 소비한다.
                 .pointerInput(Unit) { detectTapGestures { } },
         ) {
-            EdgePanel(
+            CompositionLocalProvider(LocalPanelOpacity provides opacity) { EdgePanel(
                 conversations = conversations,
                 availableApps = conversations.apps(),
                 filter = filter,
@@ -80,7 +86,7 @@ fun PanelContent(
                 onMute = { id, deleteExisting ->
                     scope.launch { chat.mute(id, deleteExisting); WidgetUpdater.request(context) }
                 },
-            )
+            ) }
         }
     }
 }

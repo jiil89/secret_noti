@@ -78,12 +78,16 @@ object Prefs {
     val peekBubble = bool("peek_bubble", false)
     val textSize = enum("text_size", TextSize.NORMAL)
     val previewLines = enum("preview_lines", PreviewLines.AUTO)
+    /** 엣지 패널 배경 투명도(%). 0 = 불투명, 최대 [com.jiil.secretnoti.ui.model.PANEL_TRANSPARENCY_MAX]. */
+    val panelTransparency = int("panel_transparency", 0)
+    /** 패널을 열면 뒤 화면 흐리게. */
+    val panelBlur = bool("panel_blur", false)
 
     private val all = listOf(
         overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, dumpAllApps, dumpAllAppsSince, onboardingDone, lastPanelOpenedAt,
         retentionDays, lastCleanupAt, enabledApps, lockEnabled, hidePreviews, deletionAlerts, savePhotos,
         keywords, themeMode, readElsewhere, autoMuteAds, autoMuteChannels, channelBackfillDone, adBackfillDone, indicatorBadge, badgeStyle, indicatorGlow, glowUsesAppColor, glowColor,
-        peekBubble, textSize, previewLines,
+        peekBubble, textSize, previewLines, panelTransparency, panelBlur,
     )
 
     fun init(context: Context) {

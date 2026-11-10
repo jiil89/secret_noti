@@ -394,4 +394,13 @@
     <string name="settings_screen_deletion_alerts_hint">Notifies you when the sender deletes a message. The original stays saved</string>
     <string name="settings_help_hint">Common questions · Replay intro</string>
     <string name="route_battery_list">Battery optimization list</string>
+    <string name="settings_panel_transparency">Panel transparency</string>
+    <string name="settings_panel_transparency_value">%1$d%%</string>
+    <string name="settings_panel_transparency_opaque">Opaque</string>
+    <string name="settings_panel_transparency_clear">Very clear</string>
+    <string name="settings_panel_transparency_hint">The screen behind shows through the panel. Too clear can make text hard to read</string>
+    <string name="settings_panel_blur">Blur the screen behind</string>
+    <string name="settings_panel_blur_hint">Blurs the screen behind the panel so text is easier to read. Android 12 or later</string>
+    <string name="settings_panel_blur_unsupported">Not available on this Android version (needs 12 or later)</string>
+    <string name="settings_panel_blur_off_now">Blur is off right now. Power saving may be on, or this phone may not support it</string>
 </resources>

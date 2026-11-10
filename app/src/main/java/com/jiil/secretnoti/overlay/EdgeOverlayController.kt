@@ -15,6 +15,7 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.jiil.secretnoti.NotiApp
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.model.BadgeStyle
+import com.jiil.secretnoti.ui.model.PANEL_TRANSPARENCY_MAX
 import com.jiil.secretnoti.ui.MainActivity
 import com.jiil.secretnoti.ui.NotiTheme
 import com.jiil.secretnoti.ui.components.PeekBubble
@@ -183,11 +184,15 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         root.setViewTreeLifecycleOwner(owner)
         root.setViewTreeSavedStateRegistryOwner(owner)
         root.setViewTreeViewModelStoreOwner(owner)
+        val blur = Prefs.panelBlur.value && PanelBlur.enabledNow(context)
+        val opacity = 1f - Prefs.panelTransparency.value.coerceIn(0, PANEL_TRANSPARENCY_MAX) / 100f
         root.addView(
             ComposeView(context).apply {
                 setContent {
                     NotiTheme(Prefs.themeMode.value, Prefs.textSize.value, Prefs.previewLines.value) {
                         PanelContent(
+                            opacity = opacity,
+                            blurBehind = blur,
                             onLeft = Prefs.handleOnLeft.value,
                             onClose = ::closePanel,
                             onOpenConversation = { openApp(MainActivity.routeRoom(it)) },
@@ -208,6 +213,10 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT,
         )
+        if (blur && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            params.flags = params.flags or WindowManager.LayoutParams.FLAG_BLUR_BEHIND
+            params.blurBehindRadius = dp(PanelBlur.RADIUS_DP)
+        }
         wm.addView(root, params)
         panel = root
         panelOwner = owner

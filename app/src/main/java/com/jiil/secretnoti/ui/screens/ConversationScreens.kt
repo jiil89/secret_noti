@@ -1,5 +1,7 @@
 package com.jiil.secretnoti.ui.screens
 
+import androidx.compose.foundation.BorderStroke
+
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
@@ -68,9 +70,13 @@ fun EdgePanel(
     val resizeDescription = stringResource(R.string.panel_resize_description)
     val widenLabel = stringResource(R.string.settings_panel_width_wide)
     val narrowLabel = stringResource(R.string.settings_panel_width_narrow)
+    // 반투명이면 그림자가 패널 안으로 비쳐 탁해 보이므로, 그림자 대신 얇은 테두리를 쓴다.
+    val opacity = LocalPanelOpacity.current
+    val translucent = opacity < 1f
     Surface(Modifier.width(width).heightIn(max = 652.dp),
-        shape = NotiShapes.panel(onLeftSide), color = NotiColors.Background,
-        shadowElevation = 16.dp) {
+        shape = NotiShapes.panel(onLeftSide), color = NotiColors.Background.copy(alpha = opacity),
+        shadowElevation = if (translucent) 0.dp else 16.dp,
+        border = if (translucent) BorderStroke(1.dp, NotiColors.Divider) else null) {
         Box {
             Column(Modifier.fillMaxSize().padding(
                 start = if (onLeftSide) 16.dp else 20.dp,
@@ -253,6 +259,7 @@ private fun ConversationItems(
             }
         }
     } else {
+        val panelTranslucent = LocalPanelOpacity.current < 1f
         LazyColumn(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             if (conversations.isEmpty()) item(key = "empty") {
                 EmptyConversations(Modifier.fillMaxWidth())
@@ -260,7 +267,7 @@ private fun ConversationItems(
             items(conversations, key = { it.id }) { conversation ->
                 var menuOpen by remember { mutableStateOf(false) }
                 val row: @Composable () -> Unit = {
-                    Box(Modifier.background(NotiColors.Background)) {
+                    Box(Modifier.background(if (panelTranslucent) Color.Transparent else NotiColors.Background)) {
                         ConversationRow(conversation, onClick = { onOpenConversation(conversation.id) },
                             modifier = Modifier.semantics {
                                 if (onDismiss != null) customActions = listOf(
@@ -301,10 +308,13 @@ private fun ConversationItems(
                                 SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
                                 else -> Alignment.Center
                             }
-                            Box(Modifier.fillMaxSize().background(NotiColors.DetailBackground)
-                                .padding(horizontal = 16.dp), contentAlignment = alignment) {
-                                Text(dismissLabel, color = NotiColors.Secondary,
-                                    style = MaterialTheme.typography.labelMedium)
+                            // 반투명 패널에서는 행이 비치므로, 밀고 있을 때만 뒤 배경을 그린다.
+                            if (!panelTranslucent || dismissState.dismissDirection != SwipeToDismissBoxValue.Settled) {
+                                Box(Modifier.fillMaxSize().background(NotiColors.DetailBackground)
+                                    .padding(horizontal = 16.dp), contentAlignment = alignment) {
+                                    Text(dismissLabel, color = NotiColors.Secondary,
+                                        style = MaterialTheme.typography.labelMedium)
+                                }
                             }
                         }) { row() }
                     }
