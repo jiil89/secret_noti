@@ -10,7 +10,11 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.res.stringResource
 import com.jiil.secretnoti.R
 
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import android.view.MotionEvent
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -43,6 +47,7 @@ import com.jiil.secretnoti.ui.model.*
 private fun visibleConversations(conversations: List<ConversationUi>, filter: String?) =
     conversations.filter { filter == null || it.packageName == filter }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun EdgePanel(
     conversations: List<ConversationUi>,
@@ -61,9 +66,15 @@ fun EdgePanel(
     onDismiss: (Long) -> Unit,
     onDismissAll: () -> Unit,
     onMute: (id: Long, deleteExisting: Boolean) -> Unit,
+    shape: Shape = NotiShapes.panel(onLeftSide),
+    /** false면 배경색·그림자를 그리지 않는다 (오버레이 창이 배경과 흐림을 그릴 때). */
+    drawBackground: Boolean = true,
 ) {
     var pendingMute by remember { mutableStateOf<ConversationUi?>(null) }
     var resizing by remember { mutableStateOf(false) }
+    val density = LocalDensity.current
+    var dragStartX by remember { mutableFloatStateOf(0f) }
+    var dragStartWidth by remember { mutableStateOf(width) }
     val currentWidth by rememberUpdatedState(width)
     val changeWidth by rememberUpdatedState(onWidthChange)
     val finishWidthChange by rememberUpdatedState(onWidthChangeFinished)
@@ -74,8 +85,8 @@ fun EdgePanel(
     val opacity = LocalPanelOpacity.current
     val translucent = opacity < 1f
     Surface(Modifier.width(width).heightIn(max = 652.dp),
-        shape = NotiShapes.panel(onLeftSide), color = NotiColors.Background.copy(alpha = opacity),
-        shadowElevation = if (translucent) 0.dp else 16.dp,
+        shape = shape, color = if (drawBackground) NotiColors.Background.copy(alpha = opacity) else Color.Transparent,
+        shadowElevation = if (translucent || !drawBackground) 0.dp else 16.dp,
         border = if (translucent) BorderStroke(1.dp, NotiColors.Divider) else null) {
         Box {
             Column(Modifier.fillMaxSize().padding(
@@ -132,21 +143,25 @@ fun EdgePanel(
                             },
                         )
                     }
-                    .pointerInput(onLeftSide, minWidth, maxWidth) {
-                        var dragWidth = currentWidth
-                        detectHorizontalDragGestures(
-                            onDragStart = {
-                                dragWidth = currentWidth.coerceIn(minWidth, maxWidth)
+                    // 화면 기준 좌표(rawX)로 계산한다. 폭이 바뀌면 오버레이 창도 같이 움직여서
+                    // 창 안 좌표로 재면 손가락 위치가 흔들린다.
+                    .pointerInteropFilter { e ->
+                        when (e.actionMasked) {
+                            MotionEvent.ACTION_DOWN -> {
+                                dragStartX = e.rawX
+                                dragStartWidth = currentWidth.coerceIn(minWidth, maxWidth)
                                 resizing = true
-                            },
-                            onDragEnd = { resizing = false; finishWidthChange() },
-                            onDragCancel = { resizing = false; finishWidthChange() },
-                        ) { change, dragAmount ->
-                            change.consume()
-                            val delta = dragAmount.toDp() * (if (onLeftSide) 1f else -1f)
-                            dragWidth = (dragWidth + delta).coerceIn(minWidth, maxWidth)
-                            changeWidth(dragWidth)
+                            }
+                            MotionEvent.ACTION_MOVE -> {
+                                val delta = with(density) { (e.rawX - dragStartX).toDp() } * (if (onLeftSide) 1f else -1f)
+                                changeWidth((dragStartWidth + delta).coerceIn(minWidth, maxWidth))
+                            }
+                            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                                resizing = false
+                                finishWidthChange()
+                            }
                         }
+                        true
                     },
                 contentAlignment = Alignment.Center,
             ) {

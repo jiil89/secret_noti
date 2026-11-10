@@ -399,8 +399,8 @@
     <string name="settings_panel_transparency_opaque">Opaque</string>
     <string name="settings_panel_transparency_clear">Very clear</string>
     <string name="settings_panel_transparency_hint">The screen behind shows through the panel. Too clear can make text hard to read</string>
-    <string name="settings_panel_blur">Blur the screen behind</string>
-    <string name="settings_panel_blur_hint">Blurs the screen behind the panel so text is easier to read. Android 12 or later</string>
+    <string name="settings_panel_blur">Blur behind the panel</string>
+    <string name="settings_panel_blur_hint">Blurs what shows through the panel so text stays readable. Works when transparency is above 0%</string>
     <string name="settings_panel_blur_unsupported">Not available on this Android version (needs 12 or later)</string>
     <string name="settings_panel_blur_off_now">Blur is off right now. Power saving may be on, or this phone may not support it</string>
 </resources>

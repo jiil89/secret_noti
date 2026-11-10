@@ -393,8 +393,8 @@
     <string name="settings_panel_transparency_opaque">불투명</string>
     <string name="settings_panel_transparency_clear">많이 투명</string>
     <string name="settings_panel_transparency_hint">패널 뒤 화면이 비쳐 보여요. 너무 투명하면 글자가 잘 안 보일 수 있어요</string>
-    <string name="settings_panel_blur">뒤 화면 흐리게</string>
-    <string name="settings_panel_blur_hint">패널을 열면 뒤 화면을 뿌옇게 만들어 글자가 잘 보여요. 안드로이드 12 이상에서 돼요</string>
+    <string name="settings_panel_blur">패널 뒤 흐리게</string>
+    <string name="settings_panel_blur_hint">패널 뒤로 비치는 화면을 뿌옇게 해서 글자가 잘 보여요. 투명도를 올렸을 때 효과가 있어요</string>
     <string name="settings_panel_blur_unsupported">이 폰의 안드로이드 버전에서는 지원하지 않아요 (12 이상 필요)</string>
     <string name="settings_panel_blur_off_now">지금은 흐림이 꺼져 있어요. 절전 모드이거나 이 폰이 지원하지 않을 수 있어요</string>
 </resources>

@@ -16,6 +16,16 @@ import com.jiil.secretnoti.NotiApp
 import com.jiil.secretnoti.settings.Prefs
 import com.jiil.secretnoti.ui.model.BadgeStyle
 import com.jiil.secretnoti.ui.model.PANEL_TRANSPARENCY_MAX
+import com.jiil.secretnoti.ui.model.PanelWidth
+import com.jiil.secretnoti.ui.model.ThemeMode
+import com.jiil.secretnoti.ui.design.NotiDarkPalette
+import com.jiil.secretnoti.ui.design.NotiLightPalette
+import android.app.Dialog
+import android.content.res.Configuration
+import android.graphics.drawable.GradientDrawable
+import android.os.Build
+import androidx.compose.ui.graphics.toArgb
+import kotlin.math.roundToInt
 import com.jiil.secretnoti.ui.MainActivity
 import com.jiil.secretnoti.ui.NotiTheme
 import com.jiil.secretnoti.ui.components.PeekBubble
@@ -27,6 +37,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
+private const val PANEL_MAX_HEIGHT_DP = 652
+private const val PANEL_VERTICAL_MARGIN_DP = 96
+/** 패널을 화면 가장자리에서 띄우는 거리. */
+private const val PANEL_EDGE_MARGIN_DP = 8
+
 /** 가장자리 손잡이와 엣지패널 오버레이 창을 관리한다. 메인 스레드에서만 호출. */
 class EdgeOverlayController(private val context: Context, private val scope: CoroutineScope) {
 
@@ -36,7 +51,7 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
 
     private var handle: HandleView? = null
     private var handleParams: WindowManager.LayoutParams? = null
-    private var panel: View? = null
+    private var panel: Dialog? = null
     private var panelOwner: OverlayOwner? = null
     private val jobs = mutableListOf<Job>()
     private var peek: View? = null
@@ -171,61 +186,81 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         hidePeek()
         Prefs.lastPanelOpenedAt.value = System.currentTimeMillis()
 
+        // 패널은 카드 크기의 창 하나다. 창 배경을 반투명으로 칠하고 그 뒤만 흐리게 하므로
+        // (Window.setBackgroundBlurRadius) 화면의 나머지는 어둡게 하지도, 흐리게 하지도 않는다.
+        // 창 뒤 흐림은 Window 객체에만 있어서 Dialog로 띄운다. 바깥 터치·뒤로 가기는 Dialog가 닫는다.
         val owner = OverlayOwner().also { it.start() }
-        val root = object : FrameLayout(context) {
-            override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-                if (event.keyCode == KeyEvent.KEYCODE_BACK) {
-                    if (event.action == KeyEvent.ACTION_UP) closePanel()
-                    return true
-                }
-                return super.dispatchKeyEvent(event)
-            }
-        }
-        root.setViewTreeLifecycleOwner(owner)
-        root.setViewTreeSavedStateRegistryOwner(owner)
-        root.setViewTreeViewModelStoreOwner(owner)
+        val onLeft = Prefs.handleOnLeft.value
         val blur = Prefs.panelBlur.value && PanelBlur.enabledNow(context)
         val opacity = 1f - Prefs.panelTransparency.value.coerceIn(0, PANEL_TRANSPARENCY_MAX) / 100f
-        root.addView(
-            ComposeView(context).apply {
-                setContent {
-                    NotiTheme(Prefs.themeMode.value, Prefs.textSize.value, Prefs.previewLines.value) {
-                        PanelContent(
-                            opacity = opacity,
-                            blurBehind = blur,
-                            onLeft = Prefs.handleOnLeft.value,
-                            onClose = ::closePanel,
-                            onOpenConversation = { openApp(MainActivity.routeRoom(it)) },
-                            onShowAll = { openApp(MainActivity.ROUTE_LIST) },
-                            onOpenSettings = { openApp(MainActivity.ROUTE_SETTINGS) },
-                        )
-                    }
-                }
-            },
-            ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
-        )
+        val screenWidthDp = context.resources.configuration.screenWidthDp
+        val maxWidthDp = (screenWidthDp - PanelWidth.SCREEN_MARGIN_DP).coerceAtLeast(PanelWidth.MIN_DP)
+        val widthDp = Prefs.panelWidthDp.value.coerceIn(PanelWidth.MIN_DP, maxWidthDp)
+        val heightPx = minOf(dp(PANEL_MAX_HEIGHT_DP), context.resources.displayMetrics.heightPixels - dp(PANEL_VERTICAL_MARGIN_DP * 2))
 
-        // 뒤로 가기 키를 받으려면 포커스를 가져야 하므로 FLAG_NOT_FOCUSABLE을 넣지 않는다.
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-            PixelFormat.TRANSLUCENT,
-        )
-        if (blur && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            params.flags = params.flags or WindowManager.LayoutParams.FLAG_BLUR_BEHIND
-            params.blurBehindRadius = dp(PanelBlur.RADIUS_DP)
+        val dialog = Dialog(context, android.R.style.Theme_Material_Dialog_NoActionBar)
+        val content = ComposeView(context).apply {
+            setViewTreeLifecycleOwner(owner)
+            setViewTreeSavedStateRegistryOwner(owner)
+            setViewTreeViewModelStoreOwner(owner)
+            setContent {
+                NotiTheme(Prefs.themeMode.value, Prefs.textSize.value, Prefs.previewLines.value) {
+                    PanelContent(
+                        onLeft = onLeft,
+                        opacity = opacity,
+                        onWidthChange = { w -> dialog.window?.setLayout(dp(w.value.roundToInt()), heightPx) },
+                        onOpenConversation = { openApp(MainActivity.routeRoom(it)) },
+                        onShowAll = { openApp(MainActivity.ROUTE_LIST) },
+                        onOpenSettings = { openApp(MainActivity.ROUTE_SETTINGS) },
+                    )
+                }
+            }
         }
-        wm.addView(root, params)
-        panel = root
+        dialog.setContentView(content)
+        dialog.setCanceledOnTouchOutside(true)
+        dialog.setOnDismissListener { if (panel === dialog) closePanel() }
+        dialog.window?.apply {
+            setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
+            clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            setFormat(PixelFormat.TRANSLUCENT)
+            // 흐림 영역의 모서리는 창 배경의 둥근 모서리를 따른다.
+            setBackgroundDrawable(GradientDrawable().apply {
+                cornerRadius = dp(PANEL_CORNER_DP).toFloat()
+                setColor(panelBackground(opacity))
+            })
+            decorView.setPadding(0, 0, 0, 0)
+            setGravity((if (onLeft) Gravity.LEFT else Gravity.RIGHT) or Gravity.CENTER_VERTICAL)
+            attributes = attributes.also { it.x = dp(PANEL_EDGE_MARGIN_DP) }
+            setLayout(dp(widthDp), heightPx)
+            setWindowAnimations(0)
+            // 반투명일 때 그림자는 패널 안으로 비쳐 탁해 보이므로 뺀다 (대신 얇은 테두리).
+            setElevation(if (opacity < 1f) 0f else dp(16).toFloat())
+            if (blur && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) setBackgroundBlurRadius(dp(PanelBlur.RADIUS_DP))
+        }
+        runCatching { dialog.show() }.onFailure {
+            owner.destroy()
+            return
+        }
+        panel = dialog
         panelOwner = owner
         handle?.visibility = View.GONE
     }
 
+    /** 앱 테마(밝게·어둡게·시스템)에 맞춘 패널 배경색. */
+    private fun panelBackground(opacity: Float): Int {
+        val dark = when (Prefs.themeMode.value) {
+            ThemeMode.DARK -> true
+            ThemeMode.LIGHT -> false
+            ThemeMode.SYSTEM -> (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                Configuration.UI_MODE_NIGHT_YES
+        }
+        return (if (dark) NotiDarkPalette else NotiLightPalette).Background.copy(alpha = opacity).toArgb()
+    }
+
     private fun closePanel() {
-        panel?.let { runCatching { wm.removeView(it) } }
+        val dialog = panel ?: return
         panel = null
+        runCatching { dialog.dismiss() }
         panelOwner?.destroy()
         panelOwner = null
         handle?.visibility = View.VISIBLE

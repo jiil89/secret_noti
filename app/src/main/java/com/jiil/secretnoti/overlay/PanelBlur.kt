@@ -6,7 +6,7 @@ import android.view.WindowManager
 
 /** 엣지 패널 뒤 화면 흐림. 안드로이드 12 이상의 창 뒤 흐림(blur behind)을 쓴다. */
 object PanelBlur {
-    const val RADIUS_DP = 24
+    const val RADIUS_DP = 40
 
     /** 이 안드로이드 버전에 흐림 기능이 있는가. */
     val supported: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
