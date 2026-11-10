@@ -74,24 +74,7 @@ fun DumpScreen() {
         }
     }
 
-    // 카톡 배지 숫자 (2초마다 새로 읽음). 0이 되면 카톡 방을 모두 읽음으로 본다.
-    var badge by remember { mutableStateOf("…") }
-    androidx.compose.runtime.LaunchedEffect(Unit) {
-        while (true) {
-            badge = withContext(Dispatchers.IO) { com.jiil.secretnoti.capture.BadgeReader.kakao(context) }
-            kotlinx.coroutines.delay(2_000)
-        }
-    }
-
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        item {
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(12.dp)) {
-                    Text("카톡 배지 숫자", fontWeight = FontWeight.Bold)
-                    Text(badge, fontFamily = FontFamily.Monospace)
-                }
-            }
-        }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(

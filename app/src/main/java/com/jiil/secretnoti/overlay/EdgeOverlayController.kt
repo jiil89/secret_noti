@@ -26,7 +26,6 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import androidx.compose.ui.graphics.toArgb
 import kotlin.math.roundToInt
-import com.jiil.secretnoti.capture.BadgeReader
 import androidx.compose.ui.unit.dp
 import com.jiil.secretnoti.ui.MainActivity
 import com.jiil.secretnoti.ui.NotiTheme
@@ -214,7 +213,6 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         val heightDp = Prefs.panelHeightDp.value.takeIf { it > 0 }?.coerceIn(minHeightDp, maxHeightDp) ?: defaultHeightDp
         var windowWidthPx = dp(widthDp)
         var windowHeightPx = dp(heightDp)
-        scope.launch(kotlinx.coroutines.Dispatchers.IO) { BadgeReader.syncKakao(context) }
 
         val dialog = Dialog(context, android.R.style.Theme_Material_Dialog_NoActionBar)
         val content = ComposeView(context).apply {

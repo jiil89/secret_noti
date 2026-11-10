@@ -89,8 +89,6 @@ class NotiListenerService : NotificationListenerService() {
         // 사용자가 밀어서 지운 것(REASON_CANCEL, 모두 지우기 REASON_CANCEL_ALL)은 읽은 게 아니므로 그대로 둔다.
         // 그 뒤 카톡에서 읽은 것은 다음 메시지의 안 읽은 수로 알아챈다 (ParsedNotification.appUnread).
         if (reason == REASON_APP_CANCEL || reason == REASON_CLICK) markReadElsewhere(sbn)
-        // 카톡 알림이 사라질 때마다 배지도 본다 (모두 읽었으면 0).
-        if (sbn.packageName == TargetApps.KAKAO) scope.launch(Dispatchers.IO) { BadgeReader.syncKakao(applicationContext) }
     }
 
     private fun markReadElsewhere(sbn: StatusBarNotification) {
