@@ -38,7 +38,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
-private const val PANEL_MAX_HEIGHT_DP = 560
+private const val PANEL_MAX_HEIGHT_DP = 652
 private const val PANEL_VERTICAL_MARGIN_DP = 96
 /** 패널을 화면 가장자리에서 띄우는 거리. */
 private const val PANEL_EDGE_MARGIN_DP = 8
@@ -198,10 +198,10 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         val screenWidthDp = context.resources.configuration.screenWidthDp
         val maxWidthDp = (screenWidthDp - PanelWidth.SCREEN_MARGIN_DP).coerceAtLeast(PanelWidth.MIN_DP)
         val widthDp = Prefs.panelWidthDp.value.coerceIn(PanelWidth.MIN_DP, maxWidthDp)
-        // 창 높이는 내용에 맞추고(대화방이 적으면 낮게), 최대 높이만 정한다.
+        // 0.4.27까지와 같은 높이: 바 사이 화면에서 위아래 96dp씩 뺀 높이 (최대 652dp).
         val maxHeightDp = minOf(PANEL_MAX_HEIGHT_DP,
             ((usableScreenHeight() - dp(PANEL_VERTICAL_MARGIN_DP * 2)) / density).toInt())
-        val heightPx = WindowManager.LayoutParams.WRAP_CONTENT
+        val heightPx = dp(maxHeightDp)
 
         val dialog = Dialog(context, android.R.style.Theme_Material_Dialog_NoActionBar)
         val content = ComposeView(context).apply {

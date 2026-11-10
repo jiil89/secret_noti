@@ -40,8 +40,8 @@ fun PanelContent(
     opacity: Float = 1f,
     /** 폭을 끄는 동안 창 폭도 맞춰 바꾼다. */
     onWidthChange: (Dp) -> Unit = {},
-    /** 패널 최대 높이. 대화방이 적으면 그만큼 낮아진다. */
-    maxHeight: Dp = 560.dp,
+    /** 패널 높이 (창 높이와 같다). */
+    maxHeight: Dp = 652.dp,
 ) {
     val chat = remember { NotiApp.instance.chat }
     val conversations by remember { chat.observePanelConversations() }.collectAsState(initial = emptyList())
@@ -76,7 +76,6 @@ fun PanelContent(
             },
             shape = RoundedCornerShape(PANEL_CORNER_DP.dp),
             drawBackground = false,
-            wrapHeight = true,
             maxHeight = maxHeight,
         )
     }
