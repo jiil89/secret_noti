@@ -103,6 +103,8 @@ fun EdgePanel(
         if (height != null) Modifier.height(height)
         else Modifier.heightIn(min = if (pendingMute != null) 360.dp else 0.dp, max = maxHeight)),
         shape = shape, color = if (drawBackground) NotiColors.Background.copy(alpha = opacity) else Color.Transparent,
+        // 투명·반투명 색은 테마 색이 아니라서 글자색이 기본값(검정)으로 떨어진다. 테마 글자색을 직접 준다.
+        contentColor = NotiColors.Text,
         shadowElevation = if (translucent || !drawBackground) 0.dp else 16.dp,
         border = if (translucent) BorderStroke(1.dp, NotiColors.Divider) else null) {
         Box {
