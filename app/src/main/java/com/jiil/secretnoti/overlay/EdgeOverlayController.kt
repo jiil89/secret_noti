@@ -191,12 +191,13 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         // 창 뒤 흐림은 Window 객체에만 있어서 Dialog로 띄운다. 바깥 터치·뒤로 가기는 Dialog가 닫는다.
         val owner = OverlayOwner().also { it.start() }
         val onLeft = Prefs.handleOnLeft.value
-        val blur = Prefs.panelBlur.value && PanelBlur.enabledNow(context)
+        // 시스템이 '흐림 꺼짐'이라고 알려도 일단 요청한다. 지원하지 않으면 아무 일도 일어나지 않는다.
+        val blur = Prefs.panelBlur.value && PanelBlur.supported
         val opacity = 1f - Prefs.panelTransparency.value.coerceIn(0, PANEL_TRANSPARENCY_MAX) / 100f
         val screenWidthDp = context.resources.configuration.screenWidthDp
         val maxWidthDp = (screenWidthDp - PanelWidth.SCREEN_MARGIN_DP).coerceAtLeast(PanelWidth.MIN_DP)
         val widthDp = Prefs.panelWidthDp.value.coerceIn(PanelWidth.MIN_DP, maxWidthDp)
-        val heightPx = minOf(dp(PANEL_MAX_HEIGHT_DP), context.resources.displayMetrics.heightPixels - dp(PANEL_VERTICAL_MARGIN_DP * 2))
+        val heightPx = minOf(dp(PANEL_MAX_HEIGHT_DP), usableScreenHeight() - dp(PANEL_VERTICAL_MARGIN_DP * 2))
 
         val dialog = Dialog(context, android.R.style.Theme_Material_Dialog_NoActionBar)
         val content = ComposeView(context).apply {
@@ -235,7 +236,11 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
             setWindowAnimations(0)
             // 반투명일 때 그림자는 패널 안으로 비쳐 탁해 보이므로 뺀다 (대신 얇은 테두리).
             setElevation(if (opacity < 1f) 0f else dp(16).toFloat())
-            if (blur && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) setBackgroundBlurRadius(dp(PanelBlur.RADIUS_DP))
+            if (blur && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                setBackgroundBlurRadius(dp(PanelBlur.RADIUS_DP))
+                // 갤럭시는 일반 흐림을 막아 둔 경우가 있어 삼성 흐림도 시도한다.
+                PanelBlur.trySamsungBlur(decorView, dp(PanelBlur.RADIUS_DP), dp(PANEL_CORNER_DP).toFloat())
+            }
         }
         runCatching { dialog.show() }.onFailure {
             owner.destroy()
@@ -244,6 +249,22 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         panel = dialog
         panelOwner = owner
         handle?.visibility = View.GONE
+    }
+
+    /**
+     * 상태바·내비게이션 바를 뺀 화면 높이(px). 예전 전체 화면 창이 바 사이에서만 그려졌으므로
+     * 같은 높이가 나오도록 바 높이를 뺀다.
+     */
+    private fun usableScreenHeight(): Int {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            runCatching {
+                val metrics = wm.currentWindowMetrics
+                val bars = metrics.windowInsets.getInsetsIgnoringVisibility(
+                    android.view.WindowInsets.Type.systemBars() or android.view.WindowInsets.Type.displayCutout())
+                return metrics.bounds.height() - bars.top - bars.bottom
+            }
+        }
+        return context.resources.displayMetrics.heightPixels
     }
 
     /** 앱 테마(밝게·어둡게·시스템)에 맞춘 패널 배경색. */
