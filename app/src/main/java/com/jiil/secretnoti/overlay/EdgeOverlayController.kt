@@ -26,6 +26,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import androidx.compose.ui.graphics.toArgb
 import kotlin.math.roundToInt
+import androidx.compose.ui.unit.dp
 import com.jiil.secretnoti.ui.MainActivity
 import com.jiil.secretnoti.ui.NotiTheme
 import com.jiil.secretnoti.ui.components.PeekBubble
@@ -37,7 +38,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
-private const val PANEL_MAX_HEIGHT_DP = 652
+private const val PANEL_MAX_HEIGHT_DP = 560
 private const val PANEL_VERTICAL_MARGIN_DP = 96
 /** 패널을 화면 가장자리에서 띄우는 거리. */
 private const val PANEL_EDGE_MARGIN_DP = 8
@@ -197,7 +198,10 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         val screenWidthDp = context.resources.configuration.screenWidthDp
         val maxWidthDp = (screenWidthDp - PanelWidth.SCREEN_MARGIN_DP).coerceAtLeast(PanelWidth.MIN_DP)
         val widthDp = Prefs.panelWidthDp.value.coerceIn(PanelWidth.MIN_DP, maxWidthDp)
-        val heightPx = minOf(dp(PANEL_MAX_HEIGHT_DP), usableScreenHeight() - dp(PANEL_VERTICAL_MARGIN_DP * 2))
+        // 창 높이는 내용에 맞추고(대화방이 적으면 낮게), 최대 높이만 정한다.
+        val maxHeightDp = minOf(PANEL_MAX_HEIGHT_DP,
+            ((usableScreenHeight() - dp(PANEL_VERTICAL_MARGIN_DP * 2)) / density).toInt())
+        val heightPx = WindowManager.LayoutParams.WRAP_CONTENT
 
         val dialog = Dialog(context, android.R.style.Theme_Material_Dialog_NoActionBar)
         val content = ComposeView(context).apply {
@@ -209,6 +213,7 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
                     PanelContent(
                         onLeft = onLeft,
                         opacity = opacity,
+                        maxHeight = maxHeightDp.dp,
                         onWidthChange = { w -> dialog.window?.setLayout(dp(w.value.roundToInt()), heightPx) },
                         onOpenConversation = { openApp(MainActivity.routeRoom(it)) },
                         onShowAll = { openApp(MainActivity.ROUTE_LIST) },
@@ -236,8 +241,8 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
             setWindowAnimations(0)
             // 반투명일 때 그림자는 패널 안으로 비쳐 탁해 보이므로 뺀다 (대신 얇은 테두리).
             setElevation(if (opacity < 1f) 0f else dp(16).toFloat())
-            if (blur && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                setBackgroundBlurRadius(dp(PanelBlur.RADIUS_DP))
+            if (blur) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) setBackgroundBlurRadius(dp(PanelBlur.RADIUS_DP))
                 // 갤럭시는 일반 흐림을 막아 둔 경우가 있어 삼성 흐림도 시도한다.
                 PanelBlur.trySamsungBlur(decorView, dp(PanelBlur.RADIUS_DP), dp(PANEL_CORNER_DP).toFloat())
             }

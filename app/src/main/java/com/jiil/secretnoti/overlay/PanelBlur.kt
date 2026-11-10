@@ -9,12 +9,20 @@ import android.view.WindowManager
 object PanelBlur {
     const val RADIUS_DP = 40
 
-    /** 이 안드로이드 버전에 흐림 기능이 있는가. */
-    val supported: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    /** 갤럭시 전용 흐림(SemBlurInfo)이 있는가. 일반 흐림이 막혀 있어도 이것은 동작한다. */
+    private val samsungAvailable: Boolean by lazy {
+        runCatching {
+            View::class.java.getMethod("semSetBlurInfo", Class.forName("android.view.SemBlurInfo"))
+        }.isSuccess
+    }
 
-    /** 지금 흐림이 실제로 그려지는가. 절전 모드이거나 기기가 지원하지 않으면 false. */
-    fun enabledNow(context: Context): Boolean =
-        supported && context.getSystemService(WindowManager::class.java).isCrossWindowBlurEnabled
+    /** 이 폰에 흐림 기능이 있는가 (안드로이드 12 이상 또는 갤럭시). */
+    val supported: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S || samsungAvailable
+
+    /** 지금 흐림이 실제로 그려지는가. 일반 흐림은 절전 모드 등에서 꺼진다. */
+    fun enabledNow(context: Context): Boolean = samsungAvailable ||
+        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            context.getSystemService(WindowManager::class.java).isCrossWindowBlurEnabled)
 
     /**
      * 갤럭시 전용 흐림(SemBlurInfo). 공개 API가 아니라서 리플렉션으로 시도하고, 없거나 막혀 있으면 조용히 넘어간다.

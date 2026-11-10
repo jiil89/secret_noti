@@ -69,6 +69,9 @@ fun EdgePanel(
     shape: Shape = NotiShapes.panel(onLeftSide),
     /** false면 배경색·그림자를 그리지 않는다 (오버레이 창이 배경과 흐림을 그릴 때). */
     drawBackground: Boolean = true,
+    /** true면 대화방 수만큼만 높아진다 (최대 [maxHeight]). false면 [maxHeight]까지 채운다. */
+    wrapHeight: Boolean = false,
+    maxHeight: Dp = 652.dp,
 ) {
     var pendingMute by remember { mutableStateOf<ConversationUi?>(null) }
     var resizing by remember { mutableStateOf(false) }
@@ -84,12 +87,13 @@ fun EdgePanel(
     // 반투명이면 그림자가 패널 안으로 비쳐 탁해 보이므로, 그림자 대신 얇은 테두리를 쓴다.
     val opacity = LocalPanelOpacity.current
     val translucent = opacity < 1f
-    Surface(Modifier.width(width).heightIn(max = 652.dp),
+    // 빼기 확인 카드가 들어갈 만큼은 높이를 확보한다.
+    Surface(Modifier.width(width).heightIn(min = if (pendingMute != null) 360.dp else 0.dp, max = maxHeight),
         shape = shape, color = if (drawBackground) NotiColors.Background.copy(alpha = opacity) else Color.Transparent,
         shadowElevation = if (translucent || !drawBackground) 0.dp else 16.dp,
         border = if (translucent) BorderStroke(1.dp, NotiColors.Divider) else null) {
         Box {
-            Column(Modifier.fillMaxSize().padding(
+            Column((if (wrapHeight) Modifier.fillMaxWidth() else Modifier.fillMaxSize()).padding(
                 start = if (onLeftSide) 16.dp else 20.dp,
                 end = if (onLeftSide) 20.dp else 16.dp, top = 20.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -102,7 +106,7 @@ fun EdgePanel(
                 }
                 AppFilterChips(availableApps, filter, onFilterChange)
                 ConversationItems(visibleConversations(conversations, filter).take(10),
-                    onOpenConversation, Modifier.weight(1f), maxLines = if (width >= 340.dp) 3 else 2,
+                    onOpenConversation, Modifier.weight(1f, fill = !wrapHeight), maxLines = if (width >= 340.dp) 3 else 2,
                     onDismiss = onDismiss, onMute = { pendingMute = it })
                 Column {
                     HorizontalDivider(color = NotiColors.Divider)
