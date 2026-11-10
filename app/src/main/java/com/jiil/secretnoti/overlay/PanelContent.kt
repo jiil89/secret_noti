@@ -40,8 +40,11 @@ fun PanelContent(
     opacity: Float = 1f,
     /** 폭을 끄는 동안 창 폭도 맞춰 바꾼다. */
     onWidthChange: (Dp) -> Unit = {},
-    /** 패널 높이 (창 높이와 같다). */
+    /** 처음 높이와 끌어서 바꿀 수 있는 범위. 창 높이와 같다. */
+    initialHeight: Dp = 434.dp,
+    minHeight: Dp = 280.dp,
     maxHeight: Dp = 652.dp,
+    onHeightChange: (Dp) -> Unit = {},
 ) {
     val chat = remember { NotiApp.instance.chat }
     val conversations by remember { chat.observePanelConversations() }.collectAsState(initial = emptyList())
@@ -53,6 +56,7 @@ fun PanelContent(
     val screenWidth = LocalConfiguration.current.screenWidthDp
     val maxWidth = (screenWidth - PanelWidth.SCREEN_MARGIN_DP).coerceAtLeast(PanelWidth.MIN_DP)
     var width by remember { mutableStateOf(Prefs.panelWidthDp.value.coerceIn(PanelWidth.MIN_DP, maxWidth).dp) }
+    var height by remember { mutableStateOf(initialHeight) }
 
     CompositionLocalProvider(LocalPanelOpacity provides opacity) {
         EdgePanel(
@@ -77,6 +81,10 @@ fun PanelContent(
             shape = RoundedCornerShape(PANEL_CORNER_DP.dp),
             drawBackground = false,
             maxHeight = maxHeight,
+            height = height,
+            minHeight = minHeight,
+            onHeightChange = { height = it; onHeightChange(it) },
+            onHeightChangeFinished = { Prefs.panelHeightDp.value = height.value.roundToInt() },
         )
     }
 }

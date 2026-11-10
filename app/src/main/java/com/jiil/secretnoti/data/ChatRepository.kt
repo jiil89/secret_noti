@@ -286,6 +286,15 @@ class ChatRepository(private val context: Context, private val db: AppDatabase) 
     }
 
     /**
+     * 앱 아이콘 배지가 0이 됐다: 원래 앱에서 모두 읽었다.
+     * 배지가 새 메시지보다 늦게 바뀔 수 있으므로 최근 [graceMs] 안에 온 방은 건드리지 않는다.
+     */
+    suspend fun markAppAllRead(packageName: String, removeFromPanel: Boolean, graceMs: Long = 15_000) {
+        val now = System.currentTimeMillis()
+        dao.markAppAllRead(packageName, now - graceMs, now, if (removeFromPanel) now else 0)
+    }
+
+    /**
      * 시크릿노티의 "카톡에서 열기"로 그 방을 열었다. 원래 앱에서 읽음 처리되므로 여기서도 읽음으로 본다.
      * 알림창에서 이미 지운 알림이면 원래 앱이 방을 열어도 알림 제거 소식이 안 와서 따로 처리해야 한다.
      */

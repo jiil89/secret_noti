@@ -242,6 +242,16 @@ interface ChatDao {
     )
     suspend fun markReadElsewhere(packageName: String, roomKey: String, now: Long, dismissAt: Long)
 
+    /** 앱 배지가 0: 그 앱의 대화방을 모두 읽음으로 ([before] 이후에 온 방은 빼고). */
+    @Query(
+        """
+        UPDATE conversation SET unreadCount = 0, readAt = MAX(readAt, :now),
+            panelDismissedAt = MAX(panelDismissedAt, :dismissAt)
+        WHERE packageName = :packageName AND lastMessageAt <= :before
+        """,
+    )
+    suspend fun markAppAllRead(packageName: String, before: Long, now: Long, dismissAt: Long)
+
     /** 시크릿노티에서 원래 앱의 그 방을 열었음: 위와 같지만 대화방 id로 찾는다. */
     @Query(
         """

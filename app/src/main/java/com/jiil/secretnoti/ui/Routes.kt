@@ -105,7 +105,7 @@ fun RoomRoute(conversationId: Long, onBack: () -> Unit) {
                     chat.markOpenedInApp(conv.id, Prefs.readElsewhere.value == ReadElsewhereAction.REMOVE_FROM_PANEL)
                     WidgetUpdater.request(context)
                 }
-                AppLauncher.Opened.APP -> Unit
+                AppLauncher.Opened.STASHED, AppLauncher.Opened.APP -> Unit
                 AppLauncher.Opened.FAILED ->
                     Toast.makeText(context, context.getString(R.string.app_not_found, conv.appLabel), Toast.LENGTH_SHORT).show()
             }

@@ -80,6 +80,10 @@ class MainActivity : FragmentActivity() {
     override fun onResume() {
         super.onResume()
         ListenerStatus.requestRefresh()
+        val context = applicationContext
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            com.jiil.secretnoti.capture.BadgeReader.syncKakao(context)
+        }
     }
 
     companion object {

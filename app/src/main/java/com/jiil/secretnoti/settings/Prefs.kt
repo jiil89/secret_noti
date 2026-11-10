@@ -45,6 +45,8 @@ object Prefs {
     val handleSize = enum("handle_size", HandleSize.MEDIUM)
     /** 엣지패널 폭(dp). */
     val panelWidthDp = int("panel_width_dp", PanelWidth.NORMAL.dp)
+    /** 엣지패널 높이(dp). 0이면 기본 높이. 패널 아래 가장자리를 끌어서 바꾼다. */
+    val panelHeightDp = int("panel_height_dp", 0)
     val dumpAllApps = bool("dump_all_apps", false)
     /** 처음 켤 때 소개를 봤는가. */
     val onboardingDone = bool("onboarding_done", false)
@@ -84,7 +86,7 @@ object Prefs {
     val panelBlur = bool("panel_blur", false)
 
     private val all = listOf(
-        overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, dumpAllApps, dumpAllAppsSince, onboardingDone, lastPanelOpenedAt,
+        overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, panelHeightDp, dumpAllApps, dumpAllAppsSince, onboardingDone, lastPanelOpenedAt,
         retentionDays, lastCleanupAt, enabledApps, lockEnabled, hidePreviews, deletionAlerts, savePhotos,
         keywords, themeMode, readElsewhere, autoMuteAds, autoMuteChannels, channelBackfillDone, adBackfillDone, indicatorBadge, badgeStyle, indicatorGlow, glowUsesAppColor, glowColor,
         peekBubble, textSize, previewLines, panelTransparency, panelBlur,

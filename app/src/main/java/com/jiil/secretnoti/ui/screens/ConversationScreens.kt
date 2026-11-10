@@ -72,12 +72,23 @@ fun EdgePanel(
     /** true면 대화방 수만큼만 높아진다 (최대 [maxHeight]). false면 [maxHeight]까지 채운다. */
     wrapHeight: Boolean = false,
     maxHeight: Dp = 652.dp,
+    /** 정해진 높이. null이 아니면 아래 가장자리를 위아래로 끌어 [minHeight]~[maxHeight] 사이로 바꿀 수 있다. */
+    height: Dp? = null,
+    minHeight: Dp = 0.dp,
+    onHeightChange: (Dp) -> Unit = {},
+    onHeightChangeFinished: () -> Unit = {},
 ) {
     var pendingMute by remember { mutableStateOf<ConversationUi?>(null) }
     var resizing by remember { mutableStateOf(false) }
     val density = LocalDensity.current
     var dragStartX by remember { mutableFloatStateOf(0f) }
     var dragStartWidth by remember { mutableStateOf(width) }
+    var resizingHeight by remember { mutableStateOf(false) }
+    var dragStartY by remember { mutableFloatStateOf(0f) }
+    var dragStartHeight by remember { mutableStateOf(height ?: 0.dp) }
+    val currentHeight by rememberUpdatedState(height)
+    val changeHeight by rememberUpdatedState(onHeightChange)
+    val finishHeightChange by rememberUpdatedState(onHeightChangeFinished)
     val currentWidth by rememberUpdatedState(width)
     val changeWidth by rememberUpdatedState(onWidthChange)
     val finishWidthChange by rememberUpdatedState(onWidthChangeFinished)
@@ -88,7 +99,9 @@ fun EdgePanel(
     val opacity = LocalPanelOpacity.current
     val translucent = opacity < 1f
     // 빼기 확인 카드가 들어갈 만큼은 높이를 확보한다.
-    Surface(Modifier.width(width).heightIn(min = if (pendingMute != null) 360.dp else 0.dp, max = maxHeight),
+    Surface(Modifier.width(width).then(
+        if (height != null) Modifier.height(height)
+        else Modifier.heightIn(min = if (pendingMute != null) 360.dp else 0.dp, max = maxHeight)),
         shape = shape, color = if (drawBackground) NotiColors.Background.copy(alpha = opacity) else Color.Transparent,
         shadowElevation = if (translucent || !drawBackground) 0.dp else 16.dp,
         border = if (translucent) BorderStroke(1.dp, NotiColors.Divider) else null) {
@@ -171,6 +184,32 @@ fun EdgePanel(
             ) {
                 Box(Modifier.width(4.dp).height(40.dp)
                     .background(if (resizing) NotiColors.Accent else NotiColors.Outline, NotiShapes.pill))
+            }
+            // 높이 조절: 아래 가장자리 가운데. 평소에는 안 보이고, 끄는 동안만 막대가 보인다.
+            if (height != null) Box(
+                Modifier.align(Alignment.BottomCenter).width(120.dp).height(28.dp)
+                    // 폭 조절과 같은 이유로 화면 기준 좌표(rawY)로 계산한다.
+                    .pointerInteropFilter { e ->
+                        when (e.actionMasked) {
+                            MotionEvent.ACTION_DOWN -> {
+                                dragStartY = e.rawY
+                                dragStartHeight = (currentHeight ?: 0.dp).coerceIn(minHeight, maxHeight)
+                                resizingHeight = true
+                            }
+                            MotionEvent.ACTION_MOVE -> {
+                                val delta = with(density) { (e.rawY - dragStartY).toDp() }
+                                changeHeight((dragStartHeight + delta).coerceIn(minHeight, maxHeight))
+                            }
+                            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                                resizingHeight = false
+                                finishHeightChange()
+                            }
+                        }
+                        true
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (resizingHeight) Box(Modifier.width(40.dp).height(4.dp).background(NotiColors.Accent, NotiShapes.pill))
             }
             // 오버레이 창에서는 Dialog를 띄울 수 없으므로 패널 안에 확인 카드를 겹쳐 보여준다.
             pendingMute?.let { conversation ->

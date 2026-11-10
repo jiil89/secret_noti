@@ -403,4 +403,5 @@
     <string name="settings_panel_blur_hint">Blurs what shows through the panel so text stays readable. Works when transparency is above 0%</string>
     <string name="settings_panel_blur_unsupported">Not available on this Android version (needs 12 or later)</string>
     <string name="settings_panel_blur_off_now">Blur is off right now. Power saving may be on, or this phone may not support it</string>
+    <string name="room_open_app_only">Couldn\'t open the chat directly, so %1$s was opened. It opens directly again after the next message in this chat</string>
 </resources>

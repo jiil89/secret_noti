@@ -26,6 +26,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import androidx.compose.ui.graphics.toArgb
 import kotlin.math.roundToInt
+import com.jiil.secretnoti.capture.BadgeReader
 import androidx.compose.ui.unit.dp
 import com.jiil.secretnoti.ui.MainActivity
 import com.jiil.secretnoti.ui.NotiTheme
@@ -40,6 +41,9 @@ import kotlinx.coroutines.launch
 
 private const val PANEL_MAX_HEIGHT_DP = 652
 private const val PANEL_VERTICAL_MARGIN_DP = 96
+private const val PANEL_MIN_HEIGHT_DP = 280
+/** 패널을 아래로 늘려도 화면 아래(내비게이션 바)와 이만큼은 띄운다. */
+private const val PANEL_BOTTOM_GAP_DP = 16
 /** 패널을 화면 가장자리에서 띄우는 거리. */
 private const val PANEL_EDGE_MARGIN_DP = 8
 
@@ -203,8 +207,14 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
         val usable = usableScreenHeight()
         val fullHeightPx = minOf(dp(PANEL_MAX_HEIGHT_DP), usable - dp(PANEL_VERTICAL_MARGIN_DP * 2))
         val topPx = (usable - fullHeightPx) / 2
-        val heightPx = fullHeightPx * 2 / 3
-        val maxHeightDp = (heightPx / density).toInt()
+        // 기본은 그 2/3. 아래 가장자리를 끌어 바꾼 높이가 있으면 그것을 쓴다 (위쪽 끝은 고정).
+        val defaultHeightDp = (fullHeightPx * 2 / 3 / density).toInt()
+        val maxHeightDp = ((usable - topPx - dp(PANEL_BOTTOM_GAP_DP)) / density).toInt()
+        val minHeightDp = minOf(PANEL_MIN_HEIGHT_DP, defaultHeightDp)
+        val heightDp = Prefs.panelHeightDp.value.takeIf { it > 0 }?.coerceIn(minHeightDp, maxHeightDp) ?: defaultHeightDp
+        var windowWidthPx = dp(widthDp)
+        var windowHeightPx = dp(heightDp)
+        scope.launch(kotlinx.coroutines.Dispatchers.IO) { BadgeReader.syncKakao(context) }
 
         val dialog = Dialog(context, android.R.style.Theme_Material_Dialog_NoActionBar)
         val content = ComposeView(context).apply {
@@ -216,8 +226,17 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
                     PanelContent(
                         onLeft = onLeft,
                         opacity = opacity,
+                        initialHeight = heightDp.dp,
+                        minHeight = minHeightDp.dp,
                         maxHeight = maxHeightDp.dp,
-                        onWidthChange = { w -> dialog.window?.setLayout(dp(w.value.roundToInt()), heightPx) },
+                        onHeightChange = { h ->
+                            windowHeightPx = dp(h.value.roundToInt())
+                            dialog.window?.setLayout(windowWidthPx, windowHeightPx)
+                        },
+                        onWidthChange = { w ->
+                            windowWidthPx = dp(w.value.roundToInt())
+                            dialog.window?.setLayout(windowWidthPx, windowHeightPx)
+                        },
                         onOpenConversation = { openApp(MainActivity.routeRoom(it)) },
                         onShowAll = { openApp(MainActivity.ROUTE_LIST) },
                         onOpenSettings = { openApp(MainActivity.ROUTE_SETTINGS) },
@@ -240,7 +259,7 @@ class EdgeOverlayController(private val context: Context, private val scope: Cor
             decorView.setPadding(0, 0, 0, 0)
             setGravity((if (onLeft) Gravity.LEFT else Gravity.RIGHT) or Gravity.TOP)
             attributes = attributes.also { it.x = dp(PANEL_EDGE_MARGIN_DP); it.y = topPx }
-            setLayout(dp(widthDp), heightPx)
+            setLayout(windowWidthPx, windowHeightPx)
             setWindowAnimations(0)
             // 반투명일 때 그림자는 패널 안으로 비쳐 탁해 보이므로 뺀다 (대신 얇은 테두리).
             setElevation(if (opacity < 1f) 0f else dp(16).toFloat())
