@@ -184,8 +184,8 @@ fun EdgePanel(
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                Box(Modifier.width(4.dp).height(40.dp)
-                    .background(if (resizing) NotiColors.Accent else NotiColors.Outline, NotiShapes.pill))
+                // 높이 조절과 같이 평소에는 안 보이고, 끄는 동안만 막대가 보인다.
+                if (resizing) Box(Modifier.width(4.dp).height(40.dp).background(NotiColors.Accent, NotiShapes.pill))
             }
             // 높이 조절: 아래 가장자리 가운데. 평소에는 안 보이고, 끄는 동안만 막대가 보인다.
             if (height != null) Box(

@@ -193,12 +193,13 @@ fun ConversationRow(
 @Composable
 private fun ClearedBell(open: Boolean, onToggle: () -> Unit) {
     val description = stringResource(R.string.panel_cleared_bell)
-    Box(Modifier.size(32.dp).clip(CircleShape)
+    // 숫자 배지(20dp, 위 1dp)와 가운데 줄이 같도록 22dp. 누르는 영역은 Compose가 48dp까지 넓혀 준다.
+    Box(Modifier.size(22.dp).clip(CircleShape)
         .background(if (open) NotiColors.Secondary else NotiColors.DetailBackground)
         .toggleable(open, role = Role.Button) { onToggle() }
         .clearAndSetSemantics { contentDescription = description },
         contentAlignment = Alignment.Center) {
-        Icon(NotiIcons.bellOff, null, Modifier.size(16.dp),
+        Icon(NotiIcons.bellOff, null, Modifier.size(13.dp),
             tint = if (open) NotiColors.Background else NotiColors.Secondary)
     }
 }
