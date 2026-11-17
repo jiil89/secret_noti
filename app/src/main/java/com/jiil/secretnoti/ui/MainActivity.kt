@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -126,17 +127,22 @@ private fun AppRoot(requestedRoute: MutableStateFlow<String?>) {
             requestedRoute.value = null
         }
     }
-    // 권한·진단·도움말·문의 화면은 설정으로, 나머지는 목록으로 돌아간다.
-    val parent = when {
-        route == MainActivity.ROUTE_PERMISSIONS || route == MainActivity.ROUTE_DIAGNOSTICS ||
-            route == MainActivity.ROUTE_HELP || route.startsWith("contact:") -> MainActivity.ROUTE_SETTINGS
-        else -> MainActivity.ROUTE_LIST
-    }
+    val parent = parentRoute(route)
     val goBack = { route = parent }
     BackHandler(enabled = route != MainActivity.ROUTE_LIST, onBack = goBack)
 
+    // 화면마다 상태(스크롤 위치 등)를 따로 보관한다. 설정에서 도움말로 들어갔다가 돌아오면 누르기 전 위치 그대로.
+    // 하위 화면으로 들어갈 때만 남겨 두고, 뒤로 나온 화면은 지워서 다음에 열면 처음부터 보인다.
+    val stateHolder = rememberSaveableStateHolder()
+    var previousRoute by remember { mutableStateOf(route) }
+    LaunchedEffect(route) {
+        val prev = previousRoute
+        if (prev != route && parentRoute(route) != prev) stateHolder.removeState(prev)
+        previousRoute = route
+    }
+
     val roomId = route.removePrefix("room:").toLongOrNull()
-    when {
+    stateHolder.SaveableStateProvider(route) { when {
         roomId != null -> RoomRoute(roomId, onBack = goBack)
         route == MainActivity.ROUTE_SEARCH -> SearchRoute(
             onOpenConversation = { route = MainActivity.routeRoom(it) },
@@ -175,5 +181,12 @@ private fun AppRoot(requestedRoute: MutableStateFlow<String?>) {
             onOpenSettings = { route = MainActivity.ROUTE_SETTINGS },
             onOpenSearch = { route = MainActivity.ROUTE_SEARCH },
         )
-    }
+    } }
+}
+
+/** 뒤로 가기로 돌아갈 화면: 권한·진단·도움말·문의는 설정으로, 나머지는 목록으로. */
+private fun parentRoute(route: String): String = when {
+    route == MainActivity.ROUTE_PERMISSIONS || route == MainActivity.ROUTE_DIAGNOSTICS ||
+        route == MainActivity.ROUTE_HELP || route.startsWith("contact:") -> MainActivity.ROUTE_SETTINGS
+    else -> MainActivity.ROUTE_LIST
 }
