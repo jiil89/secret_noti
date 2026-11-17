@@ -102,6 +102,7 @@ fun SettingsRoute(
     val peekBubble by Prefs.peekBubble.flow.collectAsStateWithLifecycle()
     val panelTransparency by Prefs.panelTransparency.flow.collectAsStateWithLifecycle()
     val panelBlur by Prefs.panelBlur.flow.collectAsStateWithLifecycle()
+    val kakaoHiddenAt by Prefs.kakaoHiddenAt.flow.collectAsStateWithLifecycle()
 
     val launcherApps = remember { installedLauncherApps(context) }
     val apps = remember(enabledApps, seenApps, launcherApps) {
@@ -176,6 +177,7 @@ fun SettingsRoute(
         panelBlur = panelBlur,
         panelBlurSupported = PanelBlur.supported,
         panelBlurEnabledNow = blurNow,
+        kakaoContentHidden = kakaoHiddenAt > 0,
     )
 
     val actions = remember {
@@ -244,6 +246,7 @@ fun SettingsRoute(
             override fun setPeekBubble(enabled: Boolean) { Prefs.peekBubble.value = enabled }
             override fun setPanelTransparency(percent: Int) { Prefs.panelTransparency.value = percent }
             override fun setPanelBlur(enabled: Boolean) { Prefs.panelBlur.value = enabled }
+            override fun openKakao() = com.jiil.secretnoti.ui.components.openKakaoApp(context)
             override fun previewGlow() { OverlayEvents.previewGlow() }
             override fun backup(password: String) {
                 pendingPassword = password

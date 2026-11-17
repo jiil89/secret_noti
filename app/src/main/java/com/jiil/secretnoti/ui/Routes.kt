@@ -1,5 +1,9 @@
 package com.jiil.secretnoti.ui
 
+import com.jiil.secretnoti.ui.components.openKakaoApp
+
+import com.jiil.secretnoti.ui.components.KakaoHiddenNotice
+
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +49,8 @@ fun ConversationListRoute(onOpenConversation: (Long) -> Unit, onOpenSettings: ()
     // 필터로 고른 앱의 대화방이 사라지면 전체로 돌아간다.
     if (filter != null && apps.none { it.packageName == filter }) filter = null
 
+    val kakaoHiddenAt by Prefs.kakaoHiddenAt.flow.collectAsStateWithLifecycle()
+    val kakaoSnoozedUntil by Prefs.kakaoNoticeSnoozedUntil.flow.collectAsStateWithLifecycle()
     ConversationListScreen(
         conversations = conversations,
         availableApps = apps,
@@ -59,6 +65,13 @@ fun ConversationListRoute(onOpenConversation: (Long) -> Unit, onOpenSettings: ()
         onMute = { id, deleteExisting -> scope.launch { chat.mute(id, deleteExisting); WidgetUpdater.request(context) } },
         mutedConversations = muted,
         onUnmute = { id -> scope.launch { chat.unmute(id); WidgetUpdater.request(context) } },
+        notice = if (kakaoHiddenAt > 0 && System.currentTimeMillis() > kakaoSnoozedUntil) {
+            {
+                KakaoHiddenNotice(onOpenKakao = { openKakaoApp(context) }, onSnooze = {
+                    Prefs.kakaoNoticeSnoozedUntil.value = System.currentTimeMillis() + 24 * 60 * 60 * 1000L
+                })
+            }
+        } else null,
     )
 }
 

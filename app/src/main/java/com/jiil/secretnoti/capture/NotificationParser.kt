@@ -133,6 +133,19 @@ object NotificationParser {
         }
     }
 
+    private val KAKAO_LABELS = setOf("카카오톡", "KakaoTalk")
+
+    /**
+     * 카톡 알림 표시가 '표시 안 함'인가: 메시지 알림인데 보낸 사람·방 이름 자리에 앱 이름만 있거나 비어 있다.
+     * 이때는 누가 보냈는지 알 수 없어 저장하지 않고, 사용자에게 설정을 바꾸라고 알린다.
+     */
+    fun isKakaoContentHidden(s: NotificationSnapshot): Boolean {
+        if (s.packageName != "com.kakao.talk" || s.isGroupSummary || s.isOngoing || s.category != "msg") return false
+        fun String?.blankOrLabel() = this == null || this.isBlank() || stripInvisible(this).trim() in KAKAO_LABELS
+        if (!s.title.blankOrLabel() || !s.conversationTitle.blankOrLabel()) return false
+        return s.messages.all { it.sender.blankOrLabel() }
+    }
+
     /**
      * 그룹 요약 알림이나 내용 없는 알림이면 null.
      * 방 키는 shortcutId → locusId → tag → 방 이름 순으로 고른다 (카톡은 shortcutId = 채팅방 번호).

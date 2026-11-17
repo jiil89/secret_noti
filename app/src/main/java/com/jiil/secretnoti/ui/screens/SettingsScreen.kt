@@ -104,6 +104,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                 verticalArrangement = Arrangement.spacedBy(NotiSpacing.panel),
             ) {
                 // 권한이 모두 있으면 아무것도 보이지 않는다. 빠진 게 있을 때만 맨 위에 알린다.
+                if (state.kakaoContentHidden) com.jiil.secretnoti.ui.components.KakaoHiddenNotice(onOpenKakao = actions::openKakao)
                 if (!state.permissions.allGranted) SettingsPermissions(state.permissions, actions::openPermissions)
                 SettingsSection(stringResource(R.string.settings_section_saving), anchor(0)) {
                     SettingsHelper(stringResource(R.string.settings_saving_hint))

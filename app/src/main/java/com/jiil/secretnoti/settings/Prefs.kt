@@ -80,6 +80,10 @@ object Prefs {
     val peekBubble = bool("peek_bubble", false)
     val textSize = enum("text_size", TextSize.NORMAL)
     val previewLines = enum("preview_lines", PreviewLines.AUTO)
+    /** 카톡 알림에 내용이 없다는 것(알림 표시 '표시 안 함')을 처음 알아챈 시각. 0이면 정상. */
+    val kakaoHiddenAt = long("kakao_hidden_at", 0L)
+    /** 앱 첫 화면의 카톡 안내를 "오늘은 그만 보기"로 접어 둔 기한. */
+    val kakaoNoticeSnoozedUntil = long("kakao_notice_snoozed_until", 0L)
     /** 엣지 패널 배경 투명도(%). 0 = 불투명, 최대 [com.jiil.secretnoti.ui.model.PANEL_TRANSPARENCY_MAX]. */
     val panelTransparency = int("panel_transparency", 0)
     /** 패널을 열면 뒤 화면 흐리게. */
@@ -89,7 +93,7 @@ object Prefs {
         overlayEnabled, gestureExclusion, handleOnLeft, handleY, handleSize, panelWidthDp, panelHeightDp, dumpAllApps, dumpAllAppsSince, onboardingDone, lastPanelOpenedAt,
         retentionDays, lastCleanupAt, enabledApps, lockEnabled, hidePreviews, deletionAlerts, savePhotos,
         keywords, themeMode, readElsewhere, autoMuteAds, autoMuteChannels, channelBackfillDone, adBackfillDone, indicatorBadge, badgeStyle, indicatorGlow, glowUsesAppColor, glowColor,
-        peekBubble, textSize, previewLines, panelTransparency, panelBlur,
+        peekBubble, textSize, previewLines, panelTransparency, panelBlur, kakaoHiddenAt, kakaoNoticeSnoozedUntil,
     )
 
     fun init(context: Context) {

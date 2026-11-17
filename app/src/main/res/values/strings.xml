@@ -405,4 +405,10 @@
     <string name="panel_cleared_bell">알림을 지운 방, 설명 보기</string>
     <string name="help_q_dimmed">패널에서 흐리게 보이는 방은 뭔가요?</string>
     <string name="help_a_dimmed">알림창에서 알림을 밀어서 지우거나 “모두 지우기”를 한 방이에요. 그 뒤에는 원래 앱에서 읽어도 시크릿노티가 알 수 없어서, 숫자 대신 종 아이콘으로 표시해요. 그 방에 새 메시지가 오면 원래대로 돌아와요.</string>
+    <string name="kakao_hidden_title">카톡 내용이 저장되지 않고 있어요</string>
+    <string name="kakao_hidden_body">카톡 알림에 내용이 없어요. 카카오톡 설정 → 알림 → 알림 표시를 ‘이름+메시지’로 바꿔 주세요.</string>
+    <string name="kakao_hidden_open">카카오톡 열기 ›</string>
+    <string name="kakao_hidden_snooze">오늘은 그만 보기</string>
+    <string name="kakao_hidden_slim">카톡 내용이 저장되지 않아요</string>
+    <string name="kakao_hidden_fix">해결 ›</string>
 </resources>

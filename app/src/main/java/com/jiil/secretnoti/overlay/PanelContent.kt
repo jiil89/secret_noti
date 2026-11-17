@@ -57,6 +57,7 @@ fun PanelContent(
     val maxWidth = (screenWidth - PanelWidth.SCREEN_MARGIN_DP).coerceAtLeast(PanelWidth.MIN_DP)
     var width by remember { mutableStateOf(Prefs.panelWidthDp.value.coerceIn(PanelWidth.MIN_DP, maxWidth).dp) }
     var height by remember { mutableStateOf(initialHeight) }
+    val kakaoHiddenAt by Prefs.kakaoHiddenAt.flow.collectAsState()
 
     CompositionLocalProvider(LocalPanelOpacity provides opacity) {
         EdgePanel(
@@ -82,6 +83,7 @@ fun PanelContent(
             drawBackground = false,
             maxHeight = maxHeight,
             height = height,
+            kakaoHidden = kakaoHiddenAt > 0,
             minHeight = minHeight,
             onHeightChange = { height = it; onHeightChange(it) },
             onHeightChangeFinished = { Prefs.panelHeightDp.value = height.value.roundToInt() },

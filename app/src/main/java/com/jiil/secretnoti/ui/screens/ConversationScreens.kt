@@ -74,6 +74,8 @@ fun EdgePanel(
     maxHeight: Dp = 652.dp,
     /** 정해진 높이. null이 아니면 아래 가장자리를 위아래로 끌어 [minHeight]~[maxHeight] 사이로 바꿀 수 있다. */
     height: Dp? = null,
+    /** 카톡 알림 표시가 '표시 안 함'이라 카톡 내용이 저장되지 않는 중. 누르면 [onShowAll]. */
+    kakaoHidden: Boolean = false,
     minHeight: Dp = 0.dp,
     onHeightChange: (Dp) -> Unit = {},
     onHeightChangeFinished: () -> Unit = {},
@@ -119,6 +121,7 @@ fun EdgePanel(
                         style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     SettingsButton(onOpenSettings)
                 }
+                if (kakaoHidden) KakaoHiddenNoticeSlim(onShowAll)
                 AppFilterChips(availableApps, filter, onFilterChange)
                 ConversationItems(visibleConversations(conversations, filter).take(10),
                     onOpenConversation, Modifier.weight(1f, fill = !wrapHeight), maxLines = if (width >= 340.dp) 3 else 2,
@@ -247,6 +250,8 @@ fun ConversationListScreen(
     onMute: (id: Long, deleteExisting: Boolean) -> Unit,
     mutedConversations: List<ConversationUi>,
     onUnmute: (Long) -> Unit,
+    /** 목록 맨 위 안내 (카톡 내용 숨김 등). */
+    notice: (@Composable () -> Unit)? = null,
 ) {
     var pendingMute by remember { mutableStateOf<ConversationUi?>(null) }
     var pendingDelete by remember { mutableStateOf<ConversationUi?>(null) }
@@ -261,6 +266,7 @@ fun ConversationListScreen(
                     SettingsButton(onOpenSettings)
                 }
             }
+            notice?.let { Spacer(Modifier.height(4.dp)); it() }
             Spacer(Modifier.height(6.dp))
             AppFilterChips(availableApps, filter, onFilterChange)
             Spacer(Modifier.height(8.dp))

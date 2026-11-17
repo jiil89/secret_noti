@@ -129,6 +129,8 @@ data class SettingsUi(
     val panelBlurSupported: Boolean = true,
     /** 지금 흐림이 실제로 그려지는가 (절전 모드에서는 꺼진다). */
     val panelBlurEnabledNow: Boolean = true,
+    /** 카톡 알림 표시가 '표시 안 함'이라 카톡 내용이 저장되지 않는 중. */
+    val kakaoContentHidden: Boolean = false,
 )
 
 /** 설정 화면에서 일어나는 모든 조작. */
@@ -172,6 +174,7 @@ interface SettingsActions {
     fun setPeekBubble(enabled: Boolean)
     fun setPanelTransparency(percent: Int) {}
     fun setPanelBlur(enabled: Boolean) {}
+    fun openKakao() {}
     /** 지금 설정으로 손잡이를 한 번 반짝여 본다. */
     fun previewGlow()
     /** 비밀번호를 받아 암호화한 백업 파일을 만든다. */

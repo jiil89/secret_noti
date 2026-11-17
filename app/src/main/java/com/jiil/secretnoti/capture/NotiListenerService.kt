@@ -138,6 +138,16 @@ class NotiListenerService : NotificationListenerService() {
         }
         if (!isTarget(pkg)) return
 
+        // 카톡 알림 표시가 '표시 안 함'이면 누가 보냈는지 없어서 저장하지 않고, 앱·패널·설정에 안내를 띄운다.
+        // 내용이 담긴 카톡 메시지 알림이 한 번이라도 오면 안내를 내린다.
+        if (pkg == TargetApps.KAKAO && snapshot.category == Notification.CATEGORY_MESSAGE && !snapshot.isGroupSummary) {
+            if (NotificationParser.isKakaoContentHidden(snapshot)) {
+                if (Prefs.kakaoHiddenAt.value == 0L) Prefs.kakaoHiddenAt.value = now
+                return
+            }
+            if (Prefs.kakaoHiddenAt.value != 0L) Prefs.kakaoHiddenAt.value = 0L
+        }
+
         val source = TargetApps.sourceOf(this, pkg)
         // 카톡·문자 외의 앱은 메시지형 알림만 받는다 (광고·통화·상태 알림 제외).
         val messagesOnly = source == Source.OTHER || source == Source.TEAMS
