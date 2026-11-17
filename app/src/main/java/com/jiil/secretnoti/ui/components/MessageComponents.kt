@@ -9,6 +9,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -22,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -92,14 +94,18 @@ fun AppFilterChips(
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         filters.forEach { (packageName, label) ->
             val selected = packageName == filter
+            // 누르는 영역은 48dp, 눌림 물결은 타원 안에만 (바깥 네모에 그리면 사각형 그림자가 보인다).
+            val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
             Box(Modifier.heightIn(min = 48.dp).widthIn(min = 48.dp)
-                .selectable(selected, onClick = { onFilterChange(packageName) }, role = Role.Tab),
+                .selectable(selected, interactionSource = interaction, indication = null,
+                    onClick = { onFilterChange(packageName) }, role = Role.Tab),
                 contentAlignment = Alignment.Center) {
                 Surface(shape = NotiShapes.pill,
                     color = if (selected) NotiColors.Text else NotiColors.Background,
                     border = if (selected) null else BorderStroke(1.dp, NotiColors.Outline)) {
                     // 칩 높이 36dp 안에서 글자를 위아래 정확히 가운데에 둔다.
-                    Box(Modifier.heightIn(min = 36.dp).padding(horizontal = 14.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.indication(interaction, androidx.compose.material3.ripple())
+                        .heightIn(min = 36.dp).padding(horizontal = 14.dp), contentAlignment = Alignment.Center) {
                         Text(label, color = if (selected) NotiColors.Background else NotiColors.Body,
                             style = MaterialTheme.typography.bodyMedium.copy(lineHeightStyle = SingleLineCentered),
                             fontWeight = FontWeight.Medium, maxLines = 1)

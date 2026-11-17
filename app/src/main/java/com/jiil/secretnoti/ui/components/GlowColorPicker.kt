@@ -57,7 +57,8 @@ fun GlowColorPicker(argb: Int, onColorChange: (Int) -> Unit) {
             glowPresets.forEach { (preset, nameRes) ->
                 val name = stringResource(nameRes)
                 val selected = opaqueColor == preset
-                Canvas(Modifier.size(40.dp).selectable(selected, role = Role.RadioButton,
+                Canvas(Modifier.size(40.dp).selectable(selected, interactionSource = null,
+                    indication = androidx.compose.material3.ripple(bounded = false, radius = 20.dp), role = Role.RadioButton,
                     onClick = { hex = glowHex(preset); onColorChange(preset) })
                     .semantics { contentDescription = name }) {
                     val color = Color(preset)

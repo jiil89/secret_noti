@@ -17,6 +17,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.graphics.graphicsLayer
@@ -632,12 +633,16 @@ private fun SectionChips(labels: List<String>, selected: Int, onSelect: (Int) ->
             // 좁은 화면에서 칩이 넘치면, 켜진 칩이 보이도록 칩 줄도 따라 움직인다.
             val requester = remember { BringIntoViewRequester() }
             LaunchedEffect(on) { if (on) requester.bringIntoView() }
+            // 누르는 영역은 48dp 그대로 두고, 눌림 물결은 타원 안에만 그린다 (바깥 사각형에 그리면 네모 그림자가 보인다).
+            val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
             Box(Modifier.bringIntoViewRequester(requester).heightIn(min = 48.dp)
-                .selectable(on, role = Role.Tab, onClick = { onSelect(index) }),
+                .selectable(on, interactionSource = interaction, indication = null, role = Role.Tab,
+                    onClick = { onSelect(index) }),
                 contentAlignment = Alignment.Center) {
                 Surface(shape = NotiShapes.pill, color = if (on) NotiColors.Text else NotiColors.Background,
                     border = if (on) null else BorderStroke(1.dp, NotiColors.Outline)) {
-                    Box(Modifier.heightIn(min = 34.dp).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.indication(interaction, ripple()).heightIn(min = 34.dp).padding(horizontal = 12.dp),
+                        contentAlignment = Alignment.Center) {
                         Text(label, color = if (on) NotiColors.Background else NotiColors.Body, maxLines = 1,
                             style = MaterialTheme.typography.labelLarge.copy(lineHeightStyle = SingleLineCentered))
                     }
