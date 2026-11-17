@@ -411,4 +411,16 @@
     <string name="kakao_hidden_snooze">오늘은 그만 보기</string>
     <string name="kakao_hidden_slim">카톡 내용이 저장되지 않아요</string>
     <string name="kakao_hidden_fix">해결 ›</string>
+    <string name="settings_section_saving_apps">저장할 앱</string>
+    <string name="settings_section_filter">걸러내기</string>
+    <string name="settings_section_keep">보관</string>
+    <string name="settings_section_panel_look">패널 모양</string>
+    <string name="settings_section_about">앱 정보</string>
+    <string name="settings_update_title">앱 업데이트</string>
+    <string name="settings_update_current">현재 버전 %1$s</string>
+    <string name="settings_update_hint">시크릿노티는 인터넷 권한이 없어 앱이 직접 확인하지 않아요. 누르면 브라우저에서 최신 버전 페이지가 열려요. 번호가 다르면 APK를 받아 설치하세요</string>
+    <string name="settings_update_check">최신 버전 확인</string>
+    <string name="settings_update_no_browser">브라우저를 열 수 없어요</string>
+    <string name="settings_diagnostics_hint">알림이 어떻게 들어왔는지 보여 주는 기록이에요. 문제가 생겨 문의할 때 도움이 돼요</string>
+    <string name="settings_footer">시크릿노티 %1$s · 인터넷 권한 없음</string>
 </resources>

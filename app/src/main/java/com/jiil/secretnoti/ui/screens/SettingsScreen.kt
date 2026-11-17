@@ -1,5 +1,10 @@
 package com.jiil.secretnoti.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.remember
@@ -76,7 +81,8 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
     val sectionTops = remember { mutableStateMapOf<Int, Int>() }
     fun anchor(index: Int) = Modifier.onGloballyPositioned { sectionTops[index] = it.positionInParent().y.toInt() }
     val sections = listOf(R.string.settings_section_saving, R.string.settings_section_panel, R.string.settings_new_messages,
-        R.string.settings_screen_appearance, R.string.settings_screen_privacy, R.string.settings_screen_backup)
+        R.string.settings_screen_appearance, R.string.settings_screen_privacy, R.string.settings_screen_backup,
+        R.string.settings_section_about)
     val currentSection by remember {
         derivedStateOf {
             if (scrollState.maxValue in 1..scrollState.value) sections.lastIndex
@@ -84,7 +90,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
         }
     }
 
-    Surface(color = NotiColors.Background) {
+    Surface(color = NotiColors.DetailBackground) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
             Row(
                 Modifier.fillMaxWidth().padding(NotiSpacing.small),
@@ -98,7 +104,6 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
             SectionChips(sections.map { stringResource(it) }, currentSection) { index ->
                 scope.launch { scrollState.animateScrollTo(sectionTops[index] ?: 0) }
             }
-            HorizontalDivider(color = NotiColors.Divider)
             Column(
                 Modifier.weight(1f).verticalScroll(scrollState).padding(NotiSpacing.content),
                 verticalArrangement = Arrangement.spacedBy(NotiSpacing.panel),
@@ -106,7 +111,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                 // 권한이 모두 있으면 아무것도 보이지 않는다. 빠진 게 있을 때만 맨 위에 알린다.
                 if (state.kakaoContentHidden) com.jiil.secretnoti.ui.components.KakaoHiddenNotice(onOpenKakao = actions::openKakao)
                 if (!state.permissions.allGranted) SettingsPermissions(state.permissions, actions::openPermissions)
-                SettingsSection(stringResource(R.string.settings_section_saving), anchor(0)) {
+                SettingsSection(stringResource(R.string.settings_section_saving_apps), anchor(0)) {
                     SettingsHelper(stringResource(R.string.settings_saving_hint))
                     val suggested = state.apps.filter { it.suggested }
                     val others = state.apps.filterNot { it.suggested }
@@ -118,8 +123,11 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     if (others.isNotEmpty()) TextButton(onClick = { expandedApps = !expandedApps }) {
                         Text(if (expandedApps) stringResource(R.string.settings_screen_collapse_apps) else pluralStringResource(R.plurals.settings_screen_more_apps, others.size, others.size))
                     }
+                }
+                SettingsSection(stringResource(R.string.settings_section_filter)) {
                     SettingsSwitchRow(stringResource(R.string.settings_auto_mute_ads), state.autoMuteAds,
                         actions::setAutoMuteAds, detail = stringResource(R.string.settings_auto_mute_ads_hint))
+                    SettingsDivider()
                     SettingsSwitchRow(stringResource(R.string.settings_channels_toggle), state.autoMuteChannels,
                         actions::setAutoMuteChannels, detail = stringResource(R.string.settings_channels_hint))
                     if (state.channelConversations.isNotEmpty()) {
@@ -161,8 +169,11 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             }
                         }
                     }
+                }
+                SettingsSection(stringResource(R.string.settings_section_keep)) {
                     SettingsSwitchRow(stringResource(R.string.settings_screen_save_photos), state.savePhotos, actions::setSavePhotos,
                         detail = stringResource(R.string.settings_screen_save_photos_hint))
+                    SettingsDivider()
                     SettingsLabel(stringResource(R.string.settings_screen_retention))
                     SettingsHelper(stringResource(R.string.settings_retention_hint))
                     RetentionSelector(state.retentionDays) { days ->
@@ -180,11 +191,11 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         onDismiss = { showChannelMuteDialog = false },
                     )
                 }
-                HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_section_panel), anchor(1)) {
                     SettingsSwitchRow(stringResource(R.string.settings_screen_show_handle), checked = state.handleEnabled,
                         onCheckedChange = actions::setHandleEnabled,
                         detail = stringResource(R.string.settings_screen_show_handle_hint))
+                    SettingsDivider()
                     SettingsLabel(stringResource(R.string.settings_screen_side))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         listOf(true, false).forEachIndexed { index, onLeft ->
@@ -218,6 +229,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             }
                         }
                     }
+                    SettingsDivider()
                     SettingsLabel(stringResource(R.string.settings_screen_size))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         HandleSize.entries.forEachIndexed { index, handleSize ->
@@ -231,6 +243,16 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             ) { Text(stringResource(handleSize.labelRes)) }
                         }
                     }
+                    SettingsDivider()
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.settings_screen_gesture),
+                        checked = state.gestureExclusion,
+                        onCheckedChange = actions::setGestureExclusion,
+                        enabled = state.handleEnabled,
+                        detail = stringResource(R.string.settings_screen_gesture_hint),
+                    )
+                }
+                SettingsSection(stringResource(R.string.settings_section_panel_look)) {
                     SettingsLabel(stringResource(R.string.settings_panel_width))
                     val panelWidthPreset = PanelWidth.of(state.panelWidthDp)
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -246,16 +268,9 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     }
                     SettingsHelper(if (panelWidthPreset == null) stringResource(R.string.settings_panel_width_custom, state.panelWidthDp)
                         else stringResource(R.string.settings_panel_width_hint))
-                    SettingsSwitchRow(
-                        label = stringResource(R.string.settings_screen_gesture),
-                        checked = state.gestureExclusion,
-                        onCheckedChange = actions::setGestureExclusion,
-                        enabled = state.handleEnabled,
-                        detail = stringResource(R.string.settings_screen_gesture_hint),
-                    )
+                    SettingsDivider()
                     PanelBackgroundSettings(state, actions)
                 }
-                HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_new_messages), anchor(2)) {
                     SettingsSwitchRow(stringResource(R.string.settings_indicator_badge), state.indicatorBadge, actions::setIndicatorBadge,
                         detail = stringResource(R.string.settings_indicator_badge_hint))
@@ -271,6 +286,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             }
                         }
                     }
+                    SettingsDivider()
                     SettingsSwitchRow(stringResource(R.string.settings_indicator_glow), state.indicatorGlow, actions::setIndicatorGlow,
                         detail = stringResource(R.string.settings_indicator_glow_hint))
                     if (state.indicatorGlow) {
@@ -289,13 +305,16 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         if (!state.glowUsesAppColor) GlowColorPicker(state.glowColor, actions::setGlowColor)
                         TextButton(onClick = actions::previewGlow) { Text(stringResource(R.string.settings_glow_preview)) }
                     }
+                    SettingsDivider()
                     SettingsSwitchRow(stringResource(R.string.settings_peek_bubble), state.peekBubble,
                         actions::setPeekBubble, detail = stringResource(R.string.settings_peek_bubble_hint))
+                    SettingsDivider()
                     SettingsSwitchRow(stringResource(R.string.settings_read_elsewhere_switch),
                         state.readElsewhereAction == ReadElsewhereAction.REMOVE_FROM_PANEL,
                         onCheckedChange = { actions.setReadElsewhereAction(
                             if (it) ReadElsewhereAction.REMOVE_FROM_PANEL else ReadElsewhereAction.KEEP) },
                         detail = stringResource(R.string.settings_read_elsewhere_switch_hint))
+                    SettingsDivider()
                     SettingsLabel(stringResource(R.string.settings_keywords_highlight))
                     SettingsHelper(stringResource(R.string.settings_keywords_hint))
                     if (state.keywords.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -320,7 +339,6 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         }
                     }
                 }
-                HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_appearance), anchor(3)) {
                     SettingsLabel(stringResource(R.string.settings_theme))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -330,6 +348,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                                 modifier = Modifier.heightIn(min = NotiSpacing.button)) { Text(stringResource(mode.labelRes)) }
                         }
                     }
+                    SettingsDivider()
                     SettingsLabel(stringResource(R.string.settings_text_size))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         TextSize.entries.forEachIndexed { index, size ->
@@ -340,6 +359,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                             }
                         }
                     }
+                    SettingsDivider()
                     SettingsLabel(stringResource(R.string.settings_preview_lines))
                     SettingsHelper(stringResource(R.string.settings_preview_lines_hint))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -353,14 +373,15 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     }
                     TextSizePreview(state.previewLines)
                 }
-                HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_privacy), anchor(4)) {
                     SettingsSwitchRow(stringResource(R.string.settings_screen_lock), state.lockEnabled, actions::setLock,
                         enabled = state.lockAvailable,
                         detail = stringResource(if (state.lockAvailable) R.string.settings_screen_lock_hint
                             else R.string.settings_screen_lock_unavailable))
+                    SettingsDivider()
                     SettingsSwitchRow(stringResource(R.string.settings_screen_hide_previews), state.hidePreviews, actions::setHidePreviews,
                         detail = stringResource(R.string.settings_screen_hide_previews_hint))
+                    SettingsDivider()
                     SettingsSwitchRow(stringResource(R.string.settings_screen_deletion_alerts), state.deletionAlerts, actions::setDeletionAlerts,
                         detail = stringResource(R.string.settings_screen_deletion_alerts_hint))
                     if (state.deletionAlerts && !state.notificationPermission) {
@@ -372,6 +393,7 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         }
                     }
                     if (state.hiddenConversations.isNotEmpty()) {
+                        SettingsDivider()
                         SettingsLabel(stringResource(R.string.settings_screen_hidden))
                         state.hiddenConversations.forEach { conversation ->
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
@@ -390,7 +412,6 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         }
                     }
                 }
-                HorizontalDivider(color = NotiColors.Divider)
                 SettingsSection(stringResource(R.string.settings_screen_backup), anchor(5)) {
                     SettingsHelper(stringResource(R.string.settings_screen_backup_hint))
                     Row(horizontalArrangement = Arrangement.spacedBy(NotiSpacing.small)) {
@@ -404,27 +425,41 @@ fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                         }
                     }
                 }
-                HorizontalDivider(color = NotiColors.Divider)
-                SettingsSection(stringResource(R.string.settings_section_help)) {
-                    SettingsNavRow(stringResource(R.string.settings_help), stringResource(R.string.settings_help_hint), actions::openHelp)
-                    SettingsNavRow(stringResource(R.string.settings_contact), stringResource(R.string.settings_contact_hint)) {
-                        showContactSheet = true
-                    }
-                }
-                // 맨 아래: 진단 기록 · 버전 (테스터가 어떤 판을 쓰는지 바로 알 수 있게).
                 val context = LocalContext.current
                 val version = remember {
                     runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
                 }
-                Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center) {
-                    TextButton(onClick = actions::openDiagnostics, modifier = Modifier.heightIn(min = NotiSpacing.button)) {
-                        Text(stringResource(R.string.settings_screen_diagnostics), color = NotiColors.Secondary,
-                            style = MaterialTheme.typography.bodySmall)
+                val fromPlayStore = remember { installedFromPlayStore(context) }
+                SettingsSection(stringResource(R.string.settings_section_about), anchor(6)) {
+                    // 인터넷 권한이 없으므로 앱이 직접 확인하지 않고 브라우저로 최신 배포 페이지를 연다.
+                    // 플레이스토어에서 받았으면 스토어가 업데이트하므로 보이지 않는다.
+                    if (!fromPlayStore) {
+                        Column(Modifier.fillMaxWidth().padding(vertical = NotiSpacing.small),
+                            verticalArrangement = Arrangement.spacedBy(NotiSpacing.tiny)) {
+                            Text(stringResource(R.string.settings_update_title),
+                                style = MaterialTheme.typography.bodyLarge, color = NotiColors.Text)
+                            if (version != null) Text(stringResource(R.string.settings_update_current, version),
+                                style = MaterialTheme.typography.bodyMedium, color = NotiColors.Body)
+                            SettingsHelper(stringResource(R.string.settings_update_hint))
+                            Button(onClick = { openLatestRelease(context) }, shape = NotiShapes.pill,
+                                modifier = Modifier.padding(top = NotiSpacing.small).heightIn(min = NotiSpacing.button)) {
+                                Text(stringResource(R.string.settings_update_check))
+                            }
+                        }
+                        SettingsDivider()
                     }
-                    if (version != null) Text(stringResource(R.string.settings_screen_version, version),
-                        color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall)
+                    SettingsNavRow(stringResource(R.string.settings_help), stringResource(R.string.settings_help_hint), actions::openHelp)
+                    SettingsDivider()
+                    SettingsNavRow(stringResource(R.string.settings_contact), stringResource(R.string.settings_contact_hint)) {
+                        showContactSheet = true
+                    }
+                    SettingsDivider()
+                    SettingsNavRow(stringResource(R.string.settings_screen_diagnostics),
+                        stringResource(R.string.settings_diagnostics_hint), actions::openDiagnostics)
                 }
+                if (version != null) Text(stringResource(R.string.settings_footer, version),
+                    Modifier.fillMaxWidth().padding(bottom = 8.dp), textAlign = TextAlign.Center,
+                    color = NotiColors.Secondary, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -549,12 +584,42 @@ private fun requiresRetentionConfirmation(current: Int, next: Int): Boolean =
 
 @Composable
 private fun SettingsSection(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(NotiSpacing.medium)) {
-        Text(title, modifier = Modifier.semantics { heading() },
-            style = MaterialTheme.typography.titleMedium, color = NotiColors.Text)
-        content()
+    // 파란 작은 제목 + 회색 바탕 위의 둥근 카드 하나.
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(NotiSpacing.small)) {
+        Text(title, modifier = Modifier.padding(start = NotiSpacing.tiny).semantics { heading() },
+            style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = NotiColors.Accent)
+        Column(Modifier.fillMaxWidth().clip(SettingsCardShape).background(NotiColors.Background)
+            .padding(horizontal = 18.dp, vertical = NotiSpacing.small),
+            verticalArrangement = Arrangement.spacedBy(NotiSpacing.medium), content = content)
     }
 }
+
+private val SettingsCardShape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
+
+/** 카드 안의 항목 사이 선. */
+@Composable
+private fun SettingsDivider() {
+    HorizontalDivider(color = NotiColors.Divider)
+}
+
+private const val LATEST_RELEASE_URL = "https://github.com/jiil89/secret_noti/releases/latest"
+
+/** 최신 배포 페이지를 브라우저로 연다. 인터넷은 브라우저가 쓰고, 이 앱은 쓰지 않는다. */
+private fun openLatestRelease(context: Context) {
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(LATEST_RELEASE_URL)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    runCatching { context.startActivity(intent) }.onFailure {
+        Toast.makeText(context, R.string.settings_update_no_browser, Toast.LENGTH_LONG).show()
+    }
+}
+
+@Suppress("DEPRECATION")
+private fun installedFromPlayStore(context: Context): Boolean = runCatching {
+    val pm = context.packageManager
+    val installer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+        pm.getInstallSourceInfo(context.packageName).installingPackageName
+    else pm.getInstallerPackageName(context.packageName)
+    installer == "com.android.vending"
+}.getOrDefault(false)
 
 /** 설정 맨 위에 붙어 있는 구역 칩. 누르면 그 구역으로 스크롤한다. */
 @OptIn(ExperimentalFoundationApi::class)

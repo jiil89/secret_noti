@@ -417,4 +417,16 @@
     <string name="kakao_hidden_snooze">Hide for today</string>
     <string name="kakao_hidden_slim">KakaoTalk messages aren\'t saved</string>
     <string name="kakao_hidden_fix">Fix ›</string>
+    <string name="settings_section_saving_apps">Apps to save</string>
+    <string name="settings_section_filter">Filtering</string>
+    <string name="settings_section_keep">Storage</string>
+    <string name="settings_section_panel_look">Panel look</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_update_title">App update</string>
+    <string name="settings_update_current">Current version %1$s</string>
+    <string name="settings_update_hint">SecretNoti has no internet permission, so it can\'t check by itself. This opens the latest release page in your browser. If the number is different, download the APK and install it</string>
+    <string name="settings_update_check">Check latest version</string>
+    <string name="settings_update_no_browser">Couldn\'t open a browser</string>
+    <string name="settings_diagnostics_hint">Shows how notifications arrived. Helpful when reporting a problem</string>
+    <string name="settings_footer">SecretNoti %1$s · No internet permission</string>
 </resources>
