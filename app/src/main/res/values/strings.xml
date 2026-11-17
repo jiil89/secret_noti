@@ -423,4 +423,5 @@
     <string name="settings_update_no_browser">브라우저를 열 수 없어요</string>
     <string name="settings_diagnostics_hint">알림이 어떻게 들어왔는지 보여 주는 기록이에요. 문제가 생겨 문의할 때 도움이 돼요</string>
     <string name="settings_footer">시크릿노티 %1$s · 인터넷 권한 없음</string>
+    <string name="contact_choose_mail">메일 앱 선택</string>
 </resources>

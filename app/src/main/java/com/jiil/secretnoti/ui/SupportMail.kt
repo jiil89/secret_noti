@@ -33,7 +33,7 @@ object SupportMail {
     suspend fun compose(context: Context, kind: ContactKind, attachDump: Boolean) {
         val attachment = if (attachDump) runCatching { writeDumpFile(context) }.getOrNull() else null
         val body = context.getString(kind.bodyRes) + "\n\n" + deviceInfo(context)
-        val send = Intent(Intent.ACTION_SEND).apply {
+        fun send(pkg: String) = Intent(Intent.ACTION_SEND).apply {
             type = if (attachment != null) "application/json" else "text/plain"
             putExtra(Intent.EXTRA_EMAIL, arrayOf(ADDRESS))
             putExtra(Intent.EXTRA_SUBJECT, context.getString(kind.subjectRes))
@@ -43,15 +43,31 @@ object SupportMail {
                 clipData = ClipData.newRawUri(null, attachment)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            // 메일 앱만 고르게 한다 (메신저·메모 앱으로 새지 않게).
-            selector = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
+            setPackage(pkg)
+        }
+        // 메일 앱만 고르게 한다 (메신저·메모 앱으로 새지 않게). 예전에는 selector(mailto)로 걸렀는데,
+        // 최신 안드로이드에서는 그 방식이 풀리지 않아 Gmail이 있어도 "메일 앱 없음"이 났다.
+        // 그래서 mailto를 받는 앱을 직접 찾아 그 앱으로 보낸다. 여러 개면 고르게 한다.
+        val apps = mailApps(context)
+        val intent = when {
+            apps.isEmpty() -> null
+            apps.size == 1 -> send(apps[0])
+            else -> Intent.createChooser(send(apps[0]), context.getString(R.string.contact_choose_mail)).apply {
+                putExtra(Intent.EXTRA_INITIAL_INTENTS, apps.drop(1).map { send(it) }.toTypedArray())
+            }
         }
         try {
-            context.startActivity(send)
+            if (intent == null) throw ActivityNotFoundException()
+            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         } catch (_: ActivityNotFoundException) {
             Toast.makeText(context, context.getString(R.string.contact_no_mail_app, ADDRESS), Toast.LENGTH_LONG).show()
         }
     }
+
+    /** mailto를 받는 앱 (Gmail·Outlook·삼성 이메일 등). 매니페스트 queries에 mailto가 있어야 보인다. */
+    private fun mailApps(context: Context): List<String> =
+        context.packageManager.queryIntentActivities(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")), 0)
+            .map { it.activityInfo.packageName }.distinct()
 
     private fun deviceInfo(context: Context): String {
         val info = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()

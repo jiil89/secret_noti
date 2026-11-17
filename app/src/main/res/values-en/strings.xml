@@ -429,4 +429,5 @@
     <string name="settings_update_no_browser">Couldn\'t open a browser</string>
     <string name="settings_diagnostics_hint">Shows how notifications arrived. Helpful when reporting a problem</string>
     <string name="settings_footer">SecretNoti %1$s · No internet permission</string>
+    <string name="contact_choose_mail">Choose an email app</string>
 </resources>
