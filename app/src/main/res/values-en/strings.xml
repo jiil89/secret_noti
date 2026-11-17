@@ -90,7 +90,7 @@
     <string name="route_target_apps_help">Choose which apps to capture in Settings → Target apps.</string>
     <string name="route_permission_granted">Allowed</string>
     <string name="route_permission_required">Required</string>
-    <string name="route_kakao_preview_help">Enable Message preview in KakaoTalk Settings → Notifications to save message content. Muted chats and notifications suppressed while using a PC cannot be saved.</string>
+    <string name="route_kakao_preview_help">Important: in KakaoTalk Settings → Notifications → Notification display, choose “Name + message”. If it is set to hide content, notifications carry no text and KakaoTalk messages cannot be saved. Muted chats and messages that arrive while KakaoTalk for PC is in use are not saved either.</string>
     <string name="route_permissions">Permissions</string>
     <string name="route_back">Back</string>
     <string name="route_diagnostics">Diagnostics log</string>
@@ -336,7 +336,10 @@
     <string name="help_title">Help</string>
     <string name="help_replay_intro">Replay intro ›</string>
     <string name="help_q_not_saved">Messages are not being saved</string>
-    <string name="help_a_not_saved">1. In KakaoTalk settings → Notifications, turn on message preview\n2. While KakaoTalk for PC is in use, your phone gets no notifications, so nothing is saved\n3. Chats with notifications turned off are not saved\n4. Set SecretNoti’s battery use to “Unrestricted”</string>
+    <string name="help_a_not_saved">1. In KakaoTalk Settings → Notifications → Notification display, choose “Name + message”. If content is hidden, only KakaoTalk stops being saved
+2. While KakaoTalk for PC is in use, your phone gets no notifications, so nothing is saved
+3. Chats with notifications turned off are not saved
+4. Set SecretNoti’s battery use to “Unrestricted”</string>
     <string name="help_check_permissions">Check permissions ›</string>
     <string name="help_q_read">When are messages marked as read?</string>
     <string name="help_a_read">Viewing in SecretNoti never marks messages as read. They are marked as read when you open the chat in KakaoTalk or tap “Open in KakaoTalk”.</string>
